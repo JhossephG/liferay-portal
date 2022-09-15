@@ -1,0 +1,80 @@
+@component-name = "portal-web-forms-and-data-lists"
+definition {
+    property testray.main.component.name = "Forms";
+
+    setUp {
+        TestCase.setUpPortalInstance();
+
+        User.firstLoginPG();
+
+        Navigator.openURL();
+    }
+
+    tearDown {
+        User.logoutAndLoginPG(
+            userLoginEmailAddress = "test@liferay.com",
+            userLoginFullName = "Test Test");
+    }
+
+    @description = "Access Portal Global Menu and validate CONFIGURATION string at Control Panel"
+    @priority = "5"
+    test ValidateConfigurationStringAtControlPanel {
+      
+        task ("Open the MENU APP's"){
+        CreatingXPath.openAppMenu();
+        //Click(locator1= "//button[@data-qa-id='applicationsMenu']"); 
+        }
+        task ("Opening the ctrl panel"){
+        CreatingXPath.openCTRLPanel();
+        //Click(locator1= "//li[contains(@id,'ProductNavigationApplicationsMenuPortlet_tab_2')]");
+        }
+        task ("Checking if the term is present"){
+        CreatingXPath.assertTermScreen(key_text= "Configuration");
+        // AssertElementPresent(
+        //     locator1= "CreatingXPath#LOCAL_SCREEN_CONFIGURATION",
+        //     text= "Users");
+        // }
+    }
+    }
+
+    @description = "Set Screen size to custom and validate values"
+    @priority = "5"
+    test SetScreenSizeAndValidateValues {
+
+        
+        CreatingXPath.openSimulationMenu();
+        // Click(locator1= "//a[@data-qa-id='simulation']");
+
+        CreatingXPath.openCustom();
+        // Click(locator1= "//button[@data-device='custom']");
+
+        CreatingXPath.setScreenDimension(
+            text= "height",
+            valor="1920");
+        CreatingXPath.setScreenDimension(
+            text= "width",
+            valor= "1080");
+        // Type(
+		// 		locator1 = "//input[contains(@id,'SimulationPortlet_height')]",
+		// 		value1 = "1920");
+
+        // Type(
+		// 		locator1 = "//input[contains(@id,'SimulationPortlet_width')]",
+		// 		value1 = "1080");    
+
+        CreatingXPath.closeSimulation();
+        // Click(locator1= "//a[@class='close sidenav-close']"); 
+
+        CreatingXPath.openSimulationMenu();
+        // Click(locator1= "//a[@data-qa-id='simulation']");
+        
+        CreatingXPath.checkDimension(
+            key_heightvalue="1920",
+            key_widthvalue="1080"); 
+        // AssertElementPresent(
+        //     locator1="CreatingXPath#MODAL",
+        //     widthvalue="1080",
+        //     heightvalue= "1920");
+
+    }
+}

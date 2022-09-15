@@ -1,0 +1,48 @@
+definition{
+
+    macro openAppMenu{
+      Click(locator1= "CreatingXPath#MENU_BUTTON");
+        
+    }
+
+    macro openCTRLPanel{
+        Click(locator1= "CreatingXPath#CONTROL_PANEL_BUTTON");
+
+    }
+
+    macro assertTermScreen{
+        AssertElementPresent(
+            locator1="CreatingXPath#LOCAL_SCREEN_CONFIGURATION",
+            text="${text}");
+        
+    }
+
+    macro openSimulationMenu{
+         Click(locator1= "CreatingXPath#SIMULATION_BUTTON");
+    }
+
+    macro openCustom{
+        Click(locator1= "CreatingXPath#CUSTOM_BUTTON");
+    }
+
+    macro setScreenDimension{
+    Type(
+        locator1= "CreatingXPath#CUSTOM_FIELD",
+        key_text= "${text}",
+        value1="${valor}");
+   
+    }
+
+    macro closeSimulation{
+        Click(locator1= "CreatingXPath#CLOSE_SIMULATION_BUTTON");
+    }
+
+    macro checkDimension{
+        AssertElementPresent(
+            locator1= "CreatingXPath#MODAL",
+            key_heightvalue="${heightvalue}",  
+            key_widthvalue= "${widthvalue}");
+
+    }
+
+}

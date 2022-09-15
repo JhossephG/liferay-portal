@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>CreatingXPath</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">CreatingXPath</td></tr>
+</thead>
+
+<tbody>
+
+<tr>
+	<td>MENU_BUTTON</td>
+	<td>//button[@data-qa-id='applicationsMenu']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CONTROL_PANEL_BUTTON</td>
+	<td>//li[contains(@id,'ProductNavigationApplicationsMenuPortlet_tab_2')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>LOCAL_SCREEN_CONFIGURATION</td>
+	<td>//h2[contains(text(), '${key_text}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CUSTOM_FIELD</td>
+	<td>//input[contains(@id,'SimulationPortlet_${key_text}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>SIMULATION_BUTTON</td>
+	<td>//a[@data-qa-id='simulation']</td>
+	<td></td>
+</tr>
+
+
+<tr>
+	<td>CUSTOM_BUTTON</td>
+	<td>//button[@data-device='custom']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CLOSE_SIMULATION_BUTTON</td>
+	<td>//a[@class='close sidenav-close']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>MODAL</td>
+	<td>//div[contains(@style,'height: ${key_heightvalue}px; width: ${key_widthvalue}px;')]</td>
+	<td></td>
+</tr>
+
+</tbody>
+</table>
+</body>
+</html>
