@@ -1,0 +1,111 @@
+@component-name = "portal-web-forms-and-data-lists"
+definition {
+    property testray.main.component.name = "Forms";
+
+setUp{
+        TestCase.setUpPortalInstance();
+
+        User.firstLoginPG();
+
+        Navigator.openURL();
+    }
+
+tearDown{
+        User.logoutAndLoginPG(
+            userLoginEmailAddress = "test@liferay.com",
+            userLoginFullName = "Test Test");
+    }
+
+@description = "Access Forms"
+    @priority = "5"
+    test ValidateFormsEnglishPortuguese {
+
+        FormsAdmin.addForm();//abrir forms
+
+        Form.editName(formName = "My Form");//alterarando titulo do form
+
+        Form.gotoAddField(fieldType = "Text");//arrastar field text
+
+        Form.editFieldLabelMetal(fieldValue = "Full name");//alterar texto do label FULL NAME
+
+        Form.closeSidebar();//close sidebar
+
+        Form.gotoAddField(fieldType = "Numeric");  //arrastar field numeric
+
+        Form.editFieldLabelMetal(fieldValue = "Age");//alterar texto do label para AGE
+
+        Form.addTranslation(localizedLanguage = "Portuguese (Brazil)");//add forms em portugues
+         
+        //parte em portugues
+
+        Form.editName(formName = "Meu formulario");//alterando titulo do forms para portugues
+
+        FormViewBuilder.editFieldLabel( 
+            fieldLabel = "Age",
+            label = "Idade");//trocando label da idade de ingles para portugues
+        
+        FormViewBuilder.editFieldLabel(
+            fieldLabel = "Full name",
+            label = "Nome completo");//trocando label do nome de ingles para portugues
+
+        Form.publishForm();//publicar form
+        
+        FormsAdminNavigator.gotoPublishedForm();//ir ate o form
+        
+        FormViewBuilder.validateTranslatedField(fieldLabel = "Full name");//verificar nome
+        FormViewBuilder.validateTranslatedField(fieldLabel = "Age");//verificar idade
+
+        FormViewBuilder.changeAppLanguageTo(changeAppLanguageTo = "en-US");//primeiro click
+        FormViewBuilder.changeAppLanguageTo(changeAppLanguageTo = "português-Brasil");//segundo click para efetuar a troca
+
+        FormViewBuilder.validateTranslatedField(fieldLabel = "Nome completo");//verificar nome
+        FormViewBuilder.validateTranslatedField(fieldLabel = "Idade");//verificar idade
+
+        FormPortlet.waitFormRenderer(text = "Submit");//aguardar a pagina renderizar
+
+        FormFields.editText(
+			fieldName = "Idade",
+			fieldValue = "15");//preencher field "Idade" do forms
+
+        FormFields.editText(
+			fieldName = "Nome completo",
+			fieldValue = "Jose");//preencher field "Nome completo" do forms
+
+		FormPortlet.clickSubmit();//submit form
+
+        Form.submitAgain();//voltar para aba de preenchimento do forms
+
+        FormViewBuilder.changeAppLanguageTo(changeAppLanguageTo = "pt-BR");//primeiro click para efetuar a troca de idioma
+        
+        FormViewBuilder.changeAppLanguageTo(changeAppLanguageTo = "english-United States");//segundo click para efetuar a troca de idioma
+
+        FormPortlet.waitFormRenderer(text = "Submit");//aguardar a pagina renderizar
+
+        FormFields.editText(
+			fieldName = "Age",
+			fieldValue = "20");//preencher field "Age" do forms
+
+        FormFields.editText(
+			fieldName = "Full name",
+			fieldValue = "Josh");//preencher field "Full name" do forms
+            
+        FormPortlet.clickSubmit();//submit form
+
+        //FormsAdmin.addForm();//retorna para a tela inicial do forms
+
+        FormsAdminNavigator.closePublishedFormWindow();//fechar aba de submissao do forms
+
+        FormsAdminNavigator.gotoViewEntries();//mudar para a parte de ver entradas
+
+        LexiconEntry.viewEntryContentForms(
+				flagName = "pt-br",
+                rowAny = "Jose",
+				rowEntry = "15");
+
+        LexiconEntry.viewEntryContentForms(
+				flagName = "en-us",
+                rowAny = "Josh",
+				rowEntry = "20");
+        }
+
+}
