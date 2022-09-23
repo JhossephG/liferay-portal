@@ -1,0 +1,65 @@
+@component-name = "portal-lima"
+definition {
+    property portal.acceptance = "true";
+    property portal.release = "true";
+    property portal.upstream = "true";
+    property testray.main.component.name = "Blogs";
+    setUp {
+		task("criar instancia do portal e logar"){
+        TestCase.setUpPortalInstance();
+        User.firstLoginPG();
+		}
+		
+		task(task"criar pagina do blog e adicionar widget na pagina"){
+        JSONLayout.addPublicLayout(
+            groupName = "Guest",
+            layoutName = "Blogs Page");
+        JSONLayout.addWidgetToPublicLayout(
+            column = "1",
+            groupName = "Guest",
+            layoutName = "Blogs Page",
+            widgetName = "Blogs");
+		}
+
+		task("ir ate o blog e adicionar conteudo e titulo"){	
+        Navigator.gotoPage(pageName = "Blogs Page");
+        Blogs.addEntry(
+        entryContent = "Blogs Entry Content",
+        entryTitle = "Blogs Entry Title");
+		}
+		
+		task("verificar conteudo e titulo do blog"){
+        BlogsEntry.viewPG(
+            entryContent = "Blogs Entry Content",
+            entryTitle = "Blogs Entry Title");
+		}
+    }
+
+    tearDown {
+        var testPortalInstance = PropsUtil.get("test.portal.instance");
+        if ("${testPortalInstance}" == "true") {
+            PortalInstances.tearDownCP();
+        }
+        else {
+            BlogsEntry.tearDownCP();
+            Blogs.tearDownConfigurationDisplaySettingsPG(
+                pageName = "Blogs Page",
+                portletName = "Blogs");
+            JSONLayout.deletePublicLayout(
+                groupName = "Guest",
+                layoutName = "Blogs Page");
+        }
+    }
+    
+    test CanDeleteBlog{
+        task("Delete blog"){
+        Blogs.addEntry(
+        entryContent = "Blogs Entry Content2",
+        entryTitle = "Blogs Entry Title2");
+        BlogsEntry.moveToRecycleBinPG(
+            entryContent = "Blogs Entry Content2",
+            entryTitle = "Blogs Entry Title2");
+        BlogsEntry.viewNoPG(entryTitle = "Blogs Entry Title2");
+        }
+    }
+}
