@@ -32,7 +32,6 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title");
 		}
-		
 	}
 
 	tearDown {
@@ -65,10 +64,11 @@ definition {
 				entryTitle = "Blogs Entry Title2");
 
 			BlogsEntry.viewNoPG(entryTitle = "Blogs Entry Title2");
-			
+
 			BlogsEntry.viewEntryPG(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title");
+		}
 	}
-	}
+
 }
