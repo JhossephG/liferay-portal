@@ -32,12 +32,7 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title");
 		}
-
-		task ("verificar conteudo e titulo do blog") {
-			BlogsEntry.viewPG(
-				entryContent = "Blogs Entry Content",
-				entryTitle = "Blogs Entry Title");
-		}
+		
 	}
 
 	tearDown {
@@ -70,7 +65,10 @@ definition {
 				entryTitle = "Blogs Entry Title2");
 
 			BlogsEntry.viewNoPG(entryTitle = "Blogs Entry Title2");
-		}
+			
+			BlogsEntry.viewEntryPG(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title");
 	}
-
+	}
 }
