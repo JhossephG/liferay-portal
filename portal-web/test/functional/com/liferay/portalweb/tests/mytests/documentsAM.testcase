@@ -9,32 +9,30 @@ definition {
 	var pageName = "Documents and Media Page";
 	var portletName = "Documents and Media";
 
+	setUp {
+		task ("Create portal instance and login") {
+			TestCase.setUpPortalInstance();
 
-    setUp{
-        task("Create portal instance and login"){
-		TestCase.setUpPortalInstance();
-
-		User.firstLoginPG();
+			User.firstLoginPG();
 		}
 
-		task("Create page of DM"){
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Documents and Media Page");
-		}	
+		task ("Create page of DM") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
 
-		task("Add a widget for DM type"){
-		JSONLayout.addWidgetToPublicLayout(
-			column = "1",
-			groupName = "Guest",
-			layoutName = "Documents and Media Page",
-			widgetName = "Documents and Media");
+		task ("Add a widget for DM type") {
+			JSONLayout.addWidgetToPublicLayout(
+				column = "1",
+				groupName = "Guest",
+				layoutName = "Documents and Media Page",
+				widgetName = "Documents and Media");
 		}
 	}
 
-
-    tearDown{
-        var testPortalInstance = PropsUtil.get("test.portal.instance");
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
@@ -47,29 +45,28 @@ definition {
 				layoutName = "Documents and Media Page");
 		}
 	}
-    
 
-    @description = "Creating a DM"
+	@description = "Creating a DM"
 	@priority = "5"
 	test CanCreateDM {
+		task ("Go to the page DM") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Documents and Media");
+		}
 
-	task("Go to the page DM"){
-	ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Documents and Media");
+		task ("Add a image in the DM page") {
+			DMDocument.addCP(
+				dmDocumentDescription = "Document Description",
+				dmDocumentFile = "itachi.jpg",
+				dmDocumentTitle = "itachi image");
+		}
+
+		task ("Go to the image in the document and assert") {
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "itachi image");
+
+			DMDocument.viewCP(dmDocumentTitle = "itachi image");
+		}
 	}
 
-	task("Add a image in the DM page"){
-	DMDocument.addCP(
-			dmDocumentDescription = "Document Description",
-			dmDocumentFile = "itachi.jpg",
-			dmDocumentTitle = "itachi image");
-	}
-
-	task("Go to the image in the document and assert"){
-	DMNavigator.gotoDocumentCP(dmDocumentTitle = "itachi image");
-
-	DMDocument.viewCP(dmDocumentTitle = "itachi image");		
-	}
-	}
 }
