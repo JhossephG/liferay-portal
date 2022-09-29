@@ -38,10 +38,10 @@ definition {
 
 		task ("Add a image in the DM page") {
 			JSONDocument.addFileWithUploadedFile(
-            dmDocumentTitle = "high resolution image",
-            groupName = "Guest",
-            mimeType = "image/jpeg",
-            sourceFileName = "high_resolution_photo.jpg"); 
+				dmDocumentTitle = "high resolution image",
+				groupName = "Guest",
+				mimeType = "image/jpeg",
+				sourceFileName = "high_resolution_photo.jpg");
 		}
 	}
 
@@ -64,18 +64,19 @@ definition {
 	@priority = "5"
 	test CanEditDM {
 		task ("Edit the contents of the DM") {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-		DMDocument.editCP(
-			dmDocumentFileEdit = "high_resolution_photo.jpg",
-			dmDocumentFileNameEdit = "high_resolution_foto.jpg",
-			dmDocumentTitle = "high resolution image",
-			dmDocumentTitleEdit = "high resolution imagem");	
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.editCP(
+				dmDocumentFileEdit = "high_resolution_photo.jpg",
+				dmDocumentFileNameEdit = "high_resolution_foto.jpg",
+				dmDocumentTitle = "high resolution image",
+				dmDocumentTitleEdit = "high resolution imagem");
 		}
 
 		task ("Go to the image in the document and assert") {
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "high resolution imagem");
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "high resolution imagem");
 
-		DMDocument.viewCP(dmDocumentTitle = "high resolution imagem");
+			DMDocument.viewCP(dmDocumentTitle = "high resolution imagem");
 		}
 	}
 
