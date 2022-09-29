@@ -1,65 +1,82 @@
 @component-name = "portal-document-management"
 definition {
-    property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
-    property portal.release = "true";
-    property portal.upstream = "true";
-    property testray.main.component.name = "Document Management";
-    var pageName = "Documents and Media Page";
-    var portletName = "Documents and Media";
-    setUp {
-        task ("Create portal instance and login") {
-            TestCase.setUpPortalInstance();
-            User.firstLoginPG();
-        }
-        task ("Create page of DM") {
-            JSONLayout.addPublicLayout(
-                groupName = "Guest",
-                layoutName = "Documents and Media Page");
-        }
-        task ("Add a widget for DM type") {
-            JSONLayout.addWidgetToPublicLayout(
-                column = "1",
-                groupName = "Guest",
-                layoutName = "Documents and Media Page",
-                widgetName = "Documents and Media");
-        }
-        task ("Go to the page DM") {
-            ProductMenu.gotoPortlet(
-                category = "Content & Data",
-                portlet = "Documents and Media");
-        }
-        task ("Add a image in the DM page") {
-            DMDocument.addCP(
-                dmDocumentDescription = "Document Description",
-                dmDocumentFile = "high_resolution_photo.jpg",
-                dmDocumentTitle = "high_resolution_photo");
-        }
-    }
-    tearDown {
-        var testPortalInstance = PropsUtil.get("test.portal.instance");
-        if ("${testPortalInstance}" == "true") {
-            PortalInstances.tearDownCP();
-        }
-        else {
-            DMDocument.tearDownCP();
-            JSONLayout.deletePublicLayout(
-                groupName = "Guest",
-                layoutName = "Documents and Media Page");
-        }
-    }
-    @description = "Editing a DM"
-    @priority = "5"
-    test CanEditDM {
-        task ("Edit the contents of the DM"){      
-        DMDocument.editCP(
-        dmDocumentFileEdit = "high_resolution_photo.jpg",
-        dmDocumentFileNameEdit = "marketplace_icon.png",
-        dmDocumentTitle = "high_resolution_photo",
-        dmDocumentTitleEdit = "marketplace_icon");
-        }
-        task ("Go to the image in the document and assert") {
-            DMNavigator.gotoDocumentCP(dmDocumentTitle = "marketplace_icon");
-            DMDocument.viewCP(dmDocumentTitle = "marketplace_icon");
-        }
-    }
+
+	property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Document Management";
+
+	var pageName = "Documents and Media Page";
+	var portletName = "Documents and Media";
+
+	setUp {
+		task ("Create portal instance and login") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+		}
+
+		task ("Create page of DM") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
+
+		task ("Add a widget for DM type") {
+			JSONLayout.addWidgetToPublicLayout(
+				column = "1",
+				groupName = "Guest",
+				layoutName = "Documents and Media Page",
+				widgetName = "Documents and Media");
+		}
+
+		task ("Go to the page DM") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Documents and Media");
+		}
+
+		task ("Add a image in the DM page") {
+			JSONDocument.addFileWithUploadedFile(
+            dmDocumentTitle = "high resolution image",
+            groupName = "Guest",
+            mimeType = "image/jpeg",
+            sourceFileName = "high_resolution_photo.jpg"); 
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			DMDocument.tearDownCP();
+
+			JSONLayout.deletePublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
+	}
+
+	@description = "Editing a DM"
+	@priority = "5"
+	test CanEditDM {
+		task ("Edit the contents of the DM") {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+		DMDocument.editCP(
+			dmDocumentFileEdit = "high_resolution_photo.jpg",
+			dmDocumentFileNameEdit = "high_resolution_foto.jpg",
+			dmDocumentTitle = "high resolution image",
+			dmDocumentTitleEdit = "high resolution imagem");	
+		}
+
+		task ("Go to the image in the document and assert") {
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "high resolution imagem");
+
+		DMDocument.viewCP(dmDocumentTitle = "high resolution imagem");
+		}
+	}
+
 }
