@@ -58,14 +58,14 @@ definition {
 		task ("Add a image in the DM page") {
 			DMDocument.addCP(
 				dmDocumentDescription = "Document Description",
-				dmDocumentFile = "itachi.jpg",
-				dmDocumentTitle = "itachi image");
+				dmDocumentFile = "high_resolution_photo.jpg",
+				dmDocumentTitle = "high_resolution_photo");
 		}
 
 		task ("Go to the image in the document and assert") {
-			DMNavigator.gotoDocumentCP(dmDocumentTitle = "itachi image");
+			DMNavigator.gotoDocumentCP(dmDocumentTitle = "high_resolution_photo");
 
-			DMDocument.viewCP(dmDocumentTitle = "itachi image");
+			DMDocument.viewCP(dmDocumentTitle = "high_resolution_photo");
 		}
 	}
 
