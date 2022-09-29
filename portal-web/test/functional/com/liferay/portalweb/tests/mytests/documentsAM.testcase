@@ -1,86 +1,105 @@
 @component-name = "portal-document-management"
 definition {
-    property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
-    property portal.release = "true";
-    property portal.upstream = "true";
-    property testray.main.component.name = "Document Management";
-    var pageName = "Documents and Media Page";
-    var portletName = "Documents and Media";
-    setUp {
-        task ("Create portal instance and login") {
-            TestCase.setUpPortalInstance();
-            User.firstLoginPG();
-        }
-        task ("Create page of DM") {
-            JSONLayout.addPublicLayout(
-                groupName = "Guest",
-                layoutName = "Documents and Media Page");
-        }
-        task ("Add a widget for DM type") {
-            JSONLayout.addWidgetToPublicLayout(
-                column = "1",
-                groupName = "Guest",
-                layoutName = "Documents and Media Page",
-                widgetName = "Documents and Media");
-        }
-        task ("Go to the page DM") {
-            ProductMenu.gotoPortlet(
-                category = "Content & Data",
-                portlet = "Documents and Media");
-        }
-        task ("Add a image in the DM page") {
-			JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "imagem 1",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "high_resolution_photo.jpg");	
-        }
-    }
-    tearDown {
-        var testPortalInstance = PropsUtil.get("test.portal.instance");
-        if ("${testPortalInstance}" == "true") {
-            PortalInstances.tearDownCP();
-        }
-        else {
-            DMDocument.tearDownCP();
-            JSONLayout.deletePublicLayout(
-                groupName = "Guest",
-                layoutName = "Documents and Media Page");
-        }
-    }
-	@description = "Editing a DM"
-    @priority = "5"
-    test CanDeleteDM {
+
+	property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Document Management";
+
+	var pageName = "Documents and Media Page";
+	var portletName = "Documents and Media";
+
+	setUp {
+		task ("Create portal instance and login") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+		}
+
 		task ("Create page of DM") {
-            JSONLayout.addPublicLayout(
-                groupName = "Guest",
-                layoutName = "Documents and Media Page");
-        }
-        task ("Add a widget for DM type") {
-            JSONLayout.addWidgetToPublicLayout(
-                column = "1",
-                groupName = "Guest",
-                layoutName = "Documents and Media Page",
-                widgetName = "Documents and Media");
-        }
-        task ("Go to the page DM") {
-            ProductMenu.gotoPortlet(
-                category = "Content & Data",
-                portlet = "Documents and Media");
-        }
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
+
+		task ("Add a widget for DM type") {
+			JSONLayout.addWidgetToPublicLayout(
+				column = "1",
+				groupName = "Guest",
+				layoutName = "Documents and Media Page",
+				widgetName = "Documents and Media");
+		}
+
+		task ("Go to the page DM") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Documents and Media");
+		}
+
 		task ("Add a image in the DM page") {
-            JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "imagem 2",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_1.jpg");
-		}
-		task("Deleting the image 1"){
-			DMDocument.deleteCP(dmDocumentTitle = "imagem 1");
-		}
-		task("Open the document and assert"){
-		DMNavigator.gotoDocumentPG(dmDocumentTitle = "imagem 2");
-		DMDocument.viewCP(dmDocumentTitle = "imagem 2");
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "imagem 1",
+				groupName = "Guest",
+				mimeType = "image/jpeg",
+				sourceFileName = "high_resolution_photo.jpg");
 		}
 	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			DMDocument.tearDownCP();
+
+			JSONLayout.deletePublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
+	}
+
+	@description = "Editing a DM"
+	@priority = "5"
+	test CanDeleteDM {
+		task ("Create page of DM") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Documents and Media Page");
+		}
+
+		task ("Add a widget for DM type") {
+			JSONLayout.addWidgetToPublicLayout(
+				column = "1",
+				groupName = "Guest",
+				layoutName = "Documents and Media Page",
+				widgetName = "Documents and Media");
+		}
+
+		task ("Go to the page DM") {
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Documents and Media");
+		}
+
+		task ("Add a image in the DM page") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "imagem 2",
+				groupName = "Guest",
+				mimeType = "image/jpeg",
+				sourceFileName = "Document_1.jpg");
+		}
+
+		task ("Deleting the image 1") {
+			DMDocument.deleteCP(dmDocumentTitle = "imagem 1");
+		}
+
+		task ("Open the document and assert") {
+			DMNavigator.gotoDocumentPG(dmDocumentTitle = "imagem 2");
+
+			DMDocument.viewCP(dmDocumentTitle = "imagem 2");
+		}
+	}
+
 }
