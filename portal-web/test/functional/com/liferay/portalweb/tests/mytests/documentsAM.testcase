@@ -75,20 +75,20 @@ definition {
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
 				portlet = "Documents and Media");
-		}		
+		}
 
 		task ("Deleting the image 1") {
 			DMDocument.deleteCP(dmDocumentTitle = "imagem 1");
+		}
+
+		task ("Assert that the image 1 has deleted") {
+			DMDocument.cannotViewCP(dmDocumentTitle = "imagem 1");
 		}
 
 		task ("Open the document and assert if is here") {
 			DMNavigator.gotoDocumentPG(dmDocumentTitle = "imagem 2");
 
 			DMDocument.viewCP(dmDocumentTitle = "imagem 2");
-		}
-
-		task("Assert that the image 2 has deleted"){
-			DMDocument.cannotViewCP(dmDocumentTitle = "imagem 1");
 		}
 	}
 
