@@ -76,7 +76,11 @@ definition {
 		task ("Go to the image in the document and assert") {
 			DMNavigator.gotoDocumentCP(dmDocumentTitle = "high resolution imagem");
 
-			DMDocument.viewCP(dmDocumentTitle = "high resolution imagem");
+			DMDocument.viewCP(
+				dmDocumentFile = "high_resolution_foto.jpg",
+				dmDocumentFileName = "high_resolution_foto.jpg",
+				dmDocumentTitle = "high resolution imagem");
+	
 		}
 	}
 
