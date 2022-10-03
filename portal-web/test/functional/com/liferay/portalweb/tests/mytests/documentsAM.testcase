@@ -80,7 +80,6 @@ definition {
 				dmDocumentFile = "high_resolution_foto.jpg",
 				dmDocumentFileName = "high_resolution_foto.jpg",
 				dmDocumentTitle = "high resolution imagem");
-	
 		}
 	}
 
