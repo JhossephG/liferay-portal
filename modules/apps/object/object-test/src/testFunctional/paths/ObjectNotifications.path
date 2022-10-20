@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>ObjectNotifications</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">ObjectNotifications</td></tr>
+</thead>
+
+<tbody>
+	<tr>
+		<td>DELETE_QUEUE_STATUS_UNSENT_BUTTON</td>
+		<td>//div[@class='dnd-td']//strong[contains(.,'Unsent')]</td>
+		<td></td>
+	</tr>
+</tbody>
+</table>
+</body>
+</html>

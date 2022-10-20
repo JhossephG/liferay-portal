@@ -83,6 +83,86 @@ definition {
 		}
 	}
 
+	@description = "LPS-161922 - Verify that it's possible to delete a notification"
+	@priority = "3"
+	test CanDeleteNotification {
+		task ("Given a template is created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Notifications",
+				panel = "Control Panel",
+				portlet = "Templates");
+
+			ObjectNotifications.addNewNotificationTemplate(
+				emailBody = "Email Body",
+				entryTo = "test@liferay.com",
+				fromAddress = "Liferay",
+				fromName = "Test Test",
+				name = "Notification Template",
+				subject = "Subject");
+
+			Button.clickSave();
+		}
+
+		task ("When an Object and a attachment field is created") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161922",
+				objectName = "CustomObject161922",
+				pluralLabelName = "Custom Objects 161922");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject161922");
+		}
+
+		task ("And go to the actions tab in the object created") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161922");
+
+			ObjectAdmin.goToActionsTab();
+		}
+
+		task ("Add a action linked at the template that was created and publish the object") {
+			ObjectAdmin.addObjectActionViaUI(
+				actionName = "Custom Action",
+				active = "true",
+				inputMethod = "true",
+				inputValue = "Action shot on add",
+				notificationName = "Notification Template",
+				objectLabel = "Custom Object 161922",
+				thenAction = "Notification",
+				whenAction = "On After Add");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161922");
+		}
+
+		task ("Add a entry in the object") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject161922",
+				value = "Entry A");
+		}
+
+		task ("Go to the Queue tab") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Notifications",
+				panel = "Control Panel",
+				portlet = "Queue");
+		}
+
+		task ("Then delete the notification and assert assert the notification is no longer showed") {
+			ObjectNotifications.deleteQueue(triggerBy = "CustomObject161922");
+
+			AssertElementNotPresent(
+				key_text = "CustomObject161922",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+	}
+
 	@description = "LPS-161918 - Verify that it's possible to edit an e-mail notification template"
 	@priority = "3"
 	test CanEditEmailTemplate {
