@@ -105,25 +105,23 @@ definition {
 	@description = "LPS-161928 - Verify that it's possible to delete attachments to the notification template"
 	@priority = "3"
 	test CanDeleteAttachment {
-		task ("Creating a object and a attachment field") {
+		task ("Given an object with an attachment field is created") {
 			ObjectAdmin.addObjectViaAPI(
-				labelName = "Custom Object 161924",
-				objectName = "CustomObject161924",
-				pluralLabelName = "Custom Objects 161924");
+				labelName = "Custom Object 161928",
+				objectName = "CustomObject161928",
+				pluralLabelName = "Custom Objects 161928");
 
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectPortlet.selectCustomObject(label = "Custom Object 161924");
-
-			ObjectAdmin.goToFieldsTab();
-
-			ObjectAdmin.addObjectFieldViaUI(
-				fieldAttachment = "Upload Directly from the User's Computer",
-				fieldLabel = "Custom Attachment",
-				fieldType = "Attachment");
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Attachment",
+				fieldLabelName = "From Computer And Show Files In DM",
+				fieldName = "fromComputerAndShowFilesInDM",
+				fieldType = "Long",
+				fileSource = "userComputer",
+				isRequired = "false",
+				objectName = "CustomObject161928");
 		}
 
-		task ("Opening the templates and adding infos") {
+		task ("And given a notification template is created") {
 			ApplicationsMenu.gotoPortlet(
 				category = "Notifications",
 				panel = "Control Panel",
@@ -135,13 +133,23 @@ definition {
 				name = "Notification Template");
 		}
 
-		task ("Adding the attachment and saving") {
-			ObjectNotifications.addNotificationTemplateAttachment();
+		task ("And given an attachment is added to the notification template") {
+			ObjectNotifications.addNotificationTemplateAttachment(objectLabel = "Custom Object 161928");
 
 			Button.clickSave();
 		}
 
-		task ("Asserting that attachment has deleted") {
+		task ("When the attachment is deleted from the notification template") {
+			Click(
+				key_objectLabel = "Notification Template",
+				locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
+
+			MenuItem.clickNoError(menuItem = "View");
+
+			Click(locator1 = "ObjectNotifications#DELETE_ATTACHMENT_BUTTON");
+		}
+
+		task ("Then the attachment shouldn't be present in the notification template") {
 			AssertElementNotPresent(locator1 = "ObjectNotifications#FIELD_ATTACHMENTS_OBJECT");
 		}
 	}
