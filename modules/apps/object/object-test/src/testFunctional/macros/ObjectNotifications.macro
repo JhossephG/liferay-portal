@@ -90,4 +90,12 @@ definition {
 		}
 	}
 
+	macro resendNotificationInTheQueue {
+		Click(
+			key_text = "${triggerBy}",
+			locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Resend");
+	}
+
 }

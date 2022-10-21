@@ -124,6 +124,84 @@ definition {
 		}
 	}
 
+	@description = "LPS-161921 - Verify that it's possible to resend a notification"
+	@priority = "3"
+	test CanResendNotification {
+		task ("Add a template") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Notifications",
+				panel = "Control Panel",
+				portlet = "Templates");
+
+			ObjectNotifications.addNewNotificationTemplate(
+				emailBody = "Email Body",
+				entryTo = "test@liferay.com",
+				fromAddress = "Liferay",
+				fromName = "Test Test",
+				name = "Notification Template",
+				subject = "Subject");
+
+			Button.clickSave();
+		}
+
+		task ("Create an Object and add an attachment field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161921",
+				objectName = "CustomObject161921",
+				pluralLabelName = "Custom Objects 161921");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject161921");
+		}
+
+		task ("Go to the actions tab in the object created") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161921");
+
+			ObjectAdmin.goToActionsTab();
+		}
+
+		task ("Add a action linked at the template that was created and publish the object") {
+			ObjectAdmin.addObjectActionViaUI(
+				actionName = "Custom Action",
+				active = "true",
+				inputMethod = "true",
+				inputValue = "Action shot on add",
+				notificationName = "Notification Template",
+				objectLabel = "Custom Object 161921",
+				thenAction = "Notification",
+				whenAction = "On After Add");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161921");
+		}
+
+		task ("Add a entry in the object") {
+			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+				fieldName = "customObjectField",
+				objectName = "CustomObject161921",
+				value = "Entry A");
+		}
+
+		task ("Go to the Queue tab") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Notifications",
+				panel = "Control Panel",
+				portlet = "Queue");
+		}
+
+		task ("Resend the notification") {
+			ObjectNotifications.resendNotificationInTheQueue(triggerBy = "CustomObject161921");
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
 	@description = "LPS-161923 - Verify that it's possible to search for notifications"
 	@priority = "3"
 	test CanSearchForNotifications {

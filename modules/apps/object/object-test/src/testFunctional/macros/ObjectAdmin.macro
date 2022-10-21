@@ -66,6 +66,7 @@ definition {
 			inputExpression = "${inputExpression}",
 			inputMethod = "${inputMethod}",
 			inputValue = "${inputValue}",
+			notificationName = "${notificationName}",
 			notRefreshAttribute = "true",
 			objectLabel = "${objectLabel}",
 			scriptValidation = "${scriptValidation}",
