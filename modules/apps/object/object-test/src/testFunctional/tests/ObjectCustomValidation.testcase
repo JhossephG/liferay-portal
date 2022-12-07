@@ -689,6 +689,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "2004");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -698,6 +700,8 @@ definition {
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "2022");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156688");
 
@@ -1102,6 +1106,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "54321");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -1111,6 +1117,8 @@ definition {
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "12345");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156693");
 
@@ -1142,6 +1150,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "13579");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -1151,6 +1161,8 @@ definition {
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "24680");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156693");
 
@@ -1213,6 +1225,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "4999");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -1223,11 +1237,15 @@ definition {
 				customField = "Custom Integer",
 				entry = "5000");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			Navigator.gotoBack();
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "5001");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156696");
 
@@ -1292,6 +1310,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "5001");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -1302,11 +1322,15 @@ definition {
 				customField = "Custom Integer",
 				entry = "5000");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			Navigator.gotoBack();
 
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "4999");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject156697");
 

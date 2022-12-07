@@ -768,6 +768,14 @@ definition {
 			locator1 = "ObjectAdmin#FIELDS_RADIO_OPTION");
 	}
 
+	macro clickSaveAndWaitLoad {
+		Button.clickSave();
+
+		WaitForSPARefresh();
+
+		WaitForPageLoad();
+	}
+
 	macro createCustomObject {
 		Click(locator1 = "ObjectAdmin#ADD_CUSTOM_OBJECT");
 

@@ -1583,6 +1583,8 @@ definition {
 				customField = "Custom Integer",
 				entry = "123");
 
+			ObjectAdmin.clickSaveAndWaitLoad();
+
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR",
 				value1 = "This entry is not possible.");
@@ -1592,6 +1594,8 @@ definition {
 			ObjectPortlet.addCustomFieldEntryViaUI(
 				customField = "Custom Integer",
 				entry = "2147483647");
+
+			ObjectAdmin.clickSaveAndWaitLoad();
 
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject162179");
 

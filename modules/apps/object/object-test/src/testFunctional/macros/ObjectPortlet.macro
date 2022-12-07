@@ -7,12 +7,6 @@ definition {
 			key_customField = "${customField}",
 			locator1 = "ObjectPortlet#ENTRY_FIELD_GENERIC",
 			value1 = "${entry}");
-
-		Button.clickSave();
-
-		WaitForSPARefresh();
-
-		WaitForPageLoad();
 	}
 
 	macro addSingleFieldEntryViaUI {
