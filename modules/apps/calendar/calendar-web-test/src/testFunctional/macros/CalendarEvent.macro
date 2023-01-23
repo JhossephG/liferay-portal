@@ -381,6 +381,8 @@ definition {
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
 		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
 
+		var startDateTime = StringUtil.replaceFirst("${startDateTime}", " ", "");
+
 		CalendarEvent.selectCalendar(calendarName = "${calendarName}");
 
 		if ("${optionSet}" == "true") {
@@ -410,6 +412,8 @@ definition {
 		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
 		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+
+		var startDateTime = StringUtil.replaceFirst("${startDateTime}", " ", "");
 
 		CalendarEvent.setRepeating(
 			frequency = "${frequency}",
@@ -557,6 +561,8 @@ definition {
 		var endDateTime = selenium.getElementValue("CalendarEditEvent#END_DATE_TIME");
 		var startDate = selenium.getElementValue("CalendarEditEvent#START_DATE");
 		var startDateTime = selenium.getElementValue("CalendarEditEvent#START_DATE_TIME");
+
+		var startDateTime = StringUtil.replaceFirst("${startDateTime}", " ", "");
 
 		CalendarEvent._viewResourcesAvailabilityEvent(
 			endDate = "${endDate}",
