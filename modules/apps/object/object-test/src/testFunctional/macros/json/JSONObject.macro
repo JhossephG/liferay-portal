@@ -514,6 +514,39 @@ definition {
 		}
 	}
 
+	@summary = "This macro calls the Headless API to delete all the notifications template that exists"
+	macro deleteAllNotificationsTemplate {
+		var portalURL = JSONCompany.getPortalURL();
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(userPassword))) {
+			var userPassword = "test";
+		}
+
+		var curl = '''
+			${portalURL}/o/notification/v1.0/notification-templates \
+				-u ${userEmailAddress}:${userPassword}
+		''';
+
+		var notificationTemplateIDList = JSONCurlUtil.get(${curl}, "$.items..id");
+
+		echo("ID's list: ${notificationTemplateIDList}");
+
+		if (${notificationTemplateIDList} != "") {
+			for (var notificationTemplateID : list ${notificationTemplateIDList}) {
+				var curl = '''
+					${portalURL}/o/notification/v1.0/notification-templates/${notificationTemplateID} \
+						-u ${userEmailAddress}:${userPassword}
+				''';
+
+				JSONCurlUtil.delete(${curl});
+			}
+		}
+	}
+
 	@summary = "This calls the JSON WS API to delete all picklists"
 	macro deleteAllPicklists {
 		var portalURL = JSONCompany.getPortalURL();
