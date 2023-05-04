@@ -2952,6 +2952,8 @@ definition {
 	@priority = 4
 	test CanSendEmailWhenPaymentStatusIsUpdated {
 		property test.smtp.server.enabled = "true";
+		property test.name.skip.portal.instance = "ObjectActions#CanSendEmailWhenPaymentStatusIsUpdated";
+        property portal.acceptance = "jhosseph";
 
 		task ("Given an email notification template") {
 			ApplicationsMenu.gotoPortlet(
