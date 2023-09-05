@@ -1,6 +1,8 @@
 Bundle-Name: Liferay Analytics Message Sender API
 Bundle-SymbolicName: com.liferay.analytics.message.sender.api
-Bundle-Version: 11.0.0
+<<<<<<< HEAD
+Bundle-Version: 10.1.0
+>>>>>>> 30428bf (LPS-195290 Baseline)
 Export-Package:\
 	com.liferay.analytics.message.sender.client,\
 	com.liferay.analytics.message.sender.constants,\
