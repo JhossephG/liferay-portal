@@ -1,0 +1,89 @@
+@component-name = "portal-workflow"
+definition {
+
+    property portal.release = "true";
+    property portal.upstream = "true";
+    property testray.main.component.name = "Workflow";
+
+    static var clientExtensionSamples = "";
+    static var companyWebId = "";
+
+    setUp {
+        TestCase.setUpPortalInstance();
+
+        User.firstLoginPG();
+
+        var companyWebId = JSONCompany.getWebId();
+    }
+
+    tearDown {
+        if (isSet(clientExtensionSamples)) {
+            for (var clientExtension : list ${clientExtensionSamples}) {
+                AntCommands.runCommand("build-test-liferay-sample-workspace.xml", "undeploy-workspace-client-extension -Dvirtual.instance.id=${companyWebId} -Dworkspace.client.extension.name=${clientExtension}");
+            }
+
+            var clientExtensionSamples = "";
+        }
+
+        var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+        if (${testLiferayVirtualInstance} == "true") {
+            PortalInstances.tearDownCP();
+        }
+    }   
+
+    @description = "LPS-168892 - Verify it's possible to create the workflow definition called machine approver with workflowAction client extension"
+    @priority = 5
+    test CanApproveEntry {
+        property portal.acceptance = "true";
+
+        task ("Given Liferay Sample Batch and Liferay Sample Etc Spring Boot are deployed into the current virtual instance") {
+            var clientExtensionSamples = "liferay-sample-batch,liferay-sample-etc-spring-boot";
+
+            for (var clientExtension : list ${clientExtensionSamples}) {
+                AntCommands.runCommand("build-test-liferay-sample-workspace.xml", "deploy-workspace-client-extension -Dvirtual.instance.id=${companyWebId} -Dworkspace.client.extension.name=${clientExtension}");
+            }
+        }
+
+        task ("blabla") {
+            // AntCommands.runCommand("build-test-liferay-sample-workspace.xml", "start-liferay-sample-etc-spring-boot -Dvirtual.instance.id=${companyWebId}");
+            var clientExtensionSampless = "liferay-sample-batch,liferay-sample-etc-spring-boot";
+
+            for (var clientExtension : list ${clientExtensionSampless}) {
+                AntCommands.runCommand("build-test-liferay-sample-workspace.xml", "deploy-workspace-client-extension -Dvirtual.instance.id=${companyWebId} -Dworkspace.client.extension.name=${clientExtension}");
+
+            }
+
+            ApplicationsMenu.gotoPortlet(
+            category = "Workflow",
+            panel = "Applications",
+            portlet = "Process Builder");
+
+            CommerceEntry.gotoMenuTab(menuTab = "Configuration");
+
+            Workflow.configureWorkflow(
+                workflowDefinition = "Machinne Approver",
+                workflowResourceValue = "Web Content Article");
+        }
+
+        NavItem.gotoWebContent();   
+
+        JSONWebcontent.addWebContent(
+                content = "Web Content Content",
+                title = "Web Content Title");
+        
+        Refresh();
+
+        WebContent.viewStatus(
+                webContentContent = "Web Content Content",
+                webContentStatus = "Pending",
+                webContentTitle = "Web Content Title");
+
+        Refresh();
+
+        WebContent.viewStatus(
+                webContentContent = "Web Content Content",
+                webContentStatus = "Approved",
+                webContentTitle = "Web Content Title");     
+    }    
+}
