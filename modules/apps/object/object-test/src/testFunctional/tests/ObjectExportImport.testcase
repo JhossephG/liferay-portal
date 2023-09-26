@@ -633,6 +633,91 @@ definition {
 			value1 = "Approved");
 	}
 
+	@description = "LPS-194547 - Verify it is possible to update a definition using the import"
+	@priority = 5
+	test CanUpdateDefinitionWithImport {
+		property custom.properties = "feature.flag.LPS-148856=true";
+
+		task ("Given a custom definition with a text field") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 194547",
+				objectName = "CustomObject194547",
+				pluralLabelName = "Custom Objects 194547");
+
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Text Field",
+				fieldName = "textField",
+				fieldType = "String",
+				isRequired = "false",
+				objectName = "CustomObject194547");
+		}
+
+		task ("and Given the definition is moved to a new created folder") {
+			ObjectAdmin.openObjectAdmin();
+
+			JSONObjectFolder.addFolder(
+				folderLabel = "Custom Folder",
+				folderName = "customFolder");
+
+			Refresh();
+
+			ObjectAdmin.moveDefinitionFolder(
+				definitionName = "Custom Object 194547",
+				folderLabel = "Custom Folder");
+		}
+
+		task ("and When export the definition") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectAdmin.openObjectFolder(folderLabel = "Custom Folder");
+
+			ObjectExportImport.exportObject(
+				objectLabel = "Custom Object 194547",
+				objectName = "CustomObject194547");
+		}
+
+		task ("and When the label from the custom field is edited in the JSON file") {
+			var tempFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "Object_Definition_CustomObject194547*.json");
+			var tempFileDirectory = selenium.getOutputDirName();
+
+			var exportedFileCheck = FileUtil.exists("${tempFileDirectory}/${tempFileName}");
+
+			if (${exportedFileCheck} != "true") {
+				echo("File not found");
+			}
+			else {
+				var fileName = "${tempFileDirectory}/${tempFileName}";
+
+				FileUtil.replaceStringInFile(${fileName}, "Text Field", "Text Field2");
+			}
+		}
+
+		task ("and When import the same definition again") {
+			ObjectExportImport.importObject(
+				objectFileName = "Object_CustomObject194547*",
+				objectName = "CustomObject194547");
+
+			Button.click(button = "Continue");
+		}
+
+		task ("Then the text field label was updated and the definition moved to the Uncategorized folder") {
+			ObjectPortlet.selectCustomObject(label = "Custom Object 194547");
+
+			ObjectAdmin.goToFieldsTab();
+
+			AssertElementPresent(
+				key_label = "Text Field2",
+				locator1 = "ObjectPortlet#SELECT_CUSTOM_OBJECT");
+
+			ObjectAdmin.openObjectAdmin();
+
+			AssertElementPresent(
+				folderLabel = "Uncategorized",
+				locator1 = "ObjectAdmin#FOLDER_LABEL");
+		}
+	}
+
 	@description = "LPS-142175 - Verify that an imported custom object is created with Draft Status"
 	@priority = 4
 	test ImportedObjectIsDraft {
