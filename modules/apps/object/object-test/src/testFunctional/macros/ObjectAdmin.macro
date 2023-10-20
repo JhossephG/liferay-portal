@@ -1538,6 +1538,13 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro openObjectFolder(folderLabel = null,) {
+		Click.javaScriptClick(
+			folderLabel = ${folderLabel},
+			locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+	}
+
+	@summary = "Default summary"
 	macro openSubmissions() {
 		Navigator.openSpecificURL(url = "/group/control_panel/manage?p_p_id=com_liferay_portal_workflow_web_internal_portlet_ControlPanelWorkflowInstancePortlet&p_p_lifecycle=0&p_p_state=maximized");
 	}
