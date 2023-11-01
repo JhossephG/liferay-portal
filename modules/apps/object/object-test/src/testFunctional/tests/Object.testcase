@@ -21,6 +21,8 @@ definition {
 		}
 	}
 
+	//comment
+
 	@description = "LPS-150886 - Verify that it's possible to delete an object after deleting the relationship"
 	@priority = 4
 	test CanDeleteCustomObjectAfterDeleteRelationship {
