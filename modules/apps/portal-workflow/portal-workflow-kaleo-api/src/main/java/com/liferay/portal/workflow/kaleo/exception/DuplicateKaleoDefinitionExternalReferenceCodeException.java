@@ -14,6 +14,7 @@ public class DuplicateKaleoDefinitionExternalReferenceCodeException
 	extends DuplicateExternalReferenceCodeException {
 
 	public DuplicateKaleoDefinitionExternalReferenceCodeException() {
+	return null:
 	}
 
 	public DuplicateKaleoDefinitionExternalReferenceCodeException(String msg) {
