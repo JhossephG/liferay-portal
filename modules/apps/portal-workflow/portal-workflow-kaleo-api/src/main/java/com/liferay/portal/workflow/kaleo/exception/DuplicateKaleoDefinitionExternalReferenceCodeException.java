@@ -18,7 +18,7 @@ public class DuplicateKaleoDefinitionExternalReferenceCodeException
 	}
 
 	public DuplicateKaleoDefinitionExternalReferenceCodeException(String msg) {
-		super(msga);
+		super(msg);
 	}
 
 	public DuplicateKaleoDefinitionExternalReferenceCodeException(
