@@ -736,7 +736,7 @@ paths:
             tags: ["WorkflowDefinition"]
     "/workflow-definitions/by-external-reference-code/{externalReferenceCode}/workflow-definition-links":
         get:
-            operationId: getWorkflowDefinitionLinksByExternalReferenceCode
+            operationId: getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage
             parameters:
                 - in: path
                   name: externalReferenceCode
@@ -766,7 +766,7 @@ paths:
                                 type: array
             tags: ["WorkflowDefinitionLink"]
         post:
-            operationId: postWorkflowDefinitionLinkByExternalReferenceCode
+            operationId: postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink
             parameters:
                 - in: path
                   name: externalReferenceCode
@@ -974,7 +974,7 @@ paths:
             tags: ["WorkflowDefinition"]
     "/workflow-definitions/{workflowDefinitionId}/workflow-definition-links":
         get:
-            operationId: getWorkflowDefinitionLinks
+            operationId: getWorkflowDefinitionWorkflowDefinitionLinksPage
             parameters:
                 - in: path
                   name: workflowDefinitionId
@@ -1005,7 +1005,7 @@ paths:
                                 type: array
             tags: ["WorkflowDefinitionLink"]
         post:
-            operationId: postWorkflowDefinitionLink
+            operationId: postWorkflowDefinitionWorkflowDefinitionLink
             parameters:
                 - in: path
                   name: workflowDefinitionId
