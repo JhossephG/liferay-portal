@@ -187,30 +187,30 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowDefinitionLinksByExternalReferenceCode()
+	public void testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage()
 		throws Exception {
 
 		String externalReferenceCode =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExternalReferenceCode();
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExternalReferenceCode();
 		String irrelevantExternalReferenceCode =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getIrrelevantExternalReferenceCode();
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getIrrelevantExternalReferenceCode();
 
 		Page<WorkflowDefinitionLink> page =
 			workflowDefinitionLinkResource.
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			WorkflowDefinitionLink irrelevantWorkflowDefinitionLink =
-				testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+				testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 					irrelevantExternalReferenceCode,
 					randomIrrelevantWorkflowDefinitionLink());
 
 			page =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						irrelevantExternalReferenceCode,
 						Pagination.of(1, (int)totalCount + 1));
 
@@ -221,21 +221,21 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 				(List<WorkflowDefinitionLink>)page.getItems());
 			assertValid(
 				page,
-				testGetWorkflowDefinitionLinksByExternalReferenceCode_getExpectedActions(
+				testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExpectedActions(
 					irrelevantExternalReferenceCode));
 		}
 
 		WorkflowDefinitionLink workflowDefinitionLink1 =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				externalReferenceCode, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink2 =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				externalReferenceCode, randomWorkflowDefinitionLink());
 
 		page =
 			workflowDefinitionLinkResource.
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
@@ -248,12 +248,12 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 			(List<WorkflowDefinitionLink>)page.getItems());
 		assertValid(
 			page,
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExpectedActions(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExpectedActions(
 				externalReferenceCode));
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExpectedActions(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExpectedActions(
 				String externalReferenceCode)
 		throws Exception {
 
@@ -263,30 +263,30 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowDefinitionLinksByExternalReferenceCodeWithPagination()
+	public void testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPageWithPagination()
 		throws Exception {
 
 		String externalReferenceCode =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExternalReferenceCode();
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExternalReferenceCode();
 
 		Page<WorkflowDefinitionLink> workflowDefinitionLinkPage =
 			workflowDefinitionLinkResource.
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
 			workflowDefinitionLinkPage.getTotalCount());
 
 		WorkflowDefinitionLink workflowDefinitionLink1 =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				externalReferenceCode, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink2 =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				externalReferenceCode, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink3 =
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				externalReferenceCode, randomWorkflowDefinitionLink());
 
 		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
@@ -296,7 +296,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<WorkflowDefinitionLink> page1 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
@@ -310,7 +310,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 			Page<WorkflowDefinitionLink> page2 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
@@ -322,7 +322,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 			Page<WorkflowDefinitionLink> page3 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(
 							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
@@ -335,7 +335,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 		else {
 			Page<WorkflowDefinitionLink> page1 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(1, totalCount + 2));
 
@@ -348,7 +348,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 			Page<WorkflowDefinitionLink> page2 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(2, totalCount + 2));
 
@@ -363,7 +363,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 			Page<WorkflowDefinitionLink> page3 =
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode,
 						Pagination.of(1, (int)totalCount + 3));
 
@@ -380,7 +380,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected WorkflowDefinitionLink
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				String externalReferenceCode,
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
@@ -390,7 +390,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected String
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExternalReferenceCode()
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExternalReferenceCode()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -398,21 +398,21 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected String
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getIrrelevantExternalReferenceCode()
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getIrrelevantExternalReferenceCode()
 		throws Exception {
 
 		return null;
 	}
 
 	@Test
-	public void testPostWorkflowDefinitionLinkByExternalReferenceCode()
+	public void testPostWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink()
 		throws Exception {
 
 		WorkflowDefinitionLink randomWorkflowDefinitionLink =
 			randomWorkflowDefinitionLink();
 
 		WorkflowDefinitionLink postWorkflowDefinitionLink =
-			testPostWorkflowDefinitionLinkByExternalReferenceCode_addWorkflowDefinitionLink(
+			testPostWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink_addWorkflowDefinitionLink(
 				randomWorkflowDefinitionLink);
 
 		assertEquals(randomWorkflowDefinitionLink, postWorkflowDefinitionLink);
@@ -420,7 +420,7 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected WorkflowDefinitionLink
-			testPostWorkflowDefinitionLinkByExternalReferenceCode_addWorkflowDefinitionLink(
+			testPostWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink_addWorkflowDefinitionLink(
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
 
@@ -429,27 +429,32 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowDefinitionLinks() throws Exception {
+	public void testGetWorkflowDefinitionWorkflowDefinitionLinksPage()
+		throws Exception {
+
 		Long workflowDefinitionId =
-			testGetWorkflowDefinitionLinks_getWorkflowDefinitionId();
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getWorkflowDefinitionId();
 		Long irrelevantWorkflowDefinitionId =
-			testGetWorkflowDefinitionLinks_getIrrelevantWorkflowDefinitionId();
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getIrrelevantWorkflowDefinitionId();
 
 		Page<WorkflowDefinitionLink> page =
-			workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-				workflowDefinitionId, Pagination.of(1, 10));
+			workflowDefinitionLinkResource.
+				getWorkflowDefinitionWorkflowDefinitionLinksPage(
+					workflowDefinitionId, Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
 		if (irrelevantWorkflowDefinitionId != null) {
 			WorkflowDefinitionLink irrelevantWorkflowDefinitionLink =
-				testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+				testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 					irrelevantWorkflowDefinitionId,
 					randomIrrelevantWorkflowDefinitionLink());
 
-			page = workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-				irrelevantWorkflowDefinitionId,
-				Pagination.of(1, (int)totalCount + 1));
+			page =
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						irrelevantWorkflowDefinitionId,
+						Pagination.of(1, (int)totalCount + 1));
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
@@ -458,20 +463,22 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 				(List<WorkflowDefinitionLink>)page.getItems());
 			assertValid(
 				page,
-				testGetWorkflowDefinitionLinks_getExpectedActions(
+				testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getExpectedActions(
 					irrelevantWorkflowDefinitionId));
 		}
 
 		WorkflowDefinitionLink workflowDefinitionLink1 =
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink2 =
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
-		page = workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-			workflowDefinitionId, Pagination.of(1, 10));
+		page =
+			workflowDefinitionLinkResource.
+				getWorkflowDefinitionWorkflowDefinitionLinksPage(
+					workflowDefinitionId, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -483,44 +490,56 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 			(List<WorkflowDefinitionLink>)page.getItems());
 		assertValid(
 			page,
-			testGetWorkflowDefinitionLinks_getExpectedActions(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getExpectedActions(
 				workflowDefinitionId));
 	}
 
 	protected Map<String, Map<String, String>>
-			testGetWorkflowDefinitionLinks_getExpectedActions(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getExpectedActions(
 				Long workflowDefinitionId)
 		throws Exception {
 
 		Map<String, Map<String, String>> expectedActions = new HashMap<>();
 
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-admin-workflow/v1.0/workflow-definitions/{workflowDefinitionId}/workflow-definition-links/batch".
+				replace(
+					"{workflowDefinitionId}",
+					String.valueOf(workflowDefinitionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
 		return expectedActions;
 	}
 
 	@Test
-	public void testGetWorkflowDefinitionLinksWithPagination()
+	public void testGetWorkflowDefinitionWorkflowDefinitionLinksPageWithPagination()
 		throws Exception {
 
 		Long workflowDefinitionId =
-			testGetWorkflowDefinitionLinks_getWorkflowDefinitionId();
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getWorkflowDefinitionId();
 
 		Page<WorkflowDefinitionLink> workflowDefinitionLinkPage =
-			workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-				workflowDefinitionId, null);
+			workflowDefinitionLinkResource.
+				getWorkflowDefinitionWorkflowDefinitionLinksPage(
+					workflowDefinitionId, null);
 
 		int totalCount = GetterUtil.getInteger(
 			workflowDefinitionLinkPage.getTotalCount());
 
 		WorkflowDefinitionLink workflowDefinitionLink1 =
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink2 =
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
 		WorkflowDefinitionLink workflowDefinitionLink3 =
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
 		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
@@ -529,11 +548,12 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 		if (totalCount >= (pageSizeLimit - 2)) {
 			Page<WorkflowDefinitionLink> page1 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
-						pageSizeLimit));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
 			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
@@ -542,22 +562,24 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 				(List<WorkflowDefinitionLink>)page1.getItems());
 
 			Page<WorkflowDefinitionLink> page2 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
-						pageSizeLimit));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
 			assertContains(
 				workflowDefinitionLink2,
 				(List<WorkflowDefinitionLink>)page2.getItems());
 
 			Page<WorkflowDefinitionLink> page3 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId,
-					Pagination.of(
-						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
-						pageSizeLimit));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
 			assertContains(
 				workflowDefinitionLink3,
@@ -565,8 +587,9 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 		}
 		else {
 			Page<WorkflowDefinitionLink> page1 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId, Pagination.of(1, totalCount + 2));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId, Pagination.of(1, totalCount + 2));
 
 			List<WorkflowDefinitionLink> workflowDefinitionLinks1 =
 				(List<WorkflowDefinitionLink>)page1.getItems();
@@ -576,8 +599,9 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 				workflowDefinitionLinks1.size());
 
 			Page<WorkflowDefinitionLink> page2 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId, Pagination.of(2, totalCount + 2));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId, Pagination.of(2, totalCount + 2));
 
 			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
 
@@ -589,9 +613,10 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 				workflowDefinitionLinks2.size());
 
 			Page<WorkflowDefinitionLink> page3 =
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId,
-					Pagination.of(1, (int)totalCount + 3));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId,
+						Pagination.of(1, (int)totalCount + 3));
 
 			assertContains(
 				workflowDefinitionLink1,
@@ -606,16 +631,18 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected WorkflowDefinitionLink
-			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_addWorkflowDefinitionLink(
 				Long workflowDefinitionId,
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return workflowDefinitionLinkResource.
+			postWorkflowDefinitionWorkflowDefinitionLink(
+				workflowDefinitionId, workflowDefinitionLink);
 	}
 
-	protected Long testGetWorkflowDefinitionLinks_getWorkflowDefinitionId()
+	protected Long
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getWorkflowDefinitionId()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -623,102 +650,21 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected Long
-			testGetWorkflowDefinitionLinks_getIrrelevantWorkflowDefinitionId()
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getIrrelevantWorkflowDefinitionId()
 		throws Exception {
 
 		return null;
 	}
 
 	@Test
-	public void testGraphQLGetWorkflowDefinitionLinks() throws Exception {
-		Long workflowDefinitionId =
-			testGetWorkflowDefinitionLinks_getWorkflowDefinitionId();
-
-		GraphQLField graphQLField = new GraphQLField(
-			"workflowDefinitionLinks",
-			new HashMap<String, Object>() {
-				{
-					put("page", 1);
-					put("pageSize", 10);
-
-					put("workflowDefinitionId", workflowDefinitionId);
-				}
-			},
-			new GraphQLField("items", getGraphQLFields()),
-			new GraphQLField("page"), new GraphQLField("totalCount"));
-
-		// No namespace
-
-		JSONObject workflowDefinitionLinksJSONObject =
-			JSONUtil.getValueAsJSONObject(
-				invokeGraphQLQuery(graphQLField), "JSONObject/data",
-				"JSONObject/workflowDefinitionLinks");
-
-		long totalCount = workflowDefinitionLinksJSONObject.getLong(
-			"totalCount");
-
-		WorkflowDefinitionLink workflowDefinitionLink1 =
-			testGraphQLGetWorkflowDefinitionLinks_addWorkflowDefinitionLink();
-		WorkflowDefinitionLink workflowDefinitionLink2 =
-			testGraphQLGetWorkflowDefinitionLinks_addWorkflowDefinitionLink();
-
-		workflowDefinitionLinksJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(graphQLField), "JSONObject/data",
-			"JSONObject/workflowDefinitionLinks");
-
-		Assert.assertEquals(
-			totalCount + 2,
-			workflowDefinitionLinksJSONObject.getLong("totalCount"));
-
-		assertContains(
-			workflowDefinitionLink1,
-			Arrays.asList(
-				WorkflowDefinitionLinkSerDes.toDTOs(
-					workflowDefinitionLinksJSONObject.getString("items"))));
-		assertContains(
-			workflowDefinitionLink2,
-			Arrays.asList(
-				WorkflowDefinitionLinkSerDes.toDTOs(
-					workflowDefinitionLinksJSONObject.getString("items"))));
-
-		// Using the namespace headlessAdminWorkflow_v1_0
-
-		workflowDefinitionLinksJSONObject = JSONUtil.getValueAsJSONObject(
-			invokeGraphQLQuery(
-				new GraphQLField("headlessAdminWorkflow_v1_0", graphQLField)),
-			"JSONObject/data", "JSONObject/headlessAdminWorkflow_v1_0",
-			"JSONObject/workflowDefinitionLinks");
-
-		Assert.assertEquals(
-			totalCount + 2,
-			workflowDefinitionLinksJSONObject.getLong("totalCount"));
-
-		assertContains(
-			workflowDefinitionLink1,
-			Arrays.asList(
-				WorkflowDefinitionLinkSerDes.toDTOs(
-					workflowDefinitionLinksJSONObject.getString("items"))));
-		assertContains(
-			workflowDefinitionLink2,
-			Arrays.asList(
-				WorkflowDefinitionLinkSerDes.toDTOs(
-					workflowDefinitionLinksJSONObject.getString("items"))));
-	}
-
-	protected WorkflowDefinitionLink
-			testGraphQLGetWorkflowDefinitionLinks_addWorkflowDefinitionLink()
+	public void testPostWorkflowDefinitionWorkflowDefinitionLink()
 		throws Exception {
 
-		return testGraphQLWorkflowDefinitionLink_addWorkflowDefinitionLink();
-	}
-
-	@Test
-	public void testPostWorkflowDefinitionLink() throws Exception {
 		WorkflowDefinitionLink randomWorkflowDefinitionLink =
 			randomWorkflowDefinitionLink();
 
 		WorkflowDefinitionLink postWorkflowDefinitionLink =
-			testPostWorkflowDefinitionLink_addWorkflowDefinitionLink(
+			testPostWorkflowDefinitionWorkflowDefinitionLink_addWorkflowDefinitionLink(
 				randomWorkflowDefinitionLink);
 
 		assertEquals(randomWorkflowDefinitionLink, postWorkflowDefinitionLink);
@@ -726,12 +672,14 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 	}
 
 	protected WorkflowDefinitionLink
-			testPostWorkflowDefinitionLink_addWorkflowDefinitionLink(
+			testPostWorkflowDefinitionWorkflowDefinitionLink_addWorkflowDefinitionLink(
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return workflowDefinitionLinkResource.
+			postWorkflowDefinitionWorkflowDefinitionLink(
+				testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getWorkflowDefinitionId(),
+				workflowDefinitionLink);
 	}
 
 	protected WorkflowDefinitionLink

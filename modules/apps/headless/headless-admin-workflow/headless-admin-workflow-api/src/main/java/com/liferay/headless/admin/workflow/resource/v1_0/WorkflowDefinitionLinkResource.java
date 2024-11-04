@@ -31,6 +31,7 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -48,23 +49,34 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface WorkflowDefinitionLinkResource {
 
 	public Page<WorkflowDefinitionLink>
-			getWorkflowDefinitionLinksByExternalReferenceCode(
+			getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 				String externalReferenceCode, Pagination pagination)
 		throws Exception;
 
 	public WorkflowDefinitionLink
-			postWorkflowDefinitionLinkByExternalReferenceCode(
+			postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 				String externalReferenceCode,
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception;
 
-	public Page<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
-			Long workflowDefinitionId, Pagination pagination)
+	public Page<WorkflowDefinitionLink>
+			getWorkflowDefinitionWorkflowDefinitionLinksPage(
+				Long workflowDefinitionId, Pagination pagination)
 		throws Exception;
 
-	public WorkflowDefinitionLink postWorkflowDefinitionLink(
+	public Response
+			postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+				Long workflowDefinitionId, String callbackURL,
+				String contentType, String fieldNames)
+		throws Exception;
+
+	public WorkflowDefinitionLink postWorkflowDefinitionWorkflowDefinitionLink(
 			Long workflowDefinitionId,
 			WorkflowDefinitionLink workflowDefinitionLink)
+		throws Exception;
+
+	public Response postWorkflowDefinitionWorkflowDefinitionLinkBatch(
+			Long workflowDefinitionId, String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(

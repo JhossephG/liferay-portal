@@ -35,43 +35,66 @@ public interface WorkflowDefinitionLinkResource {
 	}
 
 	public Page<WorkflowDefinitionLink>
-			getWorkflowDefinitionLinksByExternalReferenceCode(
+			getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 				String externalReferenceCode, Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			getWorkflowDefinitionLinksByExternalReferenceCodeHttpResponse(
+			getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPageHttpResponse(
 				String externalReferenceCode, Pagination pagination)
 		throws Exception;
 
 	public WorkflowDefinitionLink
-			postWorkflowDefinitionLinkByExternalReferenceCode(
+			postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 				String externalReferenceCode,
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
-			postWorkflowDefinitionLinkByExternalReferenceCodeHttpResponse(
+			postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinkHttpResponse(
 				String externalReferenceCode,
 				WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception;
 
-	public Page<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
-			Long workflowDefinitionId, Pagination pagination)
+	public Page<WorkflowDefinitionLink>
+			getWorkflowDefinitionWorkflowDefinitionLinksPage(
+				Long workflowDefinitionId, Pagination pagination)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse getWorkflowDefinitionLinksHttpResponse(
-			Long workflowDefinitionId, Pagination pagination)
+	public HttpInvoker.HttpResponse
+			getWorkflowDefinitionWorkflowDefinitionLinksPageHttpResponse(
+				Long workflowDefinitionId, Pagination pagination)
 		throws Exception;
 
-	public WorkflowDefinitionLink postWorkflowDefinitionLink(
+	public void postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+			Long workflowDefinitionId, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatchHttpResponse(
+				Long workflowDefinitionId, String callbackURL,
+				String contentType, String fieldNames)
+		throws Exception;
+
+	public WorkflowDefinitionLink postWorkflowDefinitionWorkflowDefinitionLink(
 			Long workflowDefinitionId,
 			WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception;
 
-	public HttpInvoker.HttpResponse postWorkflowDefinitionLinkHttpResponse(
-			Long workflowDefinitionId,
-			WorkflowDefinitionLink workflowDefinitionLink)
+	public HttpInvoker.HttpResponse
+			postWorkflowDefinitionWorkflowDefinitionLinkHttpResponse(
+				Long workflowDefinitionId,
+				WorkflowDefinitionLink workflowDefinitionLink)
+		throws Exception;
+
+	public void postWorkflowDefinitionWorkflowDefinitionLinkBatch(
+			Long workflowDefinitionId, String callbackURL, Object object)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			postWorkflowDefinitionWorkflowDefinitionLinkBatchHttpResponse(
+				Long workflowDefinitionId, String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -184,12 +207,12 @@ public interface WorkflowDefinitionLinkResource {
 		implements WorkflowDefinitionLinkResource {
 
 		public Page<WorkflowDefinitionLink>
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					String externalReferenceCode, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getWorkflowDefinitionLinksByExternalReferenceCodeHttpResponse(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPageHttpResponse(
 					externalReferenceCode, pagination);
 
 			String content = httpResponse.getContent();
@@ -252,7 +275,7 @@ public interface WorkflowDefinitionLinkResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				getWorkflowDefinitionLinksByExternalReferenceCodeHttpResponse(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPageHttpResponse(
 					String externalReferenceCode, Pagination pagination)
 			throws Exception {
 
@@ -298,13 +321,13 @@ public interface WorkflowDefinitionLinkResource {
 		}
 
 		public WorkflowDefinitionLink
-				postWorkflowDefinitionLinkByExternalReferenceCode(
+				postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 					String externalReferenceCode,
 					WorkflowDefinitionLink workflowDefinitionLink)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postWorkflowDefinitionLinkByExternalReferenceCodeHttpResponse(
+				postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinkHttpResponse(
 					externalReferenceCode, workflowDefinitionLink);
 
 			String content = httpResponse.getContent();
@@ -367,7 +390,7 @@ public interface WorkflowDefinitionLinkResource {
 		}
 
 		public HttpInvoker.HttpResponse
-				postWorkflowDefinitionLinkByExternalReferenceCodeHttpResponse(
+				postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinkHttpResponse(
 					String externalReferenceCode,
 					WorkflowDefinitionLink workflowDefinitionLink)
 			throws Exception {
@@ -409,12 +432,13 @@ public interface WorkflowDefinitionLinkResource {
 			return httpInvoker.invoke();
 		}
 
-		public Page<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
-				Long workflowDefinitionId, Pagination pagination)
+		public Page<WorkflowDefinitionLink>
+				getWorkflowDefinitionWorkflowDefinitionLinksPage(
+					Long workflowDefinitionId, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getWorkflowDefinitionLinksHttpResponse(
+				getWorkflowDefinitionWorkflowDefinitionLinksPageHttpResponse(
 					workflowDefinitionId, pagination);
 
 			String content = httpResponse.getContent();
@@ -476,8 +500,9 @@ public interface WorkflowDefinitionLinkResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse getWorkflowDefinitionLinksHttpResponse(
-				Long workflowDefinitionId, Pagination pagination)
+		public HttpInvoker.HttpResponse
+				getWorkflowDefinitionWorkflowDefinitionLinksPageHttpResponse(
+					Long workflowDefinitionId, Pagination pagination)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -521,13 +546,128 @@ public interface WorkflowDefinitionLinkResource {
 			return httpInvoker.invoke();
 		}
 
-		public WorkflowDefinitionLink postWorkflowDefinitionLink(
-				Long workflowDefinitionId,
-				WorkflowDefinitionLink workflowDefinitionLink)
+		public void
+				postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+					Long workflowDefinitionId, String callbackURL,
+					String contentType, String fieldNames)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postWorkflowDefinitionLinkHttpResponse(
+				postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatchHttpResponse(
+					workflowDefinitionId, callbackURL, contentType, fieldNames);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatchHttpResponse(
+					Long workflowDefinitionId, String callbackURL,
+					String contentType, String fieldNames)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body("[]", "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			if (contentType != null) {
+				httpInvoker.parameter(
+					"contentType", String.valueOf(contentType));
+			}
+
+			if (fieldNames != null) {
+				httpInvoker.parameter("fieldNames", String.valueOf(fieldNames));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-admin-workflow/v1.0/workflow-definitions/{workflowDefinitionId}/workflow-definition-links/export-batch");
+
+			httpInvoker.path("workflowDefinitionId", workflowDefinitionId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public WorkflowDefinitionLink
+				postWorkflowDefinitionWorkflowDefinitionLink(
+					Long workflowDefinitionId,
+					WorkflowDefinitionLink workflowDefinitionLink)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postWorkflowDefinitionWorkflowDefinitionLinkHttpResponse(
 					workflowDefinitionId, workflowDefinitionLink);
 
 			String content = httpResponse.getContent();
@@ -589,9 +729,10 @@ public interface WorkflowDefinitionLinkResource {
 			}
 		}
 
-		public HttpInvoker.HttpResponse postWorkflowDefinitionLinkHttpResponse(
-				Long workflowDefinitionId,
-				WorkflowDefinitionLink workflowDefinitionLink)
+		public HttpInvoker.HttpResponse
+				postWorkflowDefinitionWorkflowDefinitionLinkHttpResponse(
+					Long workflowDefinitionId,
+					WorkflowDefinitionLink workflowDefinitionLink)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -622,6 +763,109 @@ public interface WorkflowDefinitionLinkResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-admin-workflow/v1.0/workflow-definitions/{workflowDefinitionId}/workflow-definition-links");
+
+			httpInvoker.path("workflowDefinitionId", workflowDefinitionId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public void postWorkflowDefinitionWorkflowDefinitionLinkBatch(
+				Long workflowDefinitionId, String callbackURL, Object object)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				postWorkflowDefinitionWorkflowDefinitionLinkBatchHttpResponse(
+					workflowDefinitionId, callbackURL, object);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				postWorkflowDefinitionWorkflowDefinitionLinkBatchHttpResponse(
+					Long workflowDefinitionId, String callbackURL,
+					Object object)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (callbackURL != null) {
+				httpInvoker.parameter(
+					"callbackURL", String.valueOf(callbackURL));
+			}
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-admin-workflow/v1.0/workflow-definitions/{workflowDefinitionId}/workflow-definition-links/batch");
 
 			httpInvoker.path("workflowDefinitionId", workflowDefinitionId);
 

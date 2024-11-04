@@ -283,7 +283,7 @@ public class Mutation {
 
 	@GraphQLField
 	public WorkflowDefinitionLink
-			createWorkflowDefinitionLinkByExternalReferenceCode(
+			createWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 				@GraphQLName("externalReferenceCode") String
 					externalReferenceCode,
 				@GraphQLName("workflowDefinitionLink") WorkflowDefinitionLink
@@ -295,23 +295,60 @@ public class Mutation {
 			this::_populateResourceContext,
 			workflowDefinitionLinkResource ->
 				workflowDefinitionLinkResource.
-					postWorkflowDefinitionLinkByExternalReferenceCode(
+					postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 						externalReferenceCode, workflowDefinitionLink));
 	}
 
 	@GraphQLField
-	public WorkflowDefinitionLink createWorkflowDefinitionLink(
-			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
-			@GraphQLName("workflowDefinitionLink") WorkflowDefinitionLink
-				workflowDefinitionLink)
+	public Response
+			createWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+				@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
 			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			workflowDefinitionLinkResource ->
-				workflowDefinitionLinkResource.postWorkflowDefinitionLink(
-					workflowDefinitionId, workflowDefinitionLink));
+				workflowDefinitionLinkResource.
+					postWorkflowDefinitionWorkflowDefinitionLinksPageExportBatch(
+						workflowDefinitionId, callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public WorkflowDefinitionLink
+			createWorkflowDefinitionWorkflowDefinitionLink(
+				@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
+				@GraphQLName("workflowDefinitionLink") WorkflowDefinitionLink
+					workflowDefinitionLink)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowDefinitionLinkResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionLinkResource ->
+				workflowDefinitionLinkResource.
+					postWorkflowDefinitionWorkflowDefinitionLink(
+						workflowDefinitionId, workflowDefinitionLink));
+	}
+
+	@GraphQLField
+	public Response createWorkflowDefinitionWorkflowDefinitionLinkBatch(
+			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_workflowDefinitionLinkResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			workflowDefinitionLinkResource ->
+				workflowDefinitionLinkResource.
+					postWorkflowDefinitionWorkflowDefinitionLinkBatch(
+						workflowDefinitionId, callbackURL, object));
 	}
 
 	@GraphQLField

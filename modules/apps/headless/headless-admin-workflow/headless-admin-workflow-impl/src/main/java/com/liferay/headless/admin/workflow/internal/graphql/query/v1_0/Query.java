@@ -233,11 +233,11 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionLinksByExternalReferenceCode(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinks(externalReferenceCode: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public WorkflowDefinitionLinkPage
-			workflowDefinitionLinksByExternalReferenceCode(
+			workflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinks(
 				@GraphQLName("externalReferenceCode") String
 					externalReferenceCode,
 				@GraphQLName("pageSize") int pageSize,
@@ -249,17 +249,17 @@ public class Query {
 			this::_populateResourceContext,
 			workflowDefinitionLinkResource -> new WorkflowDefinitionLinkPage(
 				workflowDefinitionLinkResource.
-					getWorkflowDefinitionLinksByExternalReferenceCode(
+					getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 						externalReferenceCode, Pagination.of(page, pageSize))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionLinks(page: ___, pageSize: ___, workflowDefinitionId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {workflowDefinitionWorkflowDefinitionLinks(page: ___, pageSize: ___, workflowDefinitionId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public WorkflowDefinitionLinkPage workflowDefinitionLinks(
+	public WorkflowDefinitionLinkPage workflowDefinitionWorkflowDefinitionLinks(
 			@GraphQLName("workflowDefinitionId") Long workflowDefinitionId,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page)
@@ -269,8 +269,9 @@ public class Query {
 			_workflowDefinitionLinkResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			workflowDefinitionLinkResource -> new WorkflowDefinitionLinkPage(
-				workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
-					workflowDefinitionId, Pagination.of(page, pageSize))));
+				workflowDefinitionLinkResource.
+					getWorkflowDefinitionWorkflowDefinitionLinksPage(
+						workflowDefinitionId, Pagination.of(page, pageSize))));
 	}
 
 	/**
@@ -624,36 +625,6 @@ public class Query {
 
 	}
 
-	@GraphQLTypeExtension(WorkflowDefinition.class)
-	public class GetWorkflowDefinitionLinksTypeExtension {
-
-		public GetWorkflowDefinitionLinksTypeExtension(
-			WorkflowDefinition workflowDefinition) {
-
-			_workflowDefinition = workflowDefinition;
-		}
-
-		@GraphQLField
-		public WorkflowDefinitionLinkPage links(
-				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_workflowDefinitionLinkResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				workflowDefinitionLinkResource ->
-					new WorkflowDefinitionLinkPage(
-						workflowDefinitionLinkResource.
-							getWorkflowDefinitionLinks(
-								_workflowDefinition.getId(),
-								Pagination.of(page, pageSize))));
-		}
-
-		private WorkflowDefinition _workflowDefinition;
-
-	}
-
 	@GraphQLTypeExtension(WorkflowTask.class)
 	public class GetWorkflowTaskHasAssignableUsersTypeExtension {
 
@@ -771,6 +742,36 @@ public class Query {
 		}
 
 		private WorkflowTask _workflowTask;
+
+	}
+
+	@GraphQLTypeExtension(WorkflowDefinition.class)
+	public class GetWorkflowDefinitionWorkflowDefinitionLinksPageTypeExtension {
+
+		public GetWorkflowDefinitionWorkflowDefinitionLinksPageTypeExtension(
+			WorkflowDefinition workflowDefinition) {
+
+			_workflowDefinition = workflowDefinition;
+		}
+
+		@GraphQLField
+		public WorkflowDefinitionLinkPage workflowDefinitionLinks(
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_workflowDefinitionLinkResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				workflowDefinitionLinkResource ->
+					new WorkflowDefinitionLinkPage(
+						workflowDefinitionLinkResource.
+							getWorkflowDefinitionWorkflowDefinitionLinksPage(
+								_workflowDefinition.getId(),
+								Pagination.of(page, pageSize))));
+		}
+
+		private WorkflowDefinition _workflowDefinition;
 
 	}
 
