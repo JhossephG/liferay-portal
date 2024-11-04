@@ -45,7 +45,7 @@ public class WorkflowDefinitionLinkResourceTest
 			WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
 
-		return workflowDefinitionLinkResource.postWorkflowDefinitionLink(
+		return workflowDefinitionLinkResource.postWorkflowDefinitionWorkflowDefinitionLink(
 			workflowDefinitionId, workflowDefinitionLink);
 	}
 
@@ -54,8 +54,7 @@ public class WorkflowDefinitionLinkResourceTest
 			WorkflowDefinitionLink workflowDefinitionLink)
 		throws Exception {
 
-		return workflowDefinitionLinkResource.
-			postWorkflowDefinitionLinkByExternalReferenceCode(
+		return workflowDefinitionLinkResource.postWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink(
 				externalReferenceCode, workflowDefinitionLink);
 	}
 
@@ -93,11 +92,11 @@ public class WorkflowDefinitionLinkResourceTest
 
 	@Override
 	@Test
-	public void testGetWorkflowDefinitionLinks() throws Exception {
+	public void testGetWorkflowDefinitionWorkflowDefinitionLinksPage() throws Exception {
 		Long workflowDefinitionId = _workflowDefinition.getId();
 
 		Page<WorkflowDefinitionLink> page =
-			workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
+			workflowDefinitionLinkResource.getWorkflowDefinitionWorkflowDefinitionLinksPage(
 				workflowDefinitionId, Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
@@ -110,7 +109,7 @@ public class WorkflowDefinitionLinkResourceTest
 			addWorkflowDefinitionLink(
 				workflowDefinitionId, randomWorkflowDefinitionLink());
 
-		page = workflowDefinitionLinkResource.getWorkflowDefinitionLinks(
+		page = workflowDefinitionLinkResource.getWorkflowDefinitionWorkflowDefinitionLinksPage(
 			workflowDefinitionId, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
@@ -123,7 +122,7 @@ public class WorkflowDefinitionLinkResourceTest
 			(List<WorkflowDefinitionLink>)page.getItems());
 		assertValid(
 			page,
-			testGetWorkflowDefinitionLinks_getExpectedActions(
+			testGetWorkflowDefinitionWorkflowDefinitionLinksPage_getExpectedActions(
 				workflowDefinitionId));
 
 		WorkflowDefinitionLinkLocalServiceUtil.deleteWorkflowDefinitionLink(
@@ -134,15 +133,14 @@ public class WorkflowDefinitionLinkResourceTest
 
 	@Override
 	@Test
-	public void testGetWorkflowDefinitionLinksByExternalReferenceCode()
+	public void testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage()
 		throws Exception {
 
 		String externalReferenceCode =
 			_workflowDefinition.getExternalReferenceCode();
 
 		Page<WorkflowDefinitionLink> page =
-			workflowDefinitionLinkResource.
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+			workflowDefinitionLinkResource.getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
@@ -157,7 +155,7 @@ public class WorkflowDefinitionLinkResourceTest
 
 		page =
 			workflowDefinitionLinkResource.
-				getWorkflowDefinitionLinksByExternalReferenceCode(
+				getWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
@@ -170,7 +168,7 @@ public class WorkflowDefinitionLinkResourceTest
 			(List<WorkflowDefinitionLink>)page.getItems());
 		assertValid(
 			page,
-			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExpectedActions(
+			testGetWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLinksPage_getExpectedActions(
 				externalReferenceCode));
 
 		WorkflowDefinitionLinkLocalServiceUtil.deleteWorkflowDefinitionLink(
@@ -179,27 +177,9 @@ public class WorkflowDefinitionLinkResourceTest
 			workflowDefinitionLink2.getId());
 	}
 
-	@Ignore
 	@Override
 	@Test
-	public void testGetWorkflowDefinitionLinksByExternalReferenceCodeWithPagination() {
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetWorkflowDefinitionLinksWithPagination() {
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGraphQLGetWorkflowDefinitionLinks() {
-	}
-
-	@Override
-	@Test
-	public void testPostWorkflowDefinitionLink() throws Exception {
+	public void testPostWorkflowDefinitionWorkflowDefinitionLink() throws Exception {
 		WorkflowDefinitionLink randomWorkflowDefinitionLink =
 			randomWorkflowDefinitionLink();
 
@@ -218,7 +198,7 @@ public class WorkflowDefinitionLinkResourceTest
 
 	@Override
 	@Test
-	public void testPostWorkflowDefinitionLinkByExternalReferenceCode()
+	public void testPostWorkflowDefinitionByExternalReferenceCodeWorkflowDefinitionLink()
 		throws Exception {
 
 		addWorkflowDefinitionLink(
