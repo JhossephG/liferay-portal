@@ -793,6 +793,14 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (workflowDefinitionLink.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("className", additionalAssertFieldName)) {
 				if (workflowDefinitionLink.getClassName() == null) {
 					valid = false;
@@ -963,6 +971,17 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)workflowDefinitionLink1.getActions(),
+						(Map)workflowDefinitionLink2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("className", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -1144,6 +1163,11 @@ public abstract class BaseWorkflowDefinitionLinkResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("className")) {
 			Object object = workflowDefinitionLink.getClassName();

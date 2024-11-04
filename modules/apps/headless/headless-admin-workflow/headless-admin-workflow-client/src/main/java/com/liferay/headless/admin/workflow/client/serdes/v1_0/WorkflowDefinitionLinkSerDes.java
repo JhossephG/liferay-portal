@@ -46,6 +46,16 @@ public class WorkflowDefinitionLinkSerDes {
 
 		sb.append("{");
 
+		if (workflowDefinitionLink.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(workflowDefinitionLink.getActions()));
+		}
+
 		if (workflowDefinitionLink.getClassName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -141,6 +151,14 @@ public class WorkflowDefinitionLinkSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (workflowDefinitionLink.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put(
+				"actions", String.valueOf(workflowDefinitionLink.getActions()));
+		}
+
 		if (workflowDefinitionLink.getClassName() == null) {
 			map.put("className", null);
 		}
@@ -213,7 +231,10 @@ public class WorkflowDefinitionLinkSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "className")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "className")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -246,7 +267,13 @@ public class WorkflowDefinitionLinkSerDes {
 			WorkflowDefinitionLink workflowDefinitionLink,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "className")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					workflowDefinitionLink.setActions(
+						(Map<String, Map<String, String>>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "className")) {
 				if (jsonParserFieldValue != null) {
 					workflowDefinitionLink.setClassName(
 						(String)jsonParserFieldValue);
