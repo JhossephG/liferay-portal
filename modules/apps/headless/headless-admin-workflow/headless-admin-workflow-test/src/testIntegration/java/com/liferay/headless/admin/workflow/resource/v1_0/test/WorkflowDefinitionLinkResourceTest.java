@@ -8,8 +8,6 @@ package com.liferay.headless.admin.workflow.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowDefinition;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowDefinitionLink;
-import com.liferay.headless.admin.workflow.client.pagination.Page;
-import com.liferay.headless.admin.workflow.client.pagination.Pagination;
 import com.liferay.headless.admin.workflow.resource.v1_0.test.util.WorkflowDefinitionTestUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -17,16 +15,12 @@ import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService;
 
-import java.util.List;
-
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,25 +33,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class WorkflowDefinitionLinkResourceTest
 	extends BaseWorkflowDefinitionLinkResourceTestCase {
-
-	public WorkflowDefinitionLink addWorkflowDefinitionLink(
-			Long workflowDefinitionId,
-			WorkflowDefinitionLink workflowDefinitionLink)
-		throws Exception {
-
-		return workflowDefinitionLinkResource.postWorkflowDefinitionLink(
-			workflowDefinitionId, workflowDefinitionLink);
-	}
-
-	public WorkflowDefinitionLink addWorkflowDefinitionLink(
-			String externalReferenceCode,
-			WorkflowDefinitionLink workflowDefinitionLink)
-		throws Exception {
-
-		return workflowDefinitionLinkResource.
-			postWorkflowDefinitionLinkByExternalReferenceCode(
-				externalReferenceCode, workflowDefinitionLink);
-	}
 
 	@Before
 	@Override
@@ -91,6 +66,40 @@ public class WorkflowDefinitionLinkResourceTest
 		}
 	}
 
+	@Override
+	@Test
+	public WorkflowDefinitionLink
+			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
+				Long workflowDefinitionId,
+				WorkflowDefinitionLink workflowDefinitionLink)
+		throws Exception {
+
+		return workflowDefinitionLinkResource.postWorkflowDefinitionLink(
+			workflowDefinitionId, workflowDefinitionLink);
+	}
+
+	@Override
+	@Test
+	public WorkflowDefinitionLink
+			testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
+				String externalReferenceCode,
+				WorkflowDefinitionLink workflowDefinitionLink)
+		throws Exception {
+
+		return workflowDefinitionLinkResource.
+			postWorkflowDefinitionLinkByExternalReferenceCode(
+				externalReferenceCode, workflowDefinitionLink);
+	}
+
+	@Override
+	@Test
+	public String
+			testGetWorkflowDefinitionLinksByExternalReferenceCode_getExternalReferenceCode()
+		throws Exception {
+
+		return _workflowDefinition.getExternalReferenceCode();
+	}
+
 	@Ignore
 	@Override
 	@Test
@@ -116,7 +125,7 @@ public class WorkflowDefinitionLinkResourceTest
 			randomWorkflowDefinitionLink();
 
 		WorkflowDefinitionLink postWorkflowDefinitionLink =
-			addWorkflowDefinitionLink(
+			testGetWorkflowDefinitionLinks_addWorkflowDefinitionLink(
 				_workflowDefinition.getId(), randomWorkflowDefinitionLink);
 
 		randomWorkflowDefinitionLink.setWorkflowDefinitionName(
@@ -133,7 +142,7 @@ public class WorkflowDefinitionLinkResourceTest
 	public void testPostWorkflowDefinitionLinkByExternalReferenceCode()
 		throws Exception {
 
-		addWorkflowDefinitionLink(
+		testGetWorkflowDefinitionLinksByExternalReferenceCode_addWorkflowDefinitionLink(
 			_workflowDefinition.getExternalReferenceCode(),
 			randomWorkflowDefinitionLink());
 	}
@@ -148,6 +157,13 @@ public class WorkflowDefinitionLinkResourceTest
 				groupId = testGroup.getGroupId();
 			}
 		};
+	}
+
+	@Override
+	protected Long testGetWorkflowDefinitionLinks_getWorkflowDefinitionId()
+		throws Exception {
+
+		return _workflowDefinition.getId();
 	}
 
 	private static ObjectDefinition _objectDefinition;
