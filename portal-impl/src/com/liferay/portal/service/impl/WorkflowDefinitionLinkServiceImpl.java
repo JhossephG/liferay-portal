@@ -5,11 +5,57 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionRegistryUtil;
 import com.liferay.portal.service.base.WorkflowDefinitionLinkServiceBaseImpl;
 
+import java.util.List;
+
 /**
- * @author Brian Wing Shun Chan
+ * @author Jhosseph Gonzalez
  */
 public class WorkflowDefinitionLinkServiceImpl
 	extends WorkflowDefinitionLinkServiceBaseImpl {
+
+	@Override
+	public WorkflowDefinitionLink addWorkflowDefinitionLink(
+			long userId, long companyId, long groupId, String className,
+			long classPK, long typePK, String workflowDefinitionName,
+			int workflowDefinitionVersion)
+		throws PortalException {
+
+		ModelResourcePermission<WorkflowDefinitionLink>
+			modelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					"com.liferay.portal.workflow.kaleo.model.KaleoDefinition");
+
+		modelResourcePermission.check(
+			getPermissionChecker(), null, ActionKeys.VIEW);
+
+		return workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
+			userId, companyId, groupId, className, classPK, typePK,
+			workflowDefinitionName, workflowDefinitionVersion);
+	}
+
+	@Override
+	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
+			long companyId, String workflowDefinitionName,
+			int workflowDefinitionVersion)
+		throws PortalException {
+
+		ModelResourcePermission<WorkflowDefinitionLink>
+			modelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					"com.liferay.portal.workflow.kaleo.model.KaleoDefinition");
+
+		modelResourcePermission.check(
+			getPermissionChecker(), null, ActionKeys.VIEW);
+
+		return workflowDefinitionLinkLocalService.getWorkflowDefinitionLinks(
+			companyId, workflowDefinitionName, workflowDefinitionVersion);
+	}
+
 }
