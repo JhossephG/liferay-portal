@@ -42,6 +42,7 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -237,19 +238,35 @@ public class ObjectEntryKeywordQueryContributor
 
 			String fieldName = "nestedFieldArray.value_text";
 
-			if (Objects.equals(
-					objectField.getIndexedLanguageId(),
-					searchContext.getLanguageId())) {
+			if (objectField.isLocalized()) {
+				Locale[] locales = Locale.getAvailableLocales();
+
+				for (int i = 1; i < locales.length; i++) {
+					fieldName =
+						"nestedFieldArray.value_" + locales[i].toString();
+
+					nestedBooleanQuery.add(
+						new MatchQuery(fieldName, token),
+						BooleanClauseOccur.SHOULD);
+
+					queryConfig.addHighlightFieldNames(fieldName);
+				}
+			}
+			else if (Objects.equals(
+						objectField.getIndexedLanguageId(),
+						searchContext.getLanguageId())) {
 
 				fieldName =
 					"nestedFieldArray.value_" +
 						objectField.getIndexedLanguageId();
 			}
 
-			nestedBooleanQuery.add(
-				new MatchQuery(fieldName, token), BooleanClauseOccur.MUST);
+			if (!objectField.isLocalized()) {
+				nestedBooleanQuery.add(
+					new MatchQuery(fieldName, token), BooleanClauseOccur.MUST);
 
-			queryConfig.addHighlightFieldNames(fieldName);
+				queryConfig.addHighlightFieldNames(fieldName);
+			}
 		}
 		else if (Objects.equals(
 					objectField.getDBType(),
