@@ -9,6 +9,9 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.util.AssetRendererFactoryLookup;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -20,9 +23,14 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.view.count.service.ViewCountEntryLocalService;
 
+import java.io.Serializable;
 import java.text.ParseException;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.logging.Level;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -114,6 +122,36 @@ public class AssetEntryDocumentContributor
 				assetEntry.getTitleMap(), assetEntry.getDefaultLanguageId(),
 				assetEntry.getGroupId()),
 			true, true);
+
+		Map<String, Object> objectEntryDefinitionMap = baseModel.getModelAttributes();
+
+		Object entryId = objectEntryDefinitionMap.get("objectEntryId");
+
+		if (entryId instanceof Long) {
+			long longValue = GetterUtil.getLong(entryId);
+
+			ObjectEntry objectEntry= null;
+
+		try {
+
+			objectEntry = _objectEntryLocalService.getObjectEntry(longValue);
+
+		}	catch (PortalException portalException) {
+			return;
+		}
+
+		Map<String, Serializable> map = objectEntry.getValues();
+
+
+		Map<Locale, String> localizedEntryValues = (Map<Locale, String>) map.get("name_i18n");
+
+			document.addLocalizedKeyword(
+				"localized_title",
+				localizedEntryValues,
+				true, true);
+
+		}
+
 		document.addNumber(
 			"viewCount",
 			_viewCountEntryLocalService.getViewCount(
@@ -137,6 +175,9 @@ public class AssetEntryDocumentContributor
 
 	@Reference
 	private Localization _localization;
+
+	@Reference
+	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Reference
 	private ViewCountEntryLocalService _viewCountEntryLocalService;
