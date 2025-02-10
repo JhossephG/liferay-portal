@@ -7,20 +7,35 @@ package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormInstanceTestUtil;
 import com.liferay.petra.memory.DeleteFileFinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
@@ -28,13 +43,16 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.FileItem;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -47,6 +65,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -105,6 +124,39 @@ public class UploadFileEntryMVCActionCommandTest {
 							new HashMap<>()),
 						null, RandomTestUtil.randomString());
 				}));
+
+		_company = CompanyLocalServiceUtil.getCompany(
+			TestPropsValues.getCompanyId());
+
+		User user = UserLocalServiceUtil.addOrUpdateUser(
+			DDMFormConstants.DDM_FORM_DEFAULT_USER_EXTERNAL_REFERENCE_CODE, 0,
+			TestPropsValues.getCompanyId(), true, StringPool.BLANK,
+			StringPool.BLANK, false,
+			DDMFormConstants.DDM_FORM_DEFAULT_USER_SCREEN_NAME,
+			StringBundler.concat(
+				DDMFormConstants.DDM_FORM_DEFAULT_USER_SCREEN_NAME,
+				StringPool.AT, _company.getMx()),
+			LocaleUtil.getDefault(),
+			DDMFormConstants.DDM_FORM_DEFAULT_USER_FIRST_NAME, StringPool.BLANK,
+			DDMFormConstants.DDM_FORM_DEFAULT_USER_LAST_NAME, 0, 0, true,
+			Calendar.JANUARY, 1, 1970, StringPool.BLANK, false, null);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		UserLocalServiceUtil.updateStatus(
+			user, WorkflowConstants.STATUS_INACTIVE, serviceContext);
+
+		Repository repository = _portletFileRepository.addPortletRepository(
+			_group.getGroupId(), DDMFormConstants.SERVICE_NAME, serviceContext);
+
+		Folder folder = _portletFileRepository.addPortletFolder(
+			user.getUserId(), repository.getRepositoryId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			DDMFormConstants.DDM_FORM_UPLOADED_FILES_FOLDER_NAME,
+			serviceContext);
+
+		_folderId = folder.getFolderId();
 	}
 
 	@After
@@ -140,6 +192,17 @@ public class UploadFileEntryMVCActionCommandTest {
 			TestPropsValues.getCompanyId());
 
 		Assert.assertEquals(user.getUserId(), dlFileEntry.getUserId());
+
+		ResourcePermission resourcePermission =
+			_resourcePermissionLocalService.getResourcePermission(
+				_company.getCompanyId(), DLFileEntry.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(dlFileEntry.getFileEntryId()),
+				RoleLocalServiceUtil.getRole(
+					_company.getCompanyId(), RoleConstants.GUEST
+				).getRoleId());
+
+		Assert.assertEquals(544, resourcePermission.getActionIds());
 	}
 
 	private FileItem _getFileItem() throws Exception {
@@ -193,6 +256,8 @@ public class UploadFileEntryMVCActionCommandTest {
 			String.valueOf(_ddmFormInstance.getFormInstanceId()));
 		mockMultipartHttpServletRequest.addParameter(
 			"groupId", String.valueOf(_ddmFormInstance.getGroupId()));
+		mockMultipartHttpServletRequest.addParameter(
+			"folderId", String.valueOf(_folderId));
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
@@ -210,6 +275,8 @@ public class UploadFileEntryMVCActionCommandTest {
 		return mockMultipartHttpServletRequest;
 	}
 
+	private Company _company;
+
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
@@ -218,6 +285,8 @@ public class UploadFileEntryMVCActionCommandTest {
 
 	@Inject
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	private long _folderId;
 
 	@DeleteAfterTestRun
 	private Group _group;
@@ -232,6 +301,12 @@ public class UploadFileEntryMVCActionCommandTest {
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private PortletFileRepository _portletFileRepository;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	private UploadHandler _uploadHandler;
 
