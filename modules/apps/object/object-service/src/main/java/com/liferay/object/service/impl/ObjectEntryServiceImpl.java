@@ -22,6 +22,7 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.base.ObjectEntryServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.tree.Edge;
@@ -425,6 +426,19 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 		return objectEntryLocalService.updateObjectEntry(
 			getUserId(), objectEntryId, values, serviceContext);
+	}
+
+	@Override
+	public void validateObjectEntry(
+			long groupId, ObjectEntry objectEntry, List<String> validationKeys)
+		throws PortalException {
+
+		_checkAddObjectEntryPortletResourcePermission(
+			groupId, objectEntry.getObjectDefinitionId(),
+			objectEntry.getValues());
+
+		_objectValidationRuleLocalService.validate(
+			objectEntry, validationKeys, getUserId());
 	}
 
 	@Activate
@@ -867,6 +881,9 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Reference
+	private ObjectValidationRuleLocalService _objectValidationRuleLocalService;
 
 	@Reference
 	private PermissionCheckerFactory _permissionCheckerFactory;
