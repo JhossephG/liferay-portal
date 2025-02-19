@@ -5,9 +5,13 @@
 
 package com.liferay.object.rest.internal.resource.v1_0;
 
+import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.rest.dto.v1_0.Error;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
+import com.liferay.object.rest.dto.v1_0.ValidateRequest;
+import com.liferay.object.rest.dto.v1_0.ValidateResult;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManagerProvider;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
@@ -37,6 +41,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -350,6 +355,105 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		return objectEntryManager.addObjectEntry(
 			_getDTOConverterContext(null), _objectDefinition, objectEntry,
 			scopeKey);
+	}
+
+	@Override
+	public ValidateResult postScopeScopeKeyValidate(
+			String scopeKey, ValidateRequest validateRequest)
+		throws Exception {
+
+		ObjectEntryManager objectEntryManager =
+			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getStorageType());
+
+		try {
+			objectEntryManager.validateObjectEntry(
+				_getDTOConverterContext(null), _objectDefinition,
+				validateRequest.getValues(),
+				Arrays.asList(validateRequest.getValidationKeys()), scopeKey);
+		}
+		catch (ObjectValidationRuleEngineException
+					objectValidationRuleEngineException) {
+
+			return new ValidateResult() {
+				{
+					setErrors(
+						() -> transformToArray(
+							objectValidationRuleEngineException.
+								getObjectValidationRuleResults(),
+							objectValidationRuleResult -> new Error() {
+								{
+									setErrorMessage(
+										objectValidationRuleResult::
+											getErrorMessage);
+									setObjectFieldName(
+										objectValidationRuleResult::
+											getObjectFieldName);
+									setValidationKey(
+										objectValidationRuleResult::
+											getValidationKey);
+								}
+							},
+							Error.class));
+					setSuccess(() -> false);
+				}
+			};
+		}
+
+		return new ValidateResult() {
+			{
+				setSuccess(() -> true);
+			}
+		};
+	}
+
+	@Override
+	public ValidateResult postValidate(ValidateRequest validateRequest)
+		throws Exception {
+
+		ObjectEntryManager objectEntryManager =
+			_objectEntryManagerRegistry.getObjectEntryManager(
+				_objectDefinition.getStorageType());
+
+		try {
+			objectEntryManager.validateObjectEntry(
+				_getDTOConverterContext(null), _objectDefinition,
+				validateRequest.getValues(),
+				Arrays.asList(validateRequest.getValidationKeys()), null);
+		}
+		catch (ObjectValidationRuleEngineException
+					objectValidationRuleEngineException) {
+
+			return new ValidateResult() {
+				{
+					setErrors(
+						() -> transformToArray(
+							objectValidationRuleEngineException.
+								getObjectValidationRuleResults(),
+							objectValidationRuleResult -> new Error() {
+								{
+									setErrorMessage(
+										objectValidationRuleResult::
+											getErrorMessage);
+									setObjectFieldName(
+										objectValidationRuleResult::
+											getObjectFieldName);
+									setValidationKey(
+										objectValidationRuleResult::
+											getValidationKey);
+								}
+							},
+							Error.class));
+					setSuccess(() -> false);
+				}
+			};
+		}
+
+		return new ValidateResult() {
+			{
+				setSuccess(() -> true);
+			}
+		};
 	}
 
 	@Override
