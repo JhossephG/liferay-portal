@@ -14,6 +14,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.document.library.kernel.exception.FileExtensionException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.exception.InvalidFileException;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.friendly.url.info.item.provider.InfoItemFriendlyURLProvider;
@@ -122,15 +123,20 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.portlet.ControlPanelEntry;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
@@ -686,6 +692,12 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	}
 
 	@Reference
+	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@Reference
@@ -893,11 +905,22 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					fileName, file.length(), objectFieldId,
 					themeDisplay.isSignedIn());
 
-				return TempFileEntryUtil.addTempFileEntry(
+				FileEntry tempFileEntry =  TempFileEntryUtil.addTempFileEntry(
 					groupId, themeDisplay.getUserId(),
 					objectDefinition.getPortletId(),
 					TempFileEntryUtil.getTempFileName(fileName), file,
 					_mimeTypes.getContentType(file, fileName));
+
+				_resourcePermissionLocalService.removeResourcePermission(
+					themeDisplay.getCompanyId(), DLFileEntry.class.getName(),
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(tempFileEntry.getFileEntryId()),
+					_roleLocalService.getRole(
+						themeDisplay.getCompanyId(), RoleConstants.GUEST
+					).getRoleId(),
+					ActionKeys.DOWNLOAD);
+
+				return tempFileEntry;
 			}
 			finally {
 				if (file != null) {
