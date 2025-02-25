@@ -26,6 +26,7 @@ import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -362,6 +363,12 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 			String scopeKey, ValidateRequest validateRequest)
 		throws Exception {
 
+		if (!FeatureFlagManagerUtil.isEnabled(
+				contextCompany.getCompanyId(), "LPD-37056")) {
+
+			throw new UnsupportedOperationException();
+		}
+
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
 				_objectDefinition.getStorageType());
@@ -410,6 +417,12 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	@Override
 	public ValidateResult postValidate(ValidateRequest validateRequest)
 		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				contextCompany.getCompanyId(), "LPD-37056")) {
+
+			throw new UnsupportedOperationException();
+		}
 
 		ObjectEntryManager objectEntryManager =
 			_objectEntryManagerRegistry.getObjectEntryManager(
