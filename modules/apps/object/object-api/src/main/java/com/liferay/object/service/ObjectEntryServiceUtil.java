@@ -209,6 +209,13 @@ public class ObjectEntryServiceUtil {
 			objectEntryId, values, serviceContext);
 	}
 
+	public static void validateObjectEntry(
+			long groupId, ObjectEntry objectEntry, List<String> validationKeys)
+		throws PortalException {
+
+		getService().validateObjectEntry(groupId, objectEntry, validationKeys);
+	}
+
 	public static ObjectEntryService getService() {
 		return _serviceSnapshot.get();
 	}

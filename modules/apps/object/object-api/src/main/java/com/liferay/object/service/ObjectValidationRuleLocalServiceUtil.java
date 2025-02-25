@@ -435,6 +435,14 @@ public class ObjectValidationRuleLocalServiceUtil {
 			baseModel, objectDefinitionId, payloadJSONObject, userId);
 	}
 
+	public static void validate(
+			com.liferay.object.model.ObjectEntry objectEntry,
+			List<String> validationKeys, long userId)
+		throws PortalException {
+
+		getService().validate(objectEntry, validationKeys, userId);
+	}
+
 	public static ObjectValidationRuleLocalService getService() {
 		return _serviceSnapshot.get();
 	}

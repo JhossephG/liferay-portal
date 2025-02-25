@@ -232,6 +232,16 @@ public class ObjectEntryServiceWrapper
 	}
 
 	@Override
+	public void validateObjectEntry(
+			long groupId, com.liferay.object.model.ObjectEntry objectEntry,
+			java.util.List<String> validationKeys)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectEntryService.validateObjectEntry(
+			groupId, objectEntry, validationKeys);
+	}
+
+	@Override
 	public ObjectEntryService getWrappedService() {
 		return _objectEntryService;
 	}
