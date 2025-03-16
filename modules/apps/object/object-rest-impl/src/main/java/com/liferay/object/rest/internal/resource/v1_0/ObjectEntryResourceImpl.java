@@ -5,6 +5,7 @@
 
 package com.liferay.object.rest.internal.resource.v1_0;
 
+import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
@@ -25,6 +26,7 @@ import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.Sort;
@@ -42,9 +44,11 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.NotSupportedException;
@@ -724,6 +728,39 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 							}
 						},
 						ValidationError.class)));
+}
+		catch (PortalException validationException) {
+			return new ValidateResult() {
+				{
+					setSuccess(() -> false);
+					setValidateErrors(() -> {
+						if (validationException instanceof ObjectValidationRuleEngineException) {
+							return transformToArray(
+								((ObjectValidationRuleEngineException) validationException)
+									.getObjectValidationRuleResults(),
+								objectValidationRuleResult -> new ValidateError() {
+									{
+										setErrorMessage(objectValidationRuleResult::getErrorMessage);
+										setObjectFieldName(objectValidationRuleResult::getObjectFieldName);
+										setValidationKey(objectValidationRuleResult::getValidationKey);
+									}
+								},
+								ValidateError.class
+							);
+						}
+						else if (validationException instanceof ObjectEntryValuesException) {
+							return new ValidateError[]{
+								new ValidateError() {
+									{
+										setErrorMessage(validationException::getMessage);
+									}
+								}
+							};
+						}
+						return new ValidateError[0];
+					});
+				}
+			};
 		}
 
 		return Page.of(Collections.emptyList());

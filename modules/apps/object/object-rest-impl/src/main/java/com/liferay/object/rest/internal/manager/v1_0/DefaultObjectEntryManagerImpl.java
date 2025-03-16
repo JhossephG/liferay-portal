@@ -840,7 +840,7 @@ public class DefaultObjectEntryManagerImpl
 
 		_objectEntryService.validateObjectEntry(
 			getGroupId(objectDefinition, scopeKey), serviceBuilderObjectEntry,
-			objectValidationRulesERC);
+			objectValidationRulesERC, serviceContext);
 	}
 
 	private Map<String, String> _addAction(
