@@ -16,6 +16,8 @@ import com.liferay.object.definition.security.permission.resource.ObjectDefiniti
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedException;
 import com.liferay.object.exception.ObjectEntryCountException;
+import com.liferay.object.exception.ObjectEntryValuesException;
+import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -434,15 +436,46 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 	@Override
 	public void validateObjectEntry(
 			long groupId, ObjectEntry objectEntry,
-			List<String> objectValidationRulesERC)
+			List<String> objectValidationRulesERC, ServiceContext serviceContext) 
 		throws PortalException {
+
+		List<PortalException> exceptions = new ArrayList<>();
 
 		_checkAddObjectEntryPortletResourcePermission(
 			groupId, objectEntry.getObjectDefinitionId(),
 			objectEntry.getValues());
 
-		_objectValidationRuleLocalService.validate(
-			objectEntry, objectValidationRulesERC, getUserId());
+		try {
+			_objectValidationRuleLocalService.validate(
+				objectEntry, objectValidationRulesERC, getUserId());
+		}
+		catch (ObjectValidationRuleEngineException e) {
+			exceptions.add(e);
+		}
+
+		try {
+			ObjectDefinition objectDefinition =
+				_objectDefinitionPersistence.findByPrimaryKey(
+					objectEntry.getObjectDefinitionId());
+
+			objectEntryLocalService.validateValues(
+				objectEntry, false, groupId, objectDefinition,
+				objectEntry.getObjectEntryId(), serviceContext,
+				objectEntry.getUserId(),
+				objectEntry.getValues());
+		}
+		catch (ObjectEntryValuesException e) {
+			exceptions.add(e);
+		}
+
+		if (exceptions.size() == 1) {
+			throw exceptions.get(0);
+		}
+
+		if (!exceptions.isEmpty()) {
+			throw new MultipleValidationException(exceptions);
+		}
+
 	}
 
 	@Activate

@@ -324,7 +324,7 @@ public class ObjectEntryLocalServiceImpl
 
 		long objectEntryId = counterLocalService.increment();
 
-		_validateValues(
+		validateValues(
 			null, user.isGuestUser(), groupId, objectDefinition, objectEntryId,
 			serviceContext, userId, values);
 
@@ -471,7 +471,7 @@ public class ObjectEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
-		_validateValues(
+		validateValues(
 			null, user.isGuestUser(), 0, objectDefinition, primaryKey,
 			serviceContext, userId, values);
 
@@ -1634,7 +1634,7 @@ public class ObjectEntryLocalServiceImpl
 		_contributeValues(
 			objectEntry.getGroupId(), objectDefinition, userId, values);
 
-		_validateValues(
+		validateValues(
 			objectEntry, user.isGuestUser(), objectEntry.getGroupId(),
 			objectDefinition, objectEntryId, serviceContext, userId, values);
 
@@ -5845,7 +5845,7 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
-	private void _validateValues(
+	public void validateValues( //tornar metodo publico ou criar um metodo novo caso nao cubra localizedValues
 			ObjectEntry existingObjectEntry, boolean guestUser, long groupId,
 			ObjectDefinition objectDefinition, long objectEntryId,
 			ServiceContext serviceContext, long userId,
