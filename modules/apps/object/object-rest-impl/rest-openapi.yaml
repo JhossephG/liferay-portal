@@ -610,7 +610,7 @@ paths:
             tags: ["ObjectEntry"]
     "/scopes/{scopeKey}/validate":
         post:
-            operationId: postValidateScopeKey
+            operationId: postScopeScopeKeyValidatePage
             parameters:
                 - in: path
                   name: scopeKey
@@ -641,7 +641,7 @@ paths:
             tags: ["ObjectEntry"]
     "/validate":
         post:
-            operationId: postValidate
+            operationId: postValidatePage
             requestBody:
                 content:
                     application/json:
