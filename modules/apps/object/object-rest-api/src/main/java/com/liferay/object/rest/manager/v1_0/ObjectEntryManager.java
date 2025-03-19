@@ -5,6 +5,7 @@
 
 package com.liferay.object.rest.manager.v1_0;
 
+import com.liferay.object.entry.validation.ValidationError;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.util.ObjectEntryManagerUtil;
@@ -75,11 +76,12 @@ public interface ObjectEntryManager {
 			ObjectEntry objectEntry, String scopeKey)
 		throws Exception;
 
-	public default void validateObjectEntry(
+	public default List<ValidationError> validateObjectEntry(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
 			List<String> objectValidationRulesERC, String scopeKey)
 		throws Exception {
+		return null;
 	}
 
 }

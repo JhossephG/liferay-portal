@@ -15,6 +15,7 @@ import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.entry.util.ObjectEntryDTOConverterUtil;
+import com.liferay.object.entry.validation.ValidationError;
 import com.liferay.object.exception.NoSuchObjectEntryException;
 import com.liferay.object.field.attachment.AttachmentManager;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
@@ -819,7 +820,7 @@ public class DefaultObjectEntryManagerImpl
 	}
 
 	@Override
-	public void validateObjectEntry(
+	public List<ValidationError> validateObjectEntry(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
 			List<String> objectValidationRulesERC, String scopeKey)
@@ -838,7 +839,7 @@ public class DefaultObjectEntryManagerImpl
 				dtoConverterContext.getLocale(), objectDefinition, objectEntry,
 				scopeKey, serviceContext));
 
-		_objectEntryService.validateObjectEntry(
+		return _objectEntryService.validateObjectEntry(
 			getGroupId(objectDefinition, scopeKey), serviceBuilderObjectEntry,
 			objectValidationRulesERC, serviceContext);
 	}
