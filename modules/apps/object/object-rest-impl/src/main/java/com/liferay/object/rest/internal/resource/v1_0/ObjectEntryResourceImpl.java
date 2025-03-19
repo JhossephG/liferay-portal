@@ -5,8 +5,6 @@
 
 package com.liferay.object.rest.internal.resource.v1_0;
 
-import com.liferay.object.exception.ObjectEntryValuesException;
-import com.liferay.object.exception.ObjectValidationRuleEngineException;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.EntryValidation;
@@ -26,13 +24,11 @@ import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityModel;
@@ -44,11 +40,8 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.NotSupportedException;
@@ -700,37 +693,20 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 			_objectEntryManagerRegistry.getObjectEntryManager(
 				_objectDefinition.getStorageType());
 
-		try {
-			objectEntryManager.validateObjectEntry(
-				_getDTOConverterContext(null), _objectDefinition,
-				entryValidation.getEntry(),
-				Arrays.asList(entryValidation.getValidationKeys()), scopeKey);
-		}
-		catch (PortalException validationException) {
-			List<ValidationError> validationErrorList = new ArrayList<>();
-
-			if (validationException instanceof ObjectValidationRuleEngineException) {
-				validationErrorList = transform(
-					((ObjectValidationRuleEngineException) validationException)
-						.getObjectValidationRuleResults(),
-					objectValidationRuleResult -> new ValidationError() {
-							{
-								setErrorMessage(
-									objectValidationRuleResult::getErrorMessage);
-								setObjectFieldName(
-									objectValidationRuleResult::getObjectFieldName);
-								setValidationKey(
-									objectValidationRuleResult::getValidationKey);
-							}
+		return Page.of(
+			transform(
+				objectEntryManager.validateObjectEntry(
+					_getDTOConverterContext(null), _objectDefinition,
+					entryValidation.getEntry(),
+					Arrays.asList(entryValidation.getValidationKeys()),
+					scopeKey),
+				validationError -> new ValidationError() {
+					{
+						setErrorMessage(validationError::getErrorMessage);
+						setObjectFieldName(validationError::getObjectFieldName);
+						setValidationKey(validationError::getValidationKey);
 					}
-				);
-			} else if (validationException instanceof ObjectEntryValuesException) {
-				validationErrorList.add(ValidationError.toDTO(validationException.getMessage()));
-			}
-
-			return Page.of(validationErrorList);
-		}
-		return Page.of(Collections.emptyList());
+				}));
 	}
 
 	private final DTOConverterRegistry _dtoConverterRegistry;
