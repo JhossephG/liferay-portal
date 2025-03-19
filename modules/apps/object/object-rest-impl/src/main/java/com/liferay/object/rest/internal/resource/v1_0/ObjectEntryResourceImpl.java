@@ -706,63 +706,30 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 				entryValidation.getEntry(),
 				Arrays.asList(entryValidation.getValidationKeys()), scopeKey);
 		}
-		catch (ObjectValidationRuleEngineException
-					objectValidationRuleEngineException) {
+		catch (PortalException validationException) {
+			List<ValidationError> validationErrorList = new ArrayList<>();
 
-			return Page.of(
-				ListUtil.fromArray(
-					transformToArray(
-						objectValidationRuleEngineException.
-							getObjectValidationRuleResults(),
-						objectValidationRuleResult -> new ValidationError() {
+			if (validationException instanceof ObjectValidationRuleEngineException) {
+				validationErrorList = transform(
+					((ObjectValidationRuleEngineException) validationException)
+						.getObjectValidationRuleResults(),
+					objectValidationRuleResult -> new ValidationError() {
 							{
 								setErrorMessage(
-									objectValidationRuleResult::
-										getErrorMessage);
+									objectValidationRuleResult::getErrorMessage);
 								setObjectFieldName(
-									objectValidationRuleResult::
-										getObjectFieldName);
+									objectValidationRuleResult::getObjectFieldName);
 								setValidationKey(
-									objectValidationRuleResult::
-										getValidationKey);
+									objectValidationRuleResult::getValidationKey);
 							}
-						},
-						ValidationError.class)));
-}
-		catch (PortalException validationException) {
-			return new ValidateResult() {
-				{
-					setSuccess(() -> false);
-					setValidateErrors(() -> {
-						if (validationException instanceof ObjectValidationRuleEngineException) {
-							return transformToArray(
-								((ObjectValidationRuleEngineException) validationException)
-									.getObjectValidationRuleResults(),
-								objectValidationRuleResult -> new ValidateError() {
-									{
-										setErrorMessage(objectValidationRuleResult::getErrorMessage);
-										setObjectFieldName(objectValidationRuleResult::getObjectFieldName);
-										setValidationKey(objectValidationRuleResult::getValidationKey);
-									}
-								},
-								ValidateError.class
-							);
-						}
-						else if (validationException instanceof ObjectEntryValuesException) {
-							return new ValidateError[]{
-								new ValidateError() {
-									{
-										setErrorMessage(validationException::getMessage);
-									}
-								}
-							};
-						}
-						return new ValidateError[0];
-					});
-				}
-			};
-		}
+					}
+				);
+			} else if (validationException instanceof ObjectEntryValuesException) {
+				validationErrorList.add(ValidationError.toDTO(validationException.getMessage()));
+			}
 
+			return Page.of(validationErrorList);
+		}
 		return Page.of(Collections.emptyList());
 	}
 
