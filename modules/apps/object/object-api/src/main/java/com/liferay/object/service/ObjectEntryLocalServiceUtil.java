@@ -707,6 +707,22 @@ public class ObjectEntryLocalServiceUtil {
 			userId, objectEntry, status, serviceContext);
 	}
 
+	public static List<com.liferay.object.exception.ObjectEntryValuesException>
+			validateValues(
+				ObjectEntry existingObjectEntry, boolean guestUser,
+				long groupId,
+				com.liferay.object.model.ObjectDefinition objectDefinition,
+				long objectEntryId,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext,
+				long userId, boolean validation,
+				Map<String, Serializable> values)
+		throws PortalException {
+
+		return getService().validateValues(
+			existingObjectEntry, guestUser, groupId, objectDefinition,
+			objectEntryId, serviceContext, userId, validation, values);
+	}
+
 	public static ObjectEntryLocalService getService() {
 		return _serviceSnapshot.get();
 	}

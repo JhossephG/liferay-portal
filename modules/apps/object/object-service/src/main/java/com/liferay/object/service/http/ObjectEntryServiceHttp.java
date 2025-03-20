@@ -878,11 +878,15 @@ public class ObjectEntryServiceHttp {
 		}
 	}
 
-	public static void validateObjectEntry(
-			HttpPrincipal httpPrincipal, long groupId,
-			com.liferay.object.model.ObjectEntry objectEntry,
-			java.util.List<String> objectValidationRulesERC)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static java.util.List
+		<com.liferay.object.entry.validation.ValidationError>
+				validateObjectEntry(
+					HttpPrincipal httpPrincipal, long groupId,
+					com.liferay.object.model.ObjectEntry objectEntry,
+					java.util.List<String> objectValidationRulesERC,
+					com.liferay.portal.kernel.service.ServiceContext
+						serviceContext)
+			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -890,10 +894,13 @@ public class ObjectEntryServiceHttp {
 				_validateObjectEntryParameterTypes20);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, objectEntry, objectValidationRulesERC);
+				methodKey, groupId, objectEntry, objectValidationRulesERC,
+				serviceContext);
+
+			Object returnObj = null;
 
 			try {
-				TunnelUtil.invoke(httpPrincipal, methodHandler);
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
 			}
 			catch (Exception exception) {
 				if (exception instanceof
@@ -906,6 +913,9 @@ public class ObjectEntryServiceHttp {
 				throw new com.liferay.portal.kernel.exception.SystemException(
 					exception);
 			}
+
+			return (java.util.List
+				<com.liferay.object.entry.validation.ValidationError>)returnObj;
 		}
 		catch (com.liferay.portal.kernel.exception.SystemException
 					systemException) {
@@ -994,7 +1004,8 @@ public class ObjectEntryServiceHttp {
 	private static final Class<?>[] _validateObjectEntryParameterTypes20 =
 		new Class[] {
 			long.class, com.liferay.object.model.ObjectEntry.class,
-			java.util.List.class
+			java.util.List.class,
+			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 
 }
