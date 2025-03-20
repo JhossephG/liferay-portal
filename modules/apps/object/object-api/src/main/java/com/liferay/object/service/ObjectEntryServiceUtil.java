@@ -210,13 +210,15 @@ public class ObjectEntryServiceUtil {
 			objectEntryId, values, serviceContext);
 	}
 
-	public static void validateObjectEntry(
-			long groupId, ObjectEntry objectEntry,
-			List<String> objectValidationRulesERC)
+	public static List<com.liferay.object.entry.validation.ValidationError>
+			validateObjectEntry(
+				long groupId, ObjectEntry objectEntry,
+				List<String> objectValidationRulesERC,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		getService().validateObjectEntry(
-			groupId, objectEntry, objectValidationRulesERC);
+		return getService().validateObjectEntry(
+			groupId, objectEntry, objectValidationRulesERC, serviceContext);
 	}
 
 	public static ObjectEntryService getService() {

@@ -813,6 +813,25 @@ public class ObjectEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List
+		<com.liferay.object.exception.ObjectEntryValuesException>
+				validateValues(
+					com.liferay.object.model.ObjectEntry existingObjectEntry,
+					boolean guestUser, long groupId,
+					com.liferay.object.model.ObjectDefinition objectDefinition,
+					long objectEntryId,
+					com.liferay.portal.kernel.service.ServiceContext
+						serviceContext,
+					long userId, boolean validation,
+					java.util.Map<String, java.io.Serializable> values)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryLocalService.validateValues(
+			existingObjectEntry, guestUser, groupId, objectDefinition,
+			objectEntryId, serviceContext, userId, validation, values);
+	}
+
+	@Override
 	public BasePersistence<?> getBasePersistence() {
 		return _objectEntryLocalService.getBasePersistence();
 	}

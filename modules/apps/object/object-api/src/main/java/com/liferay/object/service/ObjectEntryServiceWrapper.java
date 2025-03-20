@@ -235,13 +235,15 @@ public class ObjectEntryServiceWrapper
 	}
 
 	@Override
-	public void validateObjectEntry(
-			long groupId, com.liferay.object.model.ObjectEntry objectEntry,
-			java.util.List<String> objectValidationRulesERC)
+	public java.util.List<com.liferay.object.entry.validation.ValidationError>
+			validateObjectEntry(
+				long groupId, com.liferay.object.model.ObjectEntry objectEntry,
+				java.util.List<String> objectValidationRulesERC,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		_objectEntryService.validateObjectEntry(
-			groupId, objectEntry, objectValidationRulesERC);
+		return _objectEntryService.validateObjectEntry(
+			groupId, objectEntry, objectValidationRulesERC, serviceContext);
 	}
 
 	@Override
