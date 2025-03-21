@@ -469,7 +469,7 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 		validationErrorList.addAll(
 			ListUtil.toList(
 				objectEntryLocalService.validateValues(
-					objectEntry, false, groupId, objectDefinition,
+					Collections.emptyMap(), Collections.emptySet(), objectEntry, false, groupId, objectDefinition,
 					objectEntry.getObjectEntryId(), serviceContext,
 					serviceContext.getUserId(), true, objectEntry.getValues()),
 				objectEntryValuesException -> new ValidationError(
