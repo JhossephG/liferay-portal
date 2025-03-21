@@ -324,11 +324,22 @@ public class ObjectEntryLocalServiceImpl
 
 		long objectEntryId = counterLocalService.increment();
 
-		Set<Long> dlFileEntryIds = new HashSet<>();
+		Set<Long> tempDLFileEntryIds = new HashSet<>();
+
+		Map<DLFileEntry, ObjectField> dlFileEntries = new HashMap<>();
 
 		validateValues(
-			dlFileEntryIds, null, user.isGuestUser(), groupId, objectDefinition, objectEntryId,
-			serviceContext, userId, false, values);
+			dlFileEntries, tempDLFileEntryIds, null, user.isGuestUser(),
+			groupId, objectDefinition, objectEntryId, serviceContext, userId,
+			false, values);
+
+		for (Map.Entry<DLFileEntry, ObjectField> dlFileEntry :
+				dlFileEntries.entrySet()) {
+
+			_addFileEntry(
+				dlFileEntry.getKey(), objectDefinition, objectEntryId,
+				dlFileEntry.getValue(), serviceContext, userId, values);
+		}
 
 		defaultLanguageId = _getDefaultLanguageId(defaultLanguageId, groupId);
 
@@ -435,7 +446,7 @@ public class ObjectEntryLocalServiceImpl
 				clearObjectEntryIdsMap);
 		}
 
-		_deleteTempFileEntries(dlFileEntryIds);
+		_deleteTempFileEntries(tempDLFileEntryIds);
 
 		return _addObjectEntryVersion(objectEntry);
 	}
@@ -477,9 +488,12 @@ public class ObjectEntryLocalServiceImpl
 
 		Set<Long> dlFileEntryIds = new HashSet<>();
 
+		Map<DLFileEntry, ObjectField> dlFileEntries = new HashMap<>();
+
 		validateValues(
-			dlFileEntryIds, null, user.isGuestUser(), 0, objectDefinition, primaryKey,
-			serviceContext, userId, false, values);
+			dlFileEntries, dlFileEntryIds, null, user.isGuestUser(), 0,
+			objectDefinition, primaryKey, serviceContext, userId, false,
+			values);
 
 		insertIntoOrUpdateExtensionTable(
 			userId, objectDefinition.getObjectDefinitionId(), primaryKey,
@@ -1642,12 +1656,22 @@ public class ObjectEntryLocalServiceImpl
 		_contributeValues(
 			objectEntry.getGroupId(), objectDefinition, userId, values);
 
+		Map<DLFileEntry, ObjectField> dlFileEntries = new HashMap<>();
+
 		Set<Long> dlFileEntryIds = new HashSet<>();
 
 		validateValues(
-			dlFileEntryIds, objectEntry, user.isGuestUser(), objectEntry.getGroupId(),
-			objectDefinition, objectEntryId, serviceContext, userId, false,
-			values);
+			dlFileEntries, dlFileEntryIds, objectEntry, user.isGuestUser(),
+			objectEntry.getGroupId(), objectDefinition, objectEntryId,
+			serviceContext, userId, false, values);
+
+		for (Map.Entry<DLFileEntry, ObjectField> dlFileEntry :
+				dlFileEntries.entrySet()) {
+
+			_addFileEntry(
+				dlFileEntry.getKey(), objectDefinition, objectEntryId,
+				dlFileEntry.getValue(), serviceContext, userId, values);
+		}
 
 		int workflowAction = serviceContext.getWorkflowAction();
 
@@ -1932,10 +1956,11 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	public List<ObjectEntryValuesException> validateValues(
-			Set<Long> dlFileEntryIds, ObjectEntry existingObjectEntry, boolean guestUser, long groupId,
-			ObjectDefinition objectDefinition, long objectEntryId,
-			ServiceContext serviceContext, long userId, boolean validation,
-			Map<String, Serializable> values)
+			Map<DLFileEntry, ObjectField> dlFileEntries,
+			Set<Long> tempDLFileEntryIds, ObjectEntry existingObjectEntry,
+			boolean guestUser, long groupId, ObjectDefinition objectDefinition,
+			long objectEntryId, ServiceContext serviceContext, long userId,
+			boolean validation, Map<String, Serializable> values)
 		throws PortalException {
 
 		List<ObjectField> objectFields =
@@ -1950,11 +1975,10 @@ public class ObjectEntryLocalServiceImpl
 
 				fieldExceptions.addAll(
 					_validateValues(
-						dlFileEntryIds, existingObjectEntry, guestUser, groupId,
-						objectDefinition, objectEntryId, objectField,
+						dlFileEntries, tempDLFileEntryIds, existingObjectEntry,
+						guestUser, groupId, objectDefinition, objectField,
 						serviceContext, userId, validation,
-						values.get(objectField.getName()), StringPool.BLANK,
-						values));
+						values.get(objectField.getName()), StringPool.BLANK));
 
 				if (ListUtil.isNotEmpty(fieldExceptions) && !validation) {
 					return fieldExceptions;
@@ -1973,9 +1997,10 @@ public class ObjectEntryLocalServiceImpl
 
 			for (Map.Entry<String, String> entry : localizedValues.entrySet()) {
 				return _validateValues(
-					dlFileEntryIds, existingObjectEntry, guestUser, groupId, objectDefinition,
-					objectEntryId, objectField, serviceContext, userId,
-					validation, entry.getValue(), entry.getKey(), values);
+					dlFileEntries, tempDLFileEntryIds, existingObjectEntry,
+					guestUser, groupId, objectDefinition, objectField,
+					serviceContext, userId, validation, entry.getValue(),
+					entry.getKey());
 			}
 		}
 
@@ -5700,11 +5725,11 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	private List<ObjectEntryValuesException> _validateValues(
-			Set<Long> dlFileEntryIds, ObjectEntry existingObjectEntry, boolean guestUser, long groupId,
-			ObjectDefinition objectDefinition, long objectEntryId,
+			Map<DLFileEntry, ObjectField> dlFileEntries,
+			Set<Long> tempDLFileEntryIds, ObjectEntry existingObjectEntry,
+			boolean guestUser, long groupId, ObjectDefinition objectDefinition,
 			ObjectField objectField, ServiceContext serviceContext, long userId,
-			boolean validation, Serializable value, String valueLanguageId,
-			Map<String, Serializable> values)
+			boolean check, Serializable value, String valueLanguageId)
 		throws PortalException {
 
 		_objectEntryValuesException.clear();
@@ -5742,19 +5767,15 @@ public class ObjectEntryLocalServiceImpl
 						return Collections.emptyList();
 					}
 
-					dlFileEntryIds.add(dlFileEntry.getFileEntryId());
+					tempDLFileEntryIds.add(dlFileEntry.getFileEntryId());
 				}
 				else {
-					dlFileEntryIds.add(dlFileEntry.getFileEntryId());
+					tempDLFileEntryIds.add(dlFileEntry.getFileEntryId());
 				}
 
-				if (!validation) {
-					_addFileEntry(
-						dlFileEntry, objectDefinition, objectEntryId,
-						objectField, serviceContext, userId, values);
+				dlFileEntries.put(dlFileEntry, objectField);
 
-					return Collections.emptyList();
-				}
+				return Collections.emptyList();
 			}
 
 			if (Validator.isNotNull(value)) {
@@ -5936,7 +5957,7 @@ public class ObjectEntryLocalServiceImpl
 				userId, value, valueLanguageId);
 		}
 
-		if (validation) {
+		if (check) {
 			return _objectEntryValuesException;
 		}
 
