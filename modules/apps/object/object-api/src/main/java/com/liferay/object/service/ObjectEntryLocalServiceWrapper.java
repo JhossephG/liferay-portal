@@ -816,6 +816,10 @@ public class ObjectEntryLocalServiceWrapper
 	public java.util.List
 		<com.liferay.object.exception.ObjectEntryValuesException>
 				validateValues(
+					java.util.Map
+						<com.liferay.document.library.kernel.model.DLFileEntry,
+						 com.liferay.object.model.ObjectField> dlFileEntries,
+					java.util.Set<Long> tempDLFileEntryIds,
 					com.liferay.object.model.ObjectEntry existingObjectEntry,
 					boolean guestUser, long groupId,
 					com.liferay.object.model.ObjectDefinition objectDefinition,
@@ -827,8 +831,9 @@ public class ObjectEntryLocalServiceWrapper
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryLocalService.validateValues(
-			existingObjectEntry, guestUser, groupId, objectDefinition,
-			objectEntryId, serviceContext, userId, validation, values);
+			dlFileEntries, tempDLFileEntryIds, existingObjectEntry, guestUser,
+			groupId, objectDefinition, objectEntryId, serviceContext, userId,
+			validation, values);
 	}
 
 	@Override
