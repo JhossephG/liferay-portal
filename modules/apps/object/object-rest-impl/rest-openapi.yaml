@@ -25,14 +25,6 @@ components:
                     type: object
                 oldValue:
                     type: object
-        EntryValidation:
-            properties:
-                entry:
-                    $ref: "#/components/schemas/ObjectEntry"
-                validationKeys:
-                    items:
-                        type: string
-                    type: array
         FileEntry:
             properties:
                 externalReferenceCode:
@@ -223,14 +215,6 @@ components:
                     readOnly: true
                     type: object
             type: object
-        ValidationError:
-            properties:
-                errorMessage:
-                    type: string
-                objectFieldName:
-                    type: string
-                validationKey:
-                    type: string
         ValidateRequest:
             properties:
                 entry:
@@ -247,6 +231,22 @@ components:
                     items:
                         $ref: "#/components/schemas/ValidateError"
                     type: array
+        ValidationError:
+            properties:
+                errorMessage:
+                    type: string
+                objectFieldName:
+                    type: string
+                objectValidationRuleERC:
+                    type: string
+        ValidationRequest:
+            properties:
+                objectValidationRuleERCs:
+                    items:
+                        type: string
+                    type: array
+                values:
+                    $ref: "#/components/schemas/ObjectEntry"
         Version:
             properties:
                 number:
@@ -677,10 +677,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/EntryValidation"
+                            $ref: "#/components/schemas/ValidationRequest"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/EntryValidation"
+                            $ref: "#/components/schemas/ValidationRequest"
             responses:
                 200:
                     content:
@@ -702,10 +702,10 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: "#/components/schemas/EntryValidation"
+                            $ref: "#/components/schemas/ValidationRequest"
                     application/xml:
                         schema:
-                            $ref: "#/components/schemas/EntryValidation"
+                            $ref: "#/components/schemas/ValidationRequest"
             responses:
                 200:
                     content:
