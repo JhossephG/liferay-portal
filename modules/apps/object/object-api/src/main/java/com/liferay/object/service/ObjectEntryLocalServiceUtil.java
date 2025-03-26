@@ -17,7 +17,6 @@ import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Provides the local service utility for ObjectEntry. This utility wraps
@@ -708,24 +707,17 @@ public class ObjectEntryLocalServiceUtil {
 			userId, objectEntry, status, serviceContext);
 	}
 
-	public static List<com.liferay.object.exception.ObjectEntryValuesException>
-			validateValues(
-				Map
-					<com.liferay.document.library.kernel.model.DLFileEntry,
-					 com.liferay.object.model.ObjectField> dlFileEntries,
-				Set<Long> tempDLFileEntryIds, ObjectEntry existingObjectEntry,
-				boolean guestUser, long groupId,
-				com.liferay.object.model.ObjectDefinition objectDefinition,
-				long objectEntryId,
+	public static List<com.liferay.object.entry.validation.ValidationError>
+			validate(
+				long groupId, ObjectEntry objectEntry,
+				List<String> objectValidationRuleExternalReferenceCodes,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext,
-				long userId, boolean validation,
-				Map<String, Serializable> values)
+				long userId)
 		throws PortalException {
 
-		return getService().validateValues(
-			dlFileEntries, tempDLFileEntryIds, existingObjectEntry, guestUser,
-			groupId, objectDefinition, objectEntryId, serviceContext, userId,
-			validation, values);
+		return getService().validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes,
+			serviceContext, userId);
 	}
 
 	public static ObjectEntryLocalService getService() {
