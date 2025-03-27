@@ -15673,46 +15673,40 @@ public class ObjectEntryResourceTest {
 							"true"
 						).build()));
 
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), ""
-					).build()));
-
-			Assert.assertEquals(
-				"No value was provided for required object field " +
-					"\"propertiesField\"",
-				validationResponse.getValidationErrors()[0].getErrorMessage());
-
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), "0123456789"
-					).build()));
-
-			Assert.assertEquals(
+			Map<String, String> validationValues = HashMapBuilder.put(
+				"0123456789",
 				"Object entry value exceeds the maximum length of 9 " +
-					"characters for object field \"propertiesField\"",
-				validationResponse.getValidationErrors()[0].getErrorMessage());
+					"characters for object field \"propertiesField\""
+			).put(
+				"0123456789",
+				"Object entry value exceeds the maximum length of 9 " +
+					"characters for object field \"propertiesField\""
+			).put(
+				"unique",
+				"Unique value constraint violation for " +
+					objectFieldWithProperties.getDBTableName() +
+						".propertiesField_ with value unique"
+			).build();
 
 			ObjectEntryTestUtil.addObjectEntry(
 				objectDefinition, objectFieldWithProperties.getName(),
 				"unique");
 
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), "unique"
-					).build()));
+			for (Map.Entry<String, String> values :
+					validationValues.entrySet()) {
 
-			Assert.assertTrue(
-				validationResponse.getValidationErrors()[0].getErrorMessage(
-				).contains(
-					"Unique value constraint violation for"
-				));
+				validationResponse = _validate(
+					scopeKey, objectEntryResource,
+					_getValidationRequest(
+						HashMapBuilder.<String, Object>put(
+							objectFieldWithProperties.getName(), values.getKey()
+						).build()));
+
+				Assert.assertEquals(
+					values.getValue(),
+					validationResponse.getValidationErrors()[0].
+						getErrorMessage());
+			}
 
 			_objectFieldLocalService.deleteObjectField(
 				objectFieldWithProperties.getObjectFieldId());
