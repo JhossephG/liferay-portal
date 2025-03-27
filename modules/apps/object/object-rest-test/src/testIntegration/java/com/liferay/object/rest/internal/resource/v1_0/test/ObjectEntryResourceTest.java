@@ -15531,7 +15531,7 @@ public class ObjectEntryResourceTest {
 
 	private void _testPostValidate(
 			String scopeKey, ObjectDefinition objectDefinition,
-			ObjectField objectField)
+			ObjectField objectField1)
 		throws Exception {
 
 		String errorMessage1 = RandomTestUtil.randomString();
@@ -15544,7 +15544,7 @@ public class ObjectEntryResourceTest {
 				LocalizedMapUtil.getLocalizedMap(errorMessage1),
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
-				objectField.getName() + " == \"foo\"", false,
+				objectField1.getName() + " == \"foo\"", false,
 				Collections.emptyList());
 
 		String errorMessage2 = RandomTestUtil.randomString();
@@ -15556,14 +15556,14 @@ public class ObjectEntryResourceTest {
 			LocalizedMapUtil.getLocalizedMap(errorMessage2),
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectValidationRuleConstants.OUTPUT_TYPE_PARTIAL_VALIDATION,
-			"NOT(isInteger(" + objectField.getName() + "))", false,
+			"NOT(isInteger(" + objectField1.getName() + "))", false,
 			Arrays.asList(
 				new ObjectValidationRuleSettingBuilder(
 				).name(
 					ObjectValidationRuleSettingConstants.
 						NAME_OUTPUT_OBJECT_FIELD_ID
 				).value(
-					String.valueOf(objectField.getObjectFieldId())
+					String.valueOf(objectField1.getObjectFieldId())
 				).build()));
 
 		PermissionChecker originalPermissionChecker =
@@ -15595,7 +15595,7 @@ public class ObjectEntryResourceTest {
 					scopeKey, objectEntryResource,
 					_getValidationRequest(
 						HashMapBuilder.<String, Object>put(
-							objectField.getName(), StringUtil.randomString()
+							objectField1.getName(), StringUtil.randomString()
 						).build(),
 						objectValidationRule.getExternalReferenceCode())));
 
@@ -15605,7 +15605,7 @@ public class ObjectEntryResourceTest {
 				scopeKey, objectEntryResource,
 				_getValidationRequest(
 					HashMapBuilder.<String, Object>put(
-						objectField.getName(), StringUtil.randomString()
+						objectField1.getName(), StringUtil.randomString()
 					).build(),
 					objectValidationRule.getExternalReferenceCode()));
 
@@ -15617,7 +15617,7 @@ public class ObjectEntryResourceTest {
 				scopeKey, objectEntryResource,
 				_getValidationRequest(
 					HashMapBuilder.<String, Object>put(
-						objectField.getName(), "foo"
+						objectField1.getName(), "foo"
 					).build(),
 					objectValidationRule.getExternalReferenceCode()));
 
@@ -15628,7 +15628,7 @@ public class ObjectEntryResourceTest {
 				scopeKey, objectEntryResource,
 				_getValidationRequest(
 					HashMapBuilder.<String, Object>put(
-						objectField.getName(), RandomTestUtil.randomInt()
+						objectField1.getName(), RandomTestUtil.randomInt()
 					).build()));
 
 			Assert.assertEquals(
@@ -15638,14 +15638,14 @@ public class ObjectEntryResourceTest {
 				errorMessage2,
 				validationResponse.getValidationErrors()[1].getErrorMessage());
 			Assert.assertEquals(
-				objectField.getName(),
+				objectField1.getName(),
 				validationResponse.getValidationErrors()[1].
 					getObjectFieldName());
 
 			_objectValidationRuleLocalService.deleteObjectValidationRules(
 				objectDefinition.getObjectDefinitionId());
 
-			ObjectField objectFieldWithProperties =
+			ObjectField objectField2 =
 				ObjectFieldLocalServiceUtil.addCustomObjectField(
 					StringUtil.randomString(), TestPropsValues.getUserId(), 0,
 					objectDefinition.getObjectDefinitionId(),
@@ -15673,54 +15673,48 @@ public class ObjectEntryResourceTest {
 							"true"
 						).build()));
 
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), ""
-					).build()));
-
-			Assert.assertEquals(
+			Map<String, String> validationValues = HashMapBuilder.put(
+				"",
 				"No value was provided for required object field " +
-					"\"propertiesField\"",
-				validationResponse.getValidationErrors()[0].getErrorMessage());
-
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), "0123456789"
-					).build()));
-
-			Assert.assertEquals(
+					"\"propertiesField\""
+			).put(
+				StringUtil.randomString(10),
 				"Object entry value exceeds the maximum length of 9 " +
-					"characters for object field \"propertiesField\"",
-				validationResponse.getValidationErrors()[0].getErrorMessage());
+					"characters for object field \"propertiesField\""
+			).put(
+				"unique",
+				"Unique value constraint violation for " +
+					objectField2.getDBTableName() +
+						".propertiesField_ with value unique"
+			).build();
 
 			ObjectEntryTestUtil.addObjectEntry(
-				objectDefinition, objectFieldWithProperties.getName(),
-				"unique");
+				objectDefinition, objectField2.getName(), "unique");
 
-			validationResponse = _validate(
-				scopeKey, objectEntryResource,
-				_getValidationRequest(
-					HashMapBuilder.<String, Object>put(
-						objectFieldWithProperties.getName(), "unique"
-					).build()));
+			for (Map.Entry<String, String> values :
+					validationValues.entrySet()) {
 
-			Assert.assertTrue(
-				validationResponse.getValidationErrors()[0].getErrorMessage(
-				).contains(
-					"Unique value constraint violation for"
-				));
+				validationResponse = _validate(
+					scopeKey, objectEntryResource,
+					_getValidationRequest(
+						HashMapBuilder.<String, Object>put(
+							objectField2.getName(), values.getKey()
+						).build()));
+
+				Assert.assertEquals(
+					values.getValue(),
+					validationResponse.getValidationErrors()[0].
+						getErrorMessage());
+			}
 
 			_objectFieldLocalService.deleteObjectField(
-				objectFieldWithProperties.getObjectFieldId());
+				objectField2.getObjectFieldId());
 
 			FileEntry fileEntry = TempFileEntryUtil.addTempFileEntry(
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId(),
 				objectDefinition.getPortletId(),
-				TempFileEntryUtil.getTempFileName("foo.pdf"),
+				TempFileEntryUtil.getTempFileName(
+					StringUtil.randomString() + ".pdf"),
 				FileUtil.createTempFile(
 					RandomTestUtil.randomString(
 						(_MAX_FILE_SIZE_VALUE * 1024 * 1024) + 1
