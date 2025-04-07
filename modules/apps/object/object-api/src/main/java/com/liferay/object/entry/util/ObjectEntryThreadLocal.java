@@ -8,8 +8,12 @@ package com.liferay.object.entry.util;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
 
+import java.io.Serializable;
+
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * @author Marcela Cunha
@@ -20,6 +24,19 @@ public class ObjectEntryThreadLocal {
 		Set<Long> validatedObjectEntryIds = _validatedObjectEntryIds.get();
 
 		validatedObjectEntryIds.add(objectEntryId);
+	}
+
+	public static <T> T clearExpandoValues(Supplier<T> supplier) {
+		try {
+			return supplier.get();
+		}
+		finally {
+			_expandoValues.remove();
+		}
+	}
+
+	public static Map<String, Serializable> getExpandoValues() {
+		return _expandoValues.get();
 	}
 
 	public static boolean isDisassociateRelatedModels() {
@@ -51,6 +68,10 @@ public class ObjectEntryThreadLocal {
 			disassociateRelatedModels);
 	}
 
+	public static void setExpandoValues(Map<String, Serializable> attributes) {
+		_expandoValues.set(attributes);
+	}
+
 	public static void setSkipObjectEntryResourcePermission(
 		boolean skipObjectEntryResourcePermission) {
 
@@ -74,6 +95,8 @@ public class ObjectEntryThreadLocal {
 		_disassociateRelatedModels = new CentralizedThreadLocal<>(
 			ObjectEntryThreadLocal.class + "._disassociateRelatedModels",
 			() -> false);
+	private static final ThreadLocal<Map<String, Serializable>> _expandoValues =
+		new ThreadLocal<>();
 	private static final ThreadLocal<Boolean>
 		_skipObjectEntryResourcePermission = new CentralizedThreadLocal<>(
 			ObjectEntryThreadLocal.class +
