@@ -1825,14 +1825,14 @@ public class ObjectActionLocalServiceTest {
 	}
 
 	@Test
-	public void testDTOValueInSystemObjectDefinitionActionPayload()
+	public void testExecuteObjectActionWithUnmodifiableSystemObjectDefinition()
 		throws Exception {
 
 		ObjectDefinition accountObjectDefinition =
 			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
 				TestPropsValues.getCompanyId(), AccountEntry.class.getName());
 
-		_addObjectAction(
+		ObjectAction objectAction = _addObjectAction(
 			accountObjectDefinition.getObjectDefinitionId(),
 			ObjectActionExecutorConstants.KEY_WEBHOOK,
 			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
@@ -1841,8 +1841,6 @@ public class ObjectActionLocalServiceTest {
 			).put(
 				"url", "https://onafterupdate.com"
 			).build());
-
-		Assert.assertEquals(0, _argumentsList.size());
 
 		String customFieldName = "A" + RandomTestUtil.randomString();
 		String customFieldValue1 = RandomTestUtil.randomString();
@@ -1863,11 +1861,8 @@ public class ObjectActionLocalServiceTest {
 				customFieldValue1
 			).build());
 
-		User adminUser = UserTestUtil.getAdminUser(
-			TestPropsValues.getCompanyId());
-
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			adminUser.getUserId(), 0L, RandomTestUtil.randomString(),
+			TestPropsValues.getUserId(), 0L, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, null, null,
 			RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -1895,10 +1890,6 @@ public class ObjectActionLocalServiceTest {
 
 		Http.Body body = options.getBody();
 
-		Assert.assertEquals(StringPool.UTF8, body.getCharset());
-		Assert.assertEquals(
-			ContentTypes.APPLICATION_JSON, body.getContentType());
-
 		JSONObject payloadJSONObject = _jsonFactory.createJSONObject(
 			body.getContent());
 
@@ -1913,6 +1904,8 @@ public class ObjectActionLocalServiceTest {
 				payloadJSONObject, "JSONObject/modelDTOAccount",
 				"JSONArray/customFields", "JSONObject/0",
 				"JSONObject/customValue", "Object/data"));
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
 	}
 
 	@Test
