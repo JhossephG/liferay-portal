@@ -96,7 +96,8 @@ public class ObjectEntryThreadLocal {
 			ObjectEntryThreadLocal.class + "._disassociateRelatedModels",
 			() -> false);
 	private static final ThreadLocal<Map<String, Serializable>> _expandoValues =
-		new ThreadLocal<>();
+		new CentralizedThreadLocal<>(
+			ObjectEntryThreadLocal.class + "._expandoValues");
 	private static final ThreadLocal<Boolean>
 		_skipObjectEntryResourcePermission = new CentralizedThreadLocal<>(
 			ObjectEntryThreadLocal.class +
