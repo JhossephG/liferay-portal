@@ -13,7 +13,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
  * @author Marcela Cunha
@@ -26,13 +25,12 @@ public class ObjectEntryThreadLocal {
 		validatedObjectEntryIds.add(objectEntryId);
 	}
 
-	public static <T> T clearExpandoValues(Supplier<T> supplier) {
-		try {
-			return supplier.get();
-		}
-		finally {
-			_expandoValues.remove();
-		}
+	public static void clearExpandoValues() {
+		_expandoValues.remove();
+	}
+
+	public static void expandoValues(Map<String, Serializable> attributes) {
+		_expandoValues.set(attributes);
 	}
 
 	public static Map<String, Serializable> getExpandoValues() {
@@ -66,10 +64,6 @@ public class ObjectEntryThreadLocal {
 
 		return _disassociateRelatedModels.setWithSafeCloseable(
 			disassociateRelatedModels);
-	}
-
-	public static void setExpandoValues(Map<String, Serializable> attributes) {
-		_expandoValues.set(attributes);
 	}
 
 	public static void setSkipObjectEntryResourcePermission(

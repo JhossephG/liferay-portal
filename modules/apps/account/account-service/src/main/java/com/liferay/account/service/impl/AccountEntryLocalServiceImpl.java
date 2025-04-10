@@ -693,46 +693,51 @@ public class AccountEntryLocalServiceImpl
 			accountEntry.getCompanyId(), accountEntry.getModelClassName(),
 			accountEntryId);
 
-		ObjectEntryThreadLocal.setExpandoValues(expandoBridge.getAttributes());
+		try {
+			ObjectEntryThreadLocal.expandoValues(expandoBridge.getAttributes());
 
-		accountEntry.setExpandoBridgeAttributes(serviceContext);
+			accountEntry.setExpandoBridgeAttributes(serviceContext);
 
-		accountEntry = accountEntryPersistence.update(accountEntry);
+			accountEntry = accountEntryPersistence.update(accountEntry);
 
-		if (domains != null) {
-			accountEntry = updateDomains(accountEntryId, domains);
+			if (domains != null) {
+				accountEntry = updateDomains(accountEntryId, domains);
+			}
+
+			if (status == WorkflowConstants.STATUS_INCOMPLETE) {
+				status = WorkflowConstants.STATUS_APPROVED;
+			}
+
+			ServiceContext workflowServiceContext = new ServiceContext();
+			long workflowUserId = accountEntry.getUserId();
+
+			if (serviceContext != null) {
+
+				// Asset
+
+				_updateAsset(accountEntry, serviceContext);
+
+				workflowServiceContext = (ServiceContext)serviceContext.clone();
+				workflowUserId = serviceContext.getUserId();
+			}
+
+			if (_isWorkflowEnabled(accountEntry.getCompanyId())) {
+				_checkStatus(accountEntry.getStatus(), status);
+
+				accountEntry = _startWorkflowInstance(
+					workflowUserId, accountEntry, workflowServiceContext);
+			}
+			else {
+				updateStatus(
+					workflowUserId, accountEntryId, status,
+					workflowServiceContext, Collections.emptyMap());
+			}
+
+			return accountEntry;
 		}
-
-		if (status == WorkflowConstants.STATUS_INCOMPLETE) {
-			status = WorkflowConstants.STATUS_APPROVED;
+		finally {
+			ObjectEntryThreadLocal.clearExpandoValues();
 		}
-
-		ServiceContext workflowServiceContext = new ServiceContext();
-		long workflowUserId = accountEntry.getUserId();
-
-		if (serviceContext != null) {
-
-			// Asset
-
-			_updateAsset(accountEntry, serviceContext);
-
-			workflowServiceContext = (ServiceContext)serviceContext.clone();
-			workflowUserId = serviceContext.getUserId();
-		}
-
-		if (_isWorkflowEnabled(accountEntry.getCompanyId())) {
-			_checkStatus(accountEntry.getStatus(), status);
-
-			accountEntry = _startWorkflowInstance(
-				workflowUserId, accountEntry, workflowServiceContext);
-		}
-		else {
-			updateStatus(
-				workflowUserId, accountEntryId, status, workflowServiceContext,
-				Collections.emptyMap());
-		}
-
-		return accountEntry;
 	}
 
 	@Indexable(type = IndexableType.REINDEX)

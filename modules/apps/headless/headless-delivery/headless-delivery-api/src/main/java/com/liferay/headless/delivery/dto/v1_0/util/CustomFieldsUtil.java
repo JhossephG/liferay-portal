@@ -44,6 +44,35 @@ import java.util.function.Function;
 public class CustomFieldsUtil {
 
 	public static CustomField[] toCustomFields(
+		boolean acceptAllLanguages, Map<String, Serializable> attributes,
+		String className, long classPK, long companyId, Locale locale) {
+
+		ExpandoBridge expandoBridge = ExpandoBridgeFactoryUtil.getExpandoBridge(
+			companyId, className, classPK);
+
+		return TransformUtil.transformToArray(
+			attributes.entrySet(),
+			entry -> {
+				UnicodeProperties unicodeProperties =
+					expandoBridge.getAttributeProperties(entry.getKey());
+
+				if (GetterUtil.getBoolean(
+						unicodeProperties.getProperty(
+							ExpandoColumnConstants.PROPERTY_HIDDEN))) {
+
+					return null;
+				}
+
+				return _toCustomField(
+					acceptAllLanguages,
+					unicodeProperties.getProperty(
+						ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE),
+					entry, expandoBridge, locale);
+			},
+			CustomField.class);
+	}
+
+	public static CustomField[] toCustomFields(
 		boolean acceptAllLanguages, String className, long classPK,
 		long companyId, Locale locale) {
 

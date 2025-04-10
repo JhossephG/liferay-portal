@@ -1825,90 +1825,6 @@ public class ObjectActionLocalServiceTest {
 	}
 
 	@Test
-	public void testExecuteObjectActionWithUnmodifiableSystemObjectDefinition()
-		throws Exception {
-
-		ObjectDefinition accountObjectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
-				TestPropsValues.getCompanyId(), AccountEntry.class.getName());
-
-		ObjectAction objectAction = _addObjectAction(
-			accountObjectDefinition.getObjectDefinitionId(),
-			ObjectActionExecutorConstants.KEY_WEBHOOK,
-			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
-			UnicodePropertiesBuilder.put(
-				"secret", "onafterupdate"
-			).put(
-				"url", "https://onafterupdate.com"
-			).build());
-
-		String customFieldName = "A" + RandomTestUtil.randomString();
-		String customFieldValue1 = RandomTestUtil.randomString();
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext();
-
-		serviceContext.setExpandoBridgeAttributes(
-			HashMapBuilder.<String, Serializable>put(
-				() -> {
-					ExpandoColumn expandoColumn = ExpandoTestUtil.addColumn(
-						ExpandoTestUtil.addTable(
-							PortalUtil.getClassNameId(AccountEntry.class),
-							ExpandoTableConstants.DEFAULT_TABLE_NAME),
-						customFieldName, ExpandoColumnConstants.STRING);
-
-					return expandoColumn.getName();
-				},
-				customFieldValue1
-			).build());
-
-		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			TestPropsValues.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
-			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
-			WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		String customFieldValue2 = RandomTestUtil.randomString();
-		serviceContext = ServiceContextTestUtil.getServiceContext();
-
-		serviceContext.setExpandoBridgeAttributes(
-			HashMapBuilder.<String, Serializable>put(
-				customFieldName, customFieldValue2
-			).build());
-
-		_accountEntryLocalService.updateAccountEntry(
-			accountEntry.getAccountEntryId(), 0, accountEntry.getName(),
-			accountEntry.getDescription(), false, null,
-			accountEntry.getEmailAddress(), null, accountEntry.getTaxIdNumber(),
-			WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		Assert.assertEquals(1, _argumentsList.size());
-
-		Object[] arguments = _argumentsList.poll();
-
-		Http.Options options = (Http.Options)arguments[0];
-
-		Http.Body body = options.getBody();
-
-		JSONObject payloadJSONObject = _jsonFactory.createJSONObject(
-			body.getContent());
-
-		Assert.assertEquals(
-			customFieldValue1,
-			JSONUtil.getValue(
-				payloadJSONObject, "JSONObject/originalDTOAccount",
-				"JSONObject/customFields", "Object/" + customFieldName));
-		Assert.assertEquals(
-			customFieldValue2,
-			JSONUtil.getValue(
-				payloadJSONObject, "JSONObject/modelDTOAccount",
-				"JSONArray/customFields", "JSONObject/0",
-				"JSONObject/customValue", "Object/data"));
-
-		_objectActionLocalService.deleteObjectAction(objectAction);
-	}
-
-	@Test
 	public void testExecuteObjectActionAfterObjectEntryStatusUpdate()
 		throws Exception {
 
@@ -2229,6 +2145,91 @@ public class ObjectActionLocalServiceTest {
 		Assert.assertNotNull(_argumentsList.poll());
 
 		_objectFieldLocalService.deleteObjectField(objectField);
+	}
+
+	@Test
+	public void testExecuteObjectActionWithUnmodifiableSystemObjectDefinition()
+		throws Exception {
+
+		ObjectDefinition accountObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+				TestPropsValues.getCompanyId(), AccountEntry.class.getName());
+
+		ObjectAction objectAction = _addObjectAction(
+			accountObjectDefinition.getObjectDefinitionId(),
+			ObjectActionExecutorConstants.KEY_WEBHOOK,
+			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
+			UnicodePropertiesBuilder.put(
+				"secret", "onafterupdate"
+			).put(
+				"url", "https://onafterupdate.com"
+			).build());
+
+		String customFieldName = "A" + RandomTestUtil.randomString();
+		String customFieldValue1 = RandomTestUtil.randomString();
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setExpandoBridgeAttributes(
+			HashMapBuilder.<String, Serializable>put(
+				() -> {
+					ExpandoColumn expandoColumn = ExpandoTestUtil.addColumn(
+						ExpandoTestUtil.addTable(
+							PortalUtil.getClassNameId(AccountEntry.class),
+							ExpandoTableConstants.DEFAULT_TABLE_NAME),
+						customFieldName, ExpandoColumnConstants.STRING);
+
+					return expandoColumn.getName();
+				},
+				customFieldValue1
+			).build());
+
+		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
+			TestPropsValues.getUserId(), 0L, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null, null, null,
+			RandomTestUtil.randomString(),
+			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+		String customFieldValue2 = RandomTestUtil.randomString();
+		serviceContext = ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setExpandoBridgeAttributes(
+			HashMapBuilder.<String, Serializable>put(
+				customFieldName, customFieldValue2
+			).build());
+
+		_accountEntryLocalService.updateAccountEntry(
+			accountEntry.getAccountEntryId(), 0, accountEntry.getName(),
+			accountEntry.getDescription(), false, null,
+			accountEntry.getEmailAddress(), null, accountEntry.getTaxIdNumber(),
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+		Assert.assertEquals(1, _argumentsList.size());
+
+		Object[] arguments = _argumentsList.poll();
+
+		Http.Options options = (Http.Options)arguments[0];
+
+		Http.Body body = options.getBody();
+
+		JSONObject payloadJSONObject = _jsonFactory.createJSONObject(
+			body.getContent());
+
+		Assert.assertEquals(
+			customFieldValue1,
+			JSONUtil.getValue(
+				payloadJSONObject, "JSONObject/originalDTOAccount",
+				"JSONArray/customFields", "JSONObject/0",
+				"JSONObject/customValue", "Object/data"));
+		Assert.assertEquals(
+			customFieldValue2,
+			JSONUtil.getValue(
+				payloadJSONObject, "JSONObject/modelDTOAccount",
+				"JSONArray/customFields", "JSONObject/0",
+				"JSONObject/customValue", "Object/data"));
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
 	}
 
 	@Test

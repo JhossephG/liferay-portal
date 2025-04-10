@@ -6,6 +6,7 @@
 package com.liferay.object.internal.entry.util;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -108,19 +109,22 @@ public class ObjectEntryUtil {
 					return null;
 				}
 
-				return ObjectEntryThreadLocal.clearExpandoValues(
-					() -> {
-						Map<String, Object> map = _toDTO(
-							originalBaseModel, dtoConverter,
-							dtoConverterRegistry, Collections.emptyMap(),
-							jsonFactory, modelClass, userId);
+				User user = UserLocalServiceUtil.fetchUser(userId);
 
-						map.put(
-							"customFields",
-							ObjectEntryThreadLocal.getExpandoValues());
+				Map<String, Object> originalDTOMap = _toDTO(
+					originalBaseModel, dtoConverter, dtoConverterRegistry,
+					Collections.emptyMap(), jsonFactory, modelClass, userId);
 
-						return map;
-					});
+				originalDTOMap.put(
+					"customFields",
+					CustomFieldsUtil.toCustomFields(
+						false, ObjectEntryThreadLocal.getExpandoValues(),
+						modelClass.getName(),
+						GetterUtil.getLong(
+							originalBaseModel.getPrimaryKeyObj()),
+						objectDefinition.getCompanyId(), user.getLocale()));
+
+				return originalDTOMap;
 			}
 		).put(
 			"originalExtendedProperties", originalExtendedProperties
