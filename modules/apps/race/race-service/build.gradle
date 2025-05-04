@@ -1,0 +1,12 @@
+dependencies {
+	api project(":modules:race:race-api")
+
+	compileOnly group: "com.liferay.portal", name: "release.dxp.api"
+}
+
+buildService {
+	apiDir = "../race-api/src/main/java"
+	testDir = "../race-test/src/testIntegration/java"
+}
+
+group = "com.example.race"
