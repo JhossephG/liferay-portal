@@ -24,8 +24,9 @@
 
 		<!-- Other fields -->
 
-		<column name="name" type="String" />
 		<column name="description" type="boolean" />
+		<column name="location" type="String" />
+		<column name="name" type="String" />
 
 		<!-- Order -->
 
