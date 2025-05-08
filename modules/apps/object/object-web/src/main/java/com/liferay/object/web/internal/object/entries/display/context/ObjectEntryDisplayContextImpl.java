@@ -574,6 +574,35 @@ public class ObjectEntryDisplayContextImpl
 	}
 
 	@Override
+	public Map<String, Object> getScheduleProperties() throws PortalException {
+		ObjectEntry objectEntry = _getObjectEntry();
+
+		if (objectEntry == null) {
+			return HashMapBuilder.<String, Object>put(
+				"neverReview", true
+			).put(
+				"reviewDate", null
+			).build();
+		}
+
+		Date date = (Date)objectEntry.getPropertyValue("reviewDate");
+
+		if (date == null) {
+			return HashMapBuilder.<String, Object>put(
+				"neverReview", true
+			).put(
+				"reviewDate", null
+			).build();
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"neverReview", true
+		).put(
+			"reviewDate", date
+		).build();
+	}
+
+	@Override
 	public String getURLSeparator() {
 		StringBundler sb = new StringBundler(6);
 
