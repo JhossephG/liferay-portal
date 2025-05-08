@@ -123,6 +123,9 @@ import java.sql.Timestamp;
 
 import java.text.DecimalFormat;
 
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -570,6 +573,41 @@ public class ObjectEntryDisplayContextImpl
 			}
 		).put(
 			"readOnly", String.valueOf(_readOnly || isGuestUser())
+		).build();
+	}
+
+	@Override
+	public Map<String, Object> getScheduleProperties() {
+		return HashMapBuilder.<String, Object>put(
+			"reviewDate",
+			() -> {
+				ObjectEntry objectEntry = _getObjectEntry();
+
+				Date reviewDate =
+					(objectEntry != null) ? objectEntry.getReviewDate() : null;
+
+				String formattedReviewDate = null;
+
+				if (reviewDate != null) {
+					formattedReviewDate = DateTimeFormatter.ISO_INSTANT.format(
+						reviewDate.toInstant(
+						).truncatedTo(
+							ChronoUnit.SECONDS
+						));
+				}
+
+				boolean checked = false;
+
+				if ((objectEntry == null) || (reviewDate == null)) {
+					checked = true;
+				}
+
+				return JSONUtil.put(
+					"checked", checked
+				).put(
+					"value", formattedReviewDate
+				);
+			}
 		).build();
 	}
 
