@@ -250,6 +250,7 @@
 		<column name="expirationDate" type="Date" />
 		<column name="treePath" type="String" />
 		<column name="version" type="int" />
+		<column name="reviewDate" type="Date" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
@@ -1236,6 +1237,7 @@
 		<exception>ObjectEntryFolderName</exception>
 		<exception>ObjectEntryFolderParentObjectEntryFolderId</exception>
 		<exception>ObjectEntryFolderScope</exception>
+		<exception>ObjectEntryReviewDate</exception>
 		<exception>ObjectEntryValues</exception>
 		<exception>ObjectFieldBusinessType</exception>
 		<exception>ObjectFieldDBType</exception>
