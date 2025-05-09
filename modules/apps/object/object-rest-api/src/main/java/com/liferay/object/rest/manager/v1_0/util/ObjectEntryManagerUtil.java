@@ -83,6 +83,8 @@ public class ObjectEntryManagerUtil {
 			existingObjectEntry.setProperties(() -> existingProperties);
 		}
 
+		existingObjectEntry.setReviewDate(objectEntry::getReviewDate);
+
 		if (objectEntry.getStatus() != null) {
 			existingObjectEntry.setStatus(objectEntry::getStatus);
 		}
