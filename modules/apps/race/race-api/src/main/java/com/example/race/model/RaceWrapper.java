@@ -41,8 +41,9 @@ public class RaceWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
-		attributes.put("name", getName());
 		attributes.put("description", isDescription());
+		attributes.put("location", getLocation());
+		attributes.put("name", getName());
 
 		return attributes;
 	}
@@ -97,16 +98,22 @@ public class RaceWrapper
 			setModifiedDate(modifiedDate);
 		}
 
-		String name = (String)attributes.get("name");
-
-		if (name != null) {
-			setName(name);
-		}
-
 		Boolean description = (Boolean)attributes.get("description");
 
 		if (description != null) {
 			setDescription(description);
+		}
+
+		String location = (String)attributes.get("location");
+
+		if (location != null) {
+			setLocation(location);
+		}
+
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
 		}
 	}
 
@@ -153,6 +160,16 @@ public class RaceWrapper
 	@Override
 	public long getGroupId() {
 		return model.getGroupId();
+	}
+
+	/**
+	 * Returns the location of this race.
+	 *
+	 * @return the location of this race
+	 */
+	@Override
+	public String getLocation() {
+		return model.getLocation();
 	}
 
 	/**
@@ -288,6 +305,16 @@ public class RaceWrapper
 	@Override
 	public void setGroupId(long groupId) {
 		model.setGroupId(groupId);
+	}
+
+	/**
+	 * Sets the location of this race.
+	 *
+	 * @param location the location of this race
+	 */
+	@Override
+	public void setLocation(String location) {
+		model.setLocation(location);
 	}
 
 	/**

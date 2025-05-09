@@ -130,9 +130,11 @@ public class RacePersistenceTest {
 
 		newRace.setModifiedDate(RandomTestUtil.nextDate());
 
-		newRace.setName(RandomTestUtil.randomString());
-
 		newRace.setDescription(RandomTestUtil.randomBoolean());
+
+		newRace.setLocation(RandomTestUtil.randomString());
+
+		newRace.setName(RandomTestUtil.randomString());
 
 		_races.add(_persistence.update(newRace));
 
@@ -152,9 +154,10 @@ public class RacePersistenceTest {
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingRace.getModifiedDate()),
 			Time.getShortTimestamp(newRace.getModifiedDate()));
-		Assert.assertEquals(existingRace.getName(), newRace.getName());
 		Assert.assertEquals(
 			existingRace.isDescription(), newRace.isDescription());
+		Assert.assertEquals(existingRace.getLocation(), newRace.getLocation());
+		Assert.assertEquals(existingRace.getName(), newRace.getName());
 	}
 
 	@Test
@@ -220,7 +223,8 @@ public class RacePersistenceTest {
 		return OrderByComparatorFactoryUtil.create(
 			"RACE_Race", "uuid", true, "raceId", true, "groupId", true,
 			"companyId", true, "userId", true, "userName", true, "createDate",
-			true, "modifiedDate", true, "name", true, "description", true);
+			true, "modifiedDate", true, "description", true, "location", true,
+			"name", true);
 	}
 
 	@Test
@@ -501,9 +505,11 @@ public class RacePersistenceTest {
 
 		race.setModifiedDate(RandomTestUtil.nextDate());
 
-		race.setName(RandomTestUtil.randomString());
-
 		race.setDescription(RandomTestUtil.randomBoolean());
+
+		race.setLocation(RandomTestUtil.randomString());
+
+		race.setName(RandomTestUtil.randomString());
 
 		_races.add(_persistence.update(race));
 

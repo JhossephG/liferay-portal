@@ -7,6 +7,7 @@ create table RACE_Race (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
-	name VARCHAR(75) null,
-	description BOOLEAN
+	description BOOLEAN,
+	location VARCHAR(75) null,
+	name VARCHAR(75) null
 );

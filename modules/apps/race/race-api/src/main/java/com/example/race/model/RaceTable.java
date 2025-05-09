@@ -39,10 +39,12 @@ public class RaceTable extends BaseTable<RaceTable> {
 		"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<RaceTable, Date> modifiedDate = createColumn(
 		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
-	public final Column<RaceTable, String> name = createColumn(
-		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<RaceTable, Boolean> description = createColumn(
 		"description", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
+	public final Column<RaceTable, String> location = createColumn(
+		"location", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<RaceTable, String> name = createColumn(
+		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
 	private RaceTable() {
 		super("RACE_Race", RaceTable::new);

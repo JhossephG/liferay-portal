@@ -68,7 +68,8 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"description", Types.BOOLEAN}
+		{"description", Types.BOOLEAN}, {"location", Types.VARCHAR},
+		{"name", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -83,12 +84,13 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		TABLE_COLUMNS_MAP.put("userName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
-		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("description", Types.BOOLEAN);
+		TABLE_COLUMNS_MAP.put("location", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table RACE_Race (uuid_ VARCHAR(75) null,raceId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name VARCHAR(75) null,description BOOLEAN)";
+		"create table RACE_Race (uuid_ VARCHAR(75) null,raceId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,description BOOLEAN,location VARCHAR(75) null,name VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP = "drop table RACE_Race";
 
@@ -237,8 +239,9 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 			attributeGetterFunctions.put("userName", Race::getUserName);
 			attributeGetterFunctions.put("createDate", Race::getCreateDate);
 			attributeGetterFunctions.put("modifiedDate", Race::getModifiedDate);
-			attributeGetterFunctions.put("name", Race::getName);
 			attributeGetterFunctions.put("description", Race::getDescription);
+			attributeGetterFunctions.put("location", Race::getLocation);
+			attributeGetterFunctions.put("name", Race::getName);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -272,9 +275,11 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 			attributeSetterBiConsumers.put(
 				"modifiedDate", (BiConsumer<Race, Date>)Race::setModifiedDate);
 			attributeSetterBiConsumers.put(
-				"name", (BiConsumer<Race, String>)Race::setName);
-			attributeSetterBiConsumers.put(
 				"description", (BiConsumer<Race, Boolean>)Race::setDescription);
+			attributeSetterBiConsumers.put(
+				"location", (BiConsumer<Race, String>)Race::setLocation);
+			attributeSetterBiConsumers.put(
+				"name", (BiConsumer<Race, String>)Race::setName);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -464,6 +469,47 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 
 	@JSON
 	@Override
+	public boolean getDescription() {
+		return _description;
+	}
+
+	@JSON
+	@Override
+	public boolean isDescription() {
+		return _description;
+	}
+
+	@Override
+	public void setDescription(boolean description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_description = description;
+	}
+
+	@JSON
+	@Override
+	public String getLocation() {
+		if (_location == null) {
+			return "";
+		}
+		else {
+			return _location;
+		}
+	}
+
+	@Override
+	public void setLocation(String location) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_location = location;
+	}
+
+	@JSON
+	@Override
 	public String getName() {
 		if (_name == null) {
 			return "";
@@ -489,27 +535,6 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 	@Deprecated
 	public String getOriginalName() {
 		return getColumnOriginalValue("name");
-	}
-
-	@JSON
-	@Override
-	public boolean getDescription() {
-		return _description;
-	}
-
-	@JSON
-	@Override
-	public boolean isDescription() {
-		return _description;
-	}
-
-	@Override
-	public void setDescription(boolean description) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_description = description;
 	}
 
 	@Override
@@ -582,8 +607,9 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		raceImpl.setUserName(getUserName());
 		raceImpl.setCreateDate(getCreateDate());
 		raceImpl.setModifiedDate(getModifiedDate());
-		raceImpl.setName(getName());
 		raceImpl.setDescription(isDescription());
+		raceImpl.setLocation(getLocation());
+		raceImpl.setName(getName());
 
 		raceImpl.resetOriginalValues();
 
@@ -603,9 +629,10 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		raceImpl.setCreateDate(this.<Date>getColumnOriginalValue("createDate"));
 		raceImpl.setModifiedDate(
 			this.<Date>getColumnOriginalValue("modifiedDate"));
-		raceImpl.setName(this.<String>getColumnOriginalValue("name"));
 		raceImpl.setDescription(
 			this.<Boolean>getColumnOriginalValue("description"));
+		raceImpl.setLocation(this.<String>getColumnOriginalValue("location"));
+		raceImpl.setName(this.<String>getColumnOriginalValue("name"));
 
 		return raceImpl;
 	}
@@ -723,6 +750,16 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 			raceCacheModel.modifiedDate = Long.MIN_VALUE;
 		}
 
+		raceCacheModel.description = isDescription();
+
+		raceCacheModel.location = getLocation();
+
+		String location = raceCacheModel.location;
+
+		if ((location != null) && (location.length() == 0)) {
+			raceCacheModel.location = null;
+		}
+
 		raceCacheModel.name = getName();
 
 		String name = raceCacheModel.name;
@@ -730,8 +767,6 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		if ((name != null) && (name.length() == 0)) {
 			raceCacheModel.name = null;
 		}
-
-		raceCacheModel.description = isDescription();
 
 		return raceCacheModel;
 	}
@@ -802,8 +837,9 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
-	private String _name;
 	private boolean _description;
+	private String _location;
+	private String _name;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -843,8 +879,9 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 		_columnOriginalValues.put("userName", _userName);
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
-		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("location", _location);
+		_columnOriginalValues.put("name", _name);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -884,9 +921,11 @@ public class RaceModelImpl extends BaseModelImpl<Race> implements RaceModel {
 
 		columnBitmasks.put("modifiedDate", 128L);
 
-		columnBitmasks.put("name", 256L);
+		columnBitmasks.put("description", 256L);
 
-		columnBitmasks.put("description", 512L);
+		columnBitmasks.put("location", 512L);
+
+		columnBitmasks.put("name", 1024L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

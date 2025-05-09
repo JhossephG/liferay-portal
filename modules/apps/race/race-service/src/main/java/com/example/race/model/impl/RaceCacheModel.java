@@ -52,7 +52,7 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(21);
+		StringBundler sb = new StringBundler(23);
 
 		sb.append("{uuid=");
 		sb.append(uuid);
@@ -70,10 +70,12 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
-		sb.append(", name=");
-		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
+		sb.append(", location=");
+		sb.append(location);
+		sb.append(", name=");
+		sb.append(name);
 		sb.append("}");
 
 		return sb.toString();
@@ -116,14 +118,21 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 			raceImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
+		raceImpl.setDescription(description);
+
+		if (location == null) {
+			raceImpl.setLocation("");
+		}
+		else {
+			raceImpl.setLocation(location);
+		}
+
 		if (name == null) {
 			raceImpl.setName("");
 		}
 		else {
 			raceImpl.setName(name);
 		}
-
-		raceImpl.setDescription(description);
 
 		raceImpl.resetOriginalValues();
 
@@ -144,9 +153,10 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
-		name = objectInput.readUTF();
 
 		description = objectInput.readBoolean();
+		location = objectInput.readUTF();
+		name = objectInput.readUTF();
 	}
 
 	@Override
@@ -176,14 +186,21 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
+		objectOutput.writeBoolean(description);
+
+		if (location == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(location);
+		}
+
 		if (name == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
 			objectOutput.writeUTF(name);
 		}
-
-		objectOutput.writeBoolean(description);
 	}
 
 	public String uuid;
@@ -194,7 +211,8 @@ public class RaceCacheModel implements CacheModel<Race>, Externalizable {
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
-	public String name;
 	public boolean description;
+	public String location;
+	public String name;
 
 }

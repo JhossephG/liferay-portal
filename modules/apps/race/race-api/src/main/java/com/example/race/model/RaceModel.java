@@ -195,21 +195,6 @@ public interface RaceModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
-	 * Returns the name of this race.
-	 *
-	 * @return the name of this race
-	 */
-	@AutoEscape
-	public String getName();
-
-	/**
-	 * Sets the name of this race.
-	 *
-	 * @param name the name of this race
-	 */
-	public void setName(String name);
-
-	/**
 	 * Returns the description of this race.
 	 *
 	 * @return the description of this race
@@ -229,6 +214,36 @@ public interface RaceModel
 	 * @param description the description of this race
 	 */
 	public void setDescription(boolean description);
+
+	/**
+	 * Returns the location of this race.
+	 *
+	 * @return the location of this race
+	 */
+	@AutoEscape
+	public String getLocation();
+
+	/**
+	 * Sets the location of this race.
+	 *
+	 * @param location the location of this race
+	 */
+	public void setLocation(String location);
+
+	/**
+	 * Returns the name of this race.
+	 *
+	 * @return the name of this race
+	 */
+	@AutoEscape
+	public String getName();
+
+	/**
+	 * Sets the name of this race.
+	 *
+	 * @param name the name of this race
+	 */
+	public void setName(String name);
 
 	@Override
 	public Race cloneWithOriginalValues();
