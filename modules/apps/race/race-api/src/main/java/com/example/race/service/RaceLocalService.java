@@ -69,6 +69,8 @@ public interface RaceLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public Race addRace(Race race);
 
+	public Race addRace(String name) throws PortalException;
+
 	/**
 	 * @throws PortalException
 	 */

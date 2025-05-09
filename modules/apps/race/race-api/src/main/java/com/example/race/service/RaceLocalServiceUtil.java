@@ -52,6 +52,10 @@ public class RaceLocalServiceUtil {
 		return getService().addRace(race);
 	}
 
+	public static Race addRace(String name) throws PortalException {
+		return getService().addRace(name);
+	}
+
 	/**
 	 * @throws PortalException
 	 */

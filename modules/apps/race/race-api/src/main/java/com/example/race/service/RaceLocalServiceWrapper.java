@@ -43,6 +43,13 @@ public class RaceLocalServiceWrapper
 		return _raceLocalService.addRace(race);
 	}
 
+	@Override
+	public com.example.race.model.Race addRace(String name)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _raceLocalService.addRace(name);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
