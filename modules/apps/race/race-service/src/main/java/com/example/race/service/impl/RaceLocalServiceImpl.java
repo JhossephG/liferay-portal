@@ -19,4 +19,13 @@ import org.osgi.service.component.annotations.Component;
 	service = AopService.class
 )
 public class RaceLocalServiceImpl extends RaceLocalServiceBaseImpl {
+	@Override
+	public Race addRace(String name) throws PortalException {
+		long raceId = counterLocalService.increment(Race.class.getName());
+
+		Race race = racePersistence.create(raceId);
+		race.setName(name);
+
+		return racePersistence.update(race);
+	}
 }
