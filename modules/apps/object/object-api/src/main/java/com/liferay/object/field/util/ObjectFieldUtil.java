@@ -479,6 +479,6 @@ public class ObjectFieldUtil {
 		Collections.unmodifiableSet(
 			SetUtil.fromArray(
 				"createDate", "creator", "externalReferenceCode", "id",
-				"modifiedDate", "status"));
+				"modifiedDate", "reviewDate", "status"));
 
 }
