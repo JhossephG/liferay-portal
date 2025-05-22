@@ -270,7 +270,9 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -607,6 +609,8 @@ public class ObjectEntryLocalServiceImpl
 		_checkObjectEntriesByExpirationDate(companyId, date);
 
 		_checkObjectEntriesByReviewDate(companyId, date);
+
+		_checkObjectEntriesByExpirationDate(companyId, date);
 
 		_companyIdPreviousCheckDate.put(companyId, date);
 	}
@@ -1926,11 +1930,10 @@ public class ObjectEntryLocalServiceImpl
 
 		ObjectEntry originalObjectEntry = (ObjectEntry)objectEntry.clone();
 
-		Date date = new Date();
 		Date expirationDate = objectEntry.getExpirationDate();
 
 		if ((status == WorkflowConstants.STATUS_APPROVED) &&
-			(expirationDate != null) && expirationDate.before(date)) {
+			(expirationDate != null) && _isDateInPast(expirationDate)) {
 
 			objectEntry.setExpirationDate(null);
 		}
@@ -1938,7 +1941,7 @@ public class ObjectEntryLocalServiceImpl
 		if ((status == WorkflowConstants.STATUS_EXPIRED) &&
 			(expirationDate == null)) {
 
-			objectEntry.setExpirationDate(date);
+			objectEntry.setExpirationDate(new Date());
 		}
 
 		objectEntry.setStatus(status);
@@ -4772,6 +4775,24 @@ public class ObjectEntryLocalServiceImpl
 		return staticValues;
 	}
 
+	private boolean _isDateInPast(Date inputDate) {
+		if (inputDate == null) {
+			return false;
+		}
+
+		Instant nowInstant = Instant.now(
+		).truncatedTo(
+			ChronoUnit.MINUTES
+		);
+
+		Instant inputInstant = inputDate.toInstant(
+		).truncatedTo(
+			ChronoUnit.MINUTES
+		);
+
+		return inputInstant.isBefore(nowInstant);
+	}
+
 	private List<Object[]> _list(
 			DSLQuery dslQuery, long objectDefinitionId,
 			Expression<?>[] selectExpressions)
@@ -6785,6 +6806,9 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	private final Map<Long, Date> _companyPreviousCheckDate =
+		new ConcurrentHashMap<>();
 
 	@Reference
 	private CurrentConnection _currentConnection;
