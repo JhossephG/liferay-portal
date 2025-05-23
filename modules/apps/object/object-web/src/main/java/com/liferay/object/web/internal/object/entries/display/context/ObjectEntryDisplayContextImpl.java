@@ -123,6 +123,9 @@ import java.sql.Timestamp;
 
 import java.text.DecimalFormat;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -573,6 +576,48 @@ public class ObjectEntryDisplayContextImpl
 		).build();
 	}
 
+	@Override
+	public Map<String, Object> getScheduleProperties2() throws PortalException {
+		ObjectEntry objectEntry = _getObjectEntry();
+
+		return HashMapBuilder.<String, Object>put(
+			"reviewDate",
+			() -> {
+				Date rawDate = null;
+
+				if (objectEntry != null) {
+					rawDate = (Date)objectEntry.getPropertyValue("reviewDate");
+				}
+
+				boolean checked = false;
+
+				if (rawDate == null) {
+					checked = true;
+				}
+
+				String formatted = null;
+
+				if (rawDate != null) {
+					formatted = DateTimeFormatter.ofPattern(
+						"yyyy-MM-dd HH:mm"
+					).withZone(
+						ZoneId.systemDefault()
+					).format(
+						rawDate.toInstant(
+						).truncatedTo(
+							ChronoUnit.MINUTES
+						)
+					);
+				}
+
+				return JSONUtil.put(
+					"checked", checked
+				).put(
+					"value", formatted
+				);
+			}
+		).build();
+	}
 	@Override
 	public Map<String, Object> getScheduleProperties() throws PortalException {
 		ObjectEntry objectEntry = _getObjectEntry();

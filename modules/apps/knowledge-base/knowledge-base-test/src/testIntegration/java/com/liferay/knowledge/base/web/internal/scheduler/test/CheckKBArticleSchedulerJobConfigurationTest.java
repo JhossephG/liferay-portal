@@ -64,7 +64,7 @@ public class CheckKBArticleSchedulerJobConfigurationTest {
 		throws Exception {
 
 		Date displayDate = new Date(
-			System.currentTimeMillis() + (1 * Time.DAY));
+			System.currentTimeMillis() + (Time.DAY));
 
 		Date expirationDate = new Date(displayDate.getTime() + (1 * Time.DAY));
 

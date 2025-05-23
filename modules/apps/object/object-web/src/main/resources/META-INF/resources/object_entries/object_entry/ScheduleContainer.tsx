@@ -68,30 +68,55 @@ export default function ScheduleContainer({
 		>
 			<ClayPanel.Body className="lfr-object__entries-schedule-panel">
 				<div className="row">
-					<ScheduleField
-						checkboxLabel={Liferay.Language.get('never-review')}
-						dateLabel={Liferay.Language.get('review-date')}
-						id={portletNamespace + 'reviewDate'}
-						isChecked={displayedScheduleValues.reviewDate.checked}
-						onCheckboxChange={(event) => {
-							handleCheckboxChange({
-								event,
-								property: 'reviewDate',
-							});
-						}}
-						onDateChange={(value: string) => {
-							setDisplayedScheduleValues({
-								...displayedScheduleValues,
-								reviewDate: {
-									...scheduleProperties.reviewDate,
-									value,
-								},
-							});
-							setHiddenScheduleValues({reviewDate: value});
-						}}
-						portletNamespace={portletNamespace}
-						value={displayedScheduleValues.reviewDate.value}
-					/>
+						<ScheduleField
+							checkboxLabel={Liferay.Language.get('never-review')}
+							dateLabel={Liferay.Language.get('review-date')}
+							id={portletNamespace + 'reviewDate'}
+							isChecked={displayedScheduleValues.reviewDate.checked}
+							onCheckboxChange={(event) => {
+								handleCheckboxChange({
+									event,
+									property: 'reviewDate',
+								});
+							}}
+							onDateChange={(value: string) => {
+								setDisplayedScheduleValues({
+									...displayedScheduleValues,
+									reviewDate: {
+										...scheduleProperties.reviewDate,
+										value,
+									},
+								});
+								setHiddenScheduleValues({reviewDate: value});
+							}}
+							portletNamespace={portletNamespace}
+							value={displayedScheduleValues.reviewDate.value}
+						/>
+
+						<ScheduleField
+							checkboxLabel={Liferay.Language.get('never-review')}
+							dateLabel={Liferay.Language.get('review-date')}
+							id={portletNamespace + 'reviewDate'}
+							isChecked={displayedScheduleValues.reviewDate.checked}
+							onCheckboxChange={(event) => {
+								handleCheckboxChange({
+									event,
+									property: 'reviewDate',
+								});
+							}}
+							onDateChange={(value: string) => {
+								setDisplayedScheduleValues({
+									...displayedScheduleValues,
+									reviewDate: {
+										...scheduleProperties.reviewDate,
+										value,
+									},
+								});
+								setHiddenScheduleValues({reviewDate: value});
+							}}
+							portletNamespace={portletNamespace}
+							value={displayedScheduleValues.reviewDate.value}
+						/>
 
 					<input
 						id={portletNamespace + 'scheduleContainer'}

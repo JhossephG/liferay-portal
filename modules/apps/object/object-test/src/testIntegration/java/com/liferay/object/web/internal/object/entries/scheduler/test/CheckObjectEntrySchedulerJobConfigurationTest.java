@@ -24,7 +24,9 @@ import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
@@ -61,60 +63,49 @@ public class CheckObjectEntrySchedulerJobConfigurationTest {
 			new LiferayIntegrationTestRule(),
 			SynchronousDestinationTestRule.INSTANCE);
 
-	@Before
-	public void setUp() throws Exception {
+	@Test
+	public void testCheckObjectEntryReviewDate() throws Exception {
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		String objectFieldName = "a" + RandomTestUtil.randomString();
 
-		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
+		ObjectDefinition objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
 			List.of(
 				ObjectFieldUtil.createObjectField(
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, true, true, null,
 					RandomTestUtil.randomString(), objectFieldName, false)));
 
-		_objectEntry = ObjectEntryTestUtil.addObjectEntry(
-			0, _objectDefinition.getObjectDefinitionId(),
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
-				objectFieldName, "a"
+				objectFieldName, RandomTestUtil.randomString()
+			).put(
+				"reviewDate", new Date(System.currentTimeMillis() + Time.DAY)
 			).build());
-	}
-
-	@Test
-	public void testCheckObjectEntryReviewDate() throws PortalException {
-		_objectEntry.setReviewDate(new Date());
-
-		_objectEntry = _objectEntryLocalService.updateObjectEntry(_objectEntry);
 
 		_objectEntryLocalService.checkObjectEntries(
 			TestPropsValues.getCompanyId());
 
 		List<UserNotificationEvent> userNotificationEvents =
 			_userNotificationEventLocalService.getUserNotificationEvents(
-				_objectEntry.getUserId(), _objectDefinition.getPortletId(),
-				LocalDate.now(
-				).atStartOfDay(
-					ZoneId.systemDefault()
-				).toInstant(
-				).getEpochSecond(),
+				objectEntry.getUserId(), objectDefinition.getPortletId(),
+				DateUtil.newTime(),
 				true);
 
 		Assert.assertEquals(
 			userNotificationEvents.toString(), 1,
 			userNotificationEvents.size());
 
+		UserNotificationEvent userNotificationEvent =
+			userNotificationEvents.get(0);
+
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			userNotificationEvents.get(
-				0
-			).getPayload());
+			userNotificationEvent.getPayload());
 
 		Assert.assertTrue(
 			Validator.isNotNull(jsonObject.get("notificationMessage")));
 	}
-
-	private ObjectDefinition _objectDefinition;
-	private ObjectEntry _objectEntry;
 
 	@Inject
 	private ObjectEntryLocalService _objectEntryLocalService;
