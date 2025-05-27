@@ -230,7 +230,8 @@ portletDisplay.setURLBack(backURL);
 						return false;
 					}
 
-					if (scheduleContainerInputValue.expirationDate &&
+					if (
+						scheduleContainerInputValue.expirationDate &&
 						isPastDate(scheduleContainerInputValue.expirationDate)
 					) {
 						shouldSubmitForm = false;
