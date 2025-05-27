@@ -69,6 +69,7 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.context.path.RESTContextPathResolverRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
+import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -589,7 +590,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				MVCActionCommand.class,
 				new ExpireObjectEntryMVCActionCommand(
+<<<<<<< HEAD
 					_objectEntryLocalService, _objectEntryService),
+=======
+					_objectEntryLocalService, _objectEntryResourceFactory),
+>>>>>>> d562a42 (LPD-44845 feature: create ExpireObjectEntryMVCActionCommand and expire action in ViewObjectEntriesDisplayContext)
 				HashMapDictionaryBuilder.<String, Object>put(
 					"jakarta.portlet.name", objectDefinition.getPortletId()
 				).put(
@@ -845,6 +850,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 	@Reference
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
+
+	@Reference
+	private ObjectEntryResource.Factory _objectEntryResourceFactory;
 
 	@Reference
 	private ObjectEntryService _objectEntryService;

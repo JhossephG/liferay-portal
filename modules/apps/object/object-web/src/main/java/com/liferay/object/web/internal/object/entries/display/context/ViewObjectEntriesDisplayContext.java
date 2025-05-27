@@ -147,7 +147,11 @@ public class ViewObjectEntriesDisplayContext {
 				).setParameter(
 					"objectEntryId", "{id}"
 				).buildString(),
+<<<<<<< HEAD
 				"time", "expire",
+=======
+				"times", "expire",
+>>>>>>> d562a42 (LPD-44845 feature: create ExpireObjectEntryMVCActionCommand and expire action in ViewObjectEntriesDisplayContext)
 				LanguageUtil.get(_objectRequestHelper.getRequest(), "expire"),
 				"get", "expire", null),
 			new FDSActionDropdownItem(
