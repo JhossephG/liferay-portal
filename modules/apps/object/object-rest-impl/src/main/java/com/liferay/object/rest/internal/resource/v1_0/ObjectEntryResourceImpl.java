@@ -379,6 +379,17 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	}
 
 	@Override
+	public ObjectEntry patchExpireObjectEntry(Long objectEntryId) throws Exception {
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getStorageType()));
+
+		return defaultObjectEntryManager.expireObjectEntry(
+			_getDTOConverterContext(objectEntryId), objectEntryId);
+	}
+
+	@Override
 	public ObjectEntry patchObjectEntry(
 			Long objectEntryId, ObjectEntry objectEntry)
 		throws Exception {
