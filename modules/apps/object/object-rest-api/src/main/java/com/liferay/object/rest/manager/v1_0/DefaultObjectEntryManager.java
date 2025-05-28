@@ -81,8 +81,7 @@ public interface DefaultObjectEntryManager extends ObjectEntryManager {
 		throws Exception;
 
 	public ObjectEntry expireObjectEntry(
-		DTOConverterContext dtoConverterContext,
-		long objectEntryId)
+			DTOConverterContext dtoConverterContext, long objectEntryId)
 		throws Exception;
 
 	public ObjectEntry expireObjectEntryByVersion(

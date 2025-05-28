@@ -24,7 +24,6 @@ import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.entry.util.ObjectEntryDTOConverterUtil;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
-import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.model.ObjectEntryModel;
@@ -587,7 +586,9 @@ public class ObjectEntryDTOConverter
 			serviceBuilderObjectEntry);
 	}
 
-	private String _getDateString(Object date, ObjectField objectField) {
+	private String _getDateString(
+		ObjectField objectField, Timestamp timestamp) {
+
 		String pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
 		if (objectField.compareBusinessType(
@@ -600,13 +601,9 @@ public class ObjectEntryDTOConverter
 			pattern += "'Z'";
 		}
 
-		if (Validator.isNotNull(date)) {
-			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 
-			return simpleDateFormat.format(date);
-		}
-
-		return null;
+		return simpleDateFormat.format(timestamp);
 	}
 
 	private DTOConverterContext _getDTOConverterContext(
@@ -984,7 +981,7 @@ public class ObjectEntryDTOConverter
 				return null;
 			}
 
-			return _getDateString(timestamp, objectField);
+			return _getDateString(objectField, timestamp);
 		}
 		else if (objectField.compareBusinessType(
 					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
@@ -1164,26 +1161,7 @@ public class ObjectEntryDTOConverter
 				objectDefinition.getObjectDefinitionId());
 
 		for (ObjectField objectField : objectFields) {
-			if (objectField.isMetadata() &&
-				ObjectFieldUtil.isScheduleField(objectField.getName()) &&
-				FeatureFlagManagerUtil.isEnabled(
-					objectDefinition.getCompanyId(), "LPD-17564")) {
-
-				unsafeSuppliers.put(
-					"expirationDate",
-					() -> _getDateString(
-						objectEntry.getExpirationDate(), objectField));
-
-				unsafeSuppliers.put(
-					"publishDate",
-					() -> _getDateString(
-						objectEntry.getPublishDate(), objectField));
-
-				unsafeSuppliers.put(
-					"reviewDate",
-					() -> _getDateString(
-						objectEntry.getReviewDate(), objectField));
-
+			if (objectField.isMetadata()) {
 				continue;
 			}
 

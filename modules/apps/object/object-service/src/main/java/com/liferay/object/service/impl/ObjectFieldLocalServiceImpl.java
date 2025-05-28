@@ -1924,9 +1924,9 @@ public class ObjectFieldLocalServiceImpl
 		"createDate", "creator", "id", "modifiedDate", "status");
 	private final Set<String> _reservedNames = SetUtil.fromArray(
 		"actions", "companyid", "createdate", "creator", "currentdate",
-		"datecreated", "datemodified", "expirationdate",
+		"datecreated", "datemodified", "displaydate", "expirationdate",
 		"externalreferencecode", "groupid", "id", "lastpublishdate",
-		"modifieddate", "publishdate", "reviewdate", "status", "statusbyuserid",
+		"modifieddate", "reviewdate", "status", "statusbyuserid",
 		"statusbyusername", "statusdate", "userid", "username");
 
 	@Reference

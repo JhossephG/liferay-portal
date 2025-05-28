@@ -379,7 +379,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	}
 
 	@Override
-	public ObjectEntry patchExpireObjectEntry(Long objectEntryId) throws Exception {
+	public ObjectEntry patchExpireObjectEntry(Long objectEntryId)
+		throws Exception {
+
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
 				_objectEntryManagerRegistry.getObjectEntryManager(
