@@ -482,15 +482,15 @@ public class ObjectFieldUtil {
 	private static final Set<String> _metadataObjectFieldNames =
 		Collections.unmodifiableSet(
 			SetUtil.fromArray(
-				"createDate", "creator", "expirationDate",
-				"externalReferenceCode", "id", "modifiedDate", "publishDate",
-				"reviewDate", "status"));
+				"createDate", "creator", "displayDate", "expirationDate",
+				"externalReferenceCode", "id", "modifiedDate", "reviewDate",
+				"status"));
 	private static final List<String> _scheduleFieldNames =
 		_metadataObjectFieldNames.stream(
 		).filter(
 			fieldName ->
+				fieldName.equals("displayDate") ||
 				fieldName.equals("expirationDate") ||
-				fieldName.equals("publishDate") ||
 				fieldName.equals("reviewDate")
 		).toList();
 
