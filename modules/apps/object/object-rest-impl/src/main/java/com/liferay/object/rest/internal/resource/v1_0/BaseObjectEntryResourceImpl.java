@@ -777,6 +777,15 @@ public abstract class BaseObjectEntryResourceImpl
 				objectEntry.getDefaultLanguageId());
 		}
 
+		if (objectEntry.getDisplayDate() != null) {
+			existingObjectEntry.setDisplayDate(objectEntry.getDisplayDate());
+		}
+
+		if (objectEntry.getExpirationDate() != null) {
+			existingObjectEntry.setExpirationDate(
+				objectEntry.getExpirationDate());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
@@ -817,6 +826,10 @@ public abstract class BaseObjectEntryResourceImpl
 			properties.putAll(objectEntry.getProperties());
 
 			existingObjectEntry.setProperties(properties);
+		}
+
+		if (objectEntry.getReviewDate() != null) {
+			existingObjectEntry.setReviewDate(objectEntry.getReviewDate());
 		}
 
 		if (objectEntry.getTaxonomyCategoryIds() != null) {
@@ -894,6 +907,15 @@ public abstract class BaseObjectEntryResourceImpl
 				objectEntry.getDefaultLanguageId());
 		}
 
+		if (objectEntry.getDisplayDate() != null) {
+			existingObjectEntry.setDisplayDate(objectEntry.getDisplayDate());
+		}
+
+		if (objectEntry.getExpirationDate() != null) {
+			existingObjectEntry.setExpirationDate(
+				objectEntry.getExpirationDate());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
@@ -934,6 +956,10 @@ public abstract class BaseObjectEntryResourceImpl
 			properties.putAll(objectEntry.getProperties());
 
 			existingObjectEntry.setProperties(properties);
+		}
+
+		if (objectEntry.getReviewDate() != null) {
+			existingObjectEntry.setReviewDate(objectEntry.getReviewDate());
 		}
 
 		if (objectEntry.getTaxonomyCategoryIds() != null) {
@@ -997,6 +1023,15 @@ public abstract class BaseObjectEntryResourceImpl
 				objectEntry.getDefaultLanguageId());
 		}
 
+		if (objectEntry.getDisplayDate() != null) {
+			existingObjectEntry.setDisplayDate(objectEntry.getDisplayDate());
+		}
+
+		if (objectEntry.getExpirationDate() != null) {
+			existingObjectEntry.setExpirationDate(
+				objectEntry.getExpirationDate());
+		}
+
 		if (objectEntry.getExternalReferenceCode() != null) {
 			existingObjectEntry.setExternalReferenceCode(
 				objectEntry.getExternalReferenceCode());
@@ -1037,6 +1072,10 @@ public abstract class BaseObjectEntryResourceImpl
 			properties.putAll(objectEntry.getProperties());
 
 			existingObjectEntry.setProperties(properties);
+		}
+
+		if (objectEntry.getReviewDate() != null) {
+			existingObjectEntry.setReviewDate(objectEntry.getReviewDate());
 		}
 
 		if (objectEntry.getTaxonomyCategoryIds() != null) {
