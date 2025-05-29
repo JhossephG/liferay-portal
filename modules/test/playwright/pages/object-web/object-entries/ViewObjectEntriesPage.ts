@@ -126,6 +126,23 @@ export class ViewObjectEntriesPage {
 		}
 	}
 
+	async scheduleForCurrentDate(
+		scheduleField: 'Review' | 'Expiration' | 'Display'
+	) {
+		const fieldLabel = `${scheduleField} DateMandatory`;
+
+		await this.page
+			.locator('div')
+			.filter({hasText: new RegExp(`^${fieldLabel}$`)})
+			.getByLabel('Choose date')
+			.click();
+
+		await this.page
+			.locator('div:not([aria-hidden="true"])')
+			.getByRole('button', {name: 'Select current date'})
+			.click();
+	}
+
 	async clickAddObjectEntry(objectName?: string) {
 		objectName
 			? await this.page.getByLabel('Add ' + objectName).click()
