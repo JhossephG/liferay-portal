@@ -82,9 +82,11 @@ public class CheckObjectEntrySchedulerJobConfigurationTest {
 			0, objectDefinition.getObjectDefinitionId(),
 			HashMapBuilder.<String, Serializable>put(
 				objectFieldName, RandomTestUtil.randomString()
-			).put(
-				"reviewDate", new Date()
 			).build());
+
+		objectEntry.setReviewDate(new Date());
+
+		objectEntry = _objectEntryLocalService.updateObjectEntry(objectEntry);
 
 		_objectEntryLocalService.checkObjectEntries(
 			TestPropsValues.getCompanyId());
