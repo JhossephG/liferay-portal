@@ -180,6 +180,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -2211,25 +2212,23 @@ public class DefaultObjectEntryManagerImplTest
 					"textObjectFieldName"
 				).build()));
 
+		Date date = _toDate("2000-11-29 10:00");
+
 		ObjectEntry objectEntry = _defaultObjectEntryManager.addObjectEntry(
 			_simpleDTOConverterContext, objectDefinition,
 			new ObjectEntry() {
 				{
 					setProperties(
 						HashMapBuilder.<String, Object>put(
-							"reviewDate", "2090-11-29 10:00"
-						).put(
 							"textObjectFieldName", RandomTestUtil.randomString()
 						).build());
+
+					setReviewDate(date);
 				}
 			},
 			null);
 
-		Assert.assertEquals(
-			"2090-11-29T10:00:00.000",
-			objectEntry.getPropertyValue(
-				"reviewDate"
-			).toString());
+		Assert.assertEquals(date, objectEntry.getReviewDate());
 	}
 
 	@Test
@@ -6100,32 +6099,14 @@ public class DefaultObjectEntryManagerImplTest
 				{
 					setProperties(
 						HashMapBuilder.<String, Object>put(
-							"reviewDate", "0001-12-25 00:00"
-						).put(
 							"textObjectFieldName", RandomTestUtil.randomString()
 						).build());
+					setReviewDate(_toDate("0001-12-25 00:00"));
 				}
 			},
 			null);
 
-		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
-			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
-			new ObjectEntry() {
-				{
-					setProperties(
-						HashMapBuilder.<String, Object>put(
-							"reviewDate", "2000-11-29 10:00"
-						).put(
-							"textObjectFieldName", RandomTestUtil.randomString()
-						).build());
-				}
-			});
-
-		Assert.assertEquals(
-			"2000-11-29T10:00:00.000",
-			objectEntry.getPropertyValue(
-				"reviewDate"
-			).toString());
+		Date date = _toDate("2000-11-29 10:00");
 
 		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
 			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
@@ -6133,14 +6114,27 @@ public class DefaultObjectEntryManagerImplTest
 				{
 					setProperties(
 						HashMapBuilder.<String, Object>put(
-							"reviewDate", ""
-						).put(
 							"textObjectFieldName", RandomTestUtil.randomString()
 						).build());
+					setReviewDate(date);
 				}
 			});
 
-		Assert.assertNull(objectEntry.getPropertyValue("reviewDate"));
+		Assert.assertEquals(date, objectEntry.getReviewDate());
+
+		objectEntry = _defaultObjectEntryManager.updateObjectEntry(
+			_simpleDTOConverterContext, objectDefinition, objectEntry.getId(),
+			new ObjectEntry() {
+				{
+					setProperties(
+						HashMapBuilder.<String, Object>put(
+							"textObjectFieldName", RandomTestUtil.randomString()
+						).build());
+					setReviewDate((Date)null);
+				}
+			});
+
+		Assert.assertNull(objectEntry.getReviewDate());
 	}
 
 	@Rule
@@ -7462,6 +7456,12 @@ public class DefaultObjectEntryManagerImplTest
 							_simpleDTOConverterContext, objectDefinition,
 							objectEntry.getObjectEntryId())));
 			});
+	}
+
+	private Date _toDate(String value) throws Exception {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
+		return sdf.parse(value);
 	}
 
 	private void _updateAndAssertObjectEntryWithPicklistObjectField(
