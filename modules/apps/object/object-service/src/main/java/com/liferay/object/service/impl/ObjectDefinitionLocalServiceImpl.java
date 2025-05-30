@@ -1862,6 +1862,10 @@ public class ObjectDefinitionLocalServiceImpl
 				dbColumnName
 			).dbTableName(
 				dbTableName
+			).indexed(
+				true
+			).indexedAsKeyword(
+				true
 			).labelMap(
 				LocalizedMapUtil.getLocalizedMap(
 					_language.get(LocaleUtil.getDefault(), "id"))
