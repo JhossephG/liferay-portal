@@ -1855,6 +1855,83 @@ public class ObjectDefinitionLocalServiceImpl
 		if (objectDefinition.isUnmodifiableSystemObject()) {
 			dbColumnName = pkObjectFieldName;
 		}
+		else {
+			_addSystemObjectField(
+				new DateTimeObjectFieldBuilder(
+				).dbColumnName(
+					ObjectEntryTable.INSTANCE.displayDate.getName()
+				).dbTableName(
+					dbTableName
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						_language.get(LocaleUtil.getDefault(), "display-date"))
+				).name(
+					"displayDate"
+				).objectDefinitionId(
+					objectDefinition.getObjectDefinitionId()
+				).objectFieldSettings(
+					Collections.singletonList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE
+						).value(
+							ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
+						).build())
+				).userId(
+					userId
+				).build());
+
+			_addSystemObjectField(
+				new DateTimeObjectFieldBuilder(
+				).dbColumnName(
+					ObjectEntryTable.INSTANCE.expirationDate.getName()
+				).dbTableName(
+					dbTableName
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						_language.get(
+							LocaleUtil.getDefault(), "expiration-date"))
+				).name(
+					"expirationDate"
+				).objectDefinitionId(
+					objectDefinition.getObjectDefinitionId()
+				).objectFieldSettings(
+					Collections.singletonList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE
+						).value(
+							ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
+						).build())
+				).userId(
+					userId
+				).build());
+
+			_addSystemObjectField(
+				new DateTimeObjectFieldBuilder(
+				).dbColumnName(
+					ObjectEntryTable.INSTANCE.reviewDate.getName()
+				).dbTableName(
+					dbTableName
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						_language.get(LocaleUtil.getDefault(), "review-date"))
+				).name(
+					"reviewDate"
+				).objectDefinitionId(
+					objectDefinition.getObjectDefinitionId()
+				).objectFieldSettings(
+					Collections.singletonList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_TIME_STORAGE
+						).value(
+							ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
+						).build())
+				).userId(
+					userId
+				).build());
+		}
 
 		_addSystemObjectField(
 			new LongIntegerObjectFieldBuilder(
@@ -1911,87 +1988,6 @@ public class ObjectDefinitionLocalServiceImpl
 				"status"
 			).objectDefinitionId(
 				objectDefinition.getObjectDefinitionId()
-			).userId(
-				userId
-			).build());
-
-		if (!FeatureFlagManagerUtil.isEnabled(
-				objectDefinition.getCompanyId(), "LPD-17564")) {
-
-			return;
-		}
-
-		_addSystemObjectField(
-			new DateTimeObjectFieldBuilder(
-			).dbColumnName(
-				ObjectEntryTable.INSTANCE.displayDate.getName()
-			).dbTableName(
-				dbTableName
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(
-					_language.get(LocaleUtil.getDefault(), "display-date"))
-			).name(
-				"displayDate"
-			).objectDefinitionId(
-				objectDefinition.getObjectDefinitionId()
-			).objectFieldSettings(
-				Collections.singletonList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_TIME_STORAGE
-					).value(
-						ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
-					).build())
-			).userId(
-				userId
-			).build());
-
-		_addSystemObjectField(
-			new DateTimeObjectFieldBuilder(
-			).dbColumnName(
-				ObjectEntryTable.INSTANCE.expirationDate.getName()
-			).dbTableName(
-				dbTableName
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(
-					_language.get(LocaleUtil.getDefault(), "expiration-date"))
-			).name(
-				"expirationDate"
-			).objectDefinitionId(
-				objectDefinition.getObjectDefinitionId()
-			).objectFieldSettings(
-				Collections.singletonList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_TIME_STORAGE
-					).value(
-						ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
-					).build())
-			).userId(
-				userId
-			).build());
-
-		_addSystemObjectField(
-			new DateTimeObjectFieldBuilder(
-			).dbColumnName(
-				ObjectEntryTable.INSTANCE.reviewDate.getName()
-			).dbTableName(
-				dbTableName
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(
-					_language.get(LocaleUtil.getDefault(), "review-date"))
-			).name(
-				"reviewDate"
-			).objectDefinitionId(
-				objectDefinition.getObjectDefinitionId()
-			).objectFieldSettings(
-				Collections.singletonList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_TIME_STORAGE
-					).value(
-						ObjectFieldSettingConstants.VALUE_CONVERT_TO_UTC
-					).build())
 			).userId(
 				userId
 			).build());
