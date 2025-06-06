@@ -117,6 +117,7 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.scheduler.TimeUnit;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -202,6 +203,9 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 
 import java.text.DateFormat;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8173,6 +8177,92 @@ public class ObjectEntryResourceTest {
 			_siteScopedObjectDefinition1);
 		_testPatchPutCustomObjectEntryWithDuplicateExternalReferenceCode(
 			Http.Method.PUT, _objectDefinition2, _siteScopedObjectDefinition2);
+	}
+
+	@FeatureFlag("LPD-17564")
+	@Test
+	public void testPatchPutObjectEntryWithScheduleObjectFields()
+		throws Exception {
+
+		String objectFieldName = "a" + RandomTestUtil.randomString();
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				true, ObjectDefinitionTestUtil.getRandomName(),
+				Collections.singletonList(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).localized(
+						true
+					).name(
+						objectFieldName
+					).build()),
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				TestPropsValues.getUserId());
+
+		Date date1 = new Date();
+
+		Date date2 = new Date(date1.getTime() + TimeUnit.MINUTE.toMillis(1));
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			objectDefinition,
+			HashMapBuilder.<String, Serializable>put(
+				objectFieldName, RandomTestUtil.randomString()
+			).put(
+				"displayDate", date1
+			).put(
+				"expirationDate", date2
+			).put(
+				"reviewDate", date1
+			).build());
+
+		String endpoint =
+			objectDefinition.getRESTContextPath() +
+				"/by-external-reference-code/" +
+					objectEntry.getExternalReferenceCode();
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"displayDate", (Date)null
+			).put(
+				"expirationDate", (Date)null
+			).put(
+				"reviewDate", (Date)null
+			).toString(),
+			endpoint, Http.Method.PATCH);
+
+		Instant instant1 = date1.toInstant(
+		).truncatedTo(
+			ChronoUnit.SECONDS
+		);
+
+		Instant instant2 = date2.toInstant(
+		).truncatedTo(
+			ChronoUnit.SECONDS
+		);
+
+		Assert.assertEquals(instant1.toString(), jsonObject.get("displayDate"));
+		Assert.assertEquals(
+			instant2.toString(), jsonObject.get("expirationDate"));
+		Assert.assertEquals(instant1.toString(), jsonObject.get("reviewDate"));
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				objectFieldName, RandomTestUtil.randomString()
+			).put(
+				"displayDate", (Date)null
+			).put(
+				"expirationDate", (Date)null
+			).put(
+				"reviewDate", (Date)null
+			).toString(),
+			endpoint, Http.Method.PUT);
+
+		Assert.assertNull(jsonObject.get("displayDate"));
+		Assert.assertNull(jsonObject.get("expirationDate"));
+		Assert.assertNull(jsonObject.get("reviewDate"));
 	}
 
 	@Test
