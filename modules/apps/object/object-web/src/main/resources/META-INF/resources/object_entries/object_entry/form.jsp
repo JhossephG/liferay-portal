@@ -113,6 +113,9 @@ portletDisplay.setURLBack(backURL);
 
 <c:if test="<%= !objectEntryDisplayContext.isReadOnly() %>">
 	<aui:script sandbox="<%= true %>">
+		const isDefaultLayout =
+			<%= objectEntryDisplayContext.getObjectLayoutTab() == null %>;
+
 		function <portlet:namespace />getExternalReferenceCode() {
 			return String(
 				'<%= (objectEntry == null) ? "" : objectEntry.getExternalReferenceCode() %>'
@@ -129,19 +132,27 @@ portletDisplay.setURLBack(backURL);
 			const scope = '<%= objectDefinition.getScope() %>';
 			const contextPath = '/o<%= objectDefinition.getRESTContextPath() %>';
 			const pathScopedBySite = contextPath.concat(
-				`/scopes/\${themeDisplay.getSiteGroupId()}`
+				`/scopes/${themeDisplay.getSiteGroupId()}`
 			);
 
 			const postPath = scope === 'site' ? pathScopedBySite : contextPath;
 
-			let patchPath = scope === 'site' ? pathScopedBySite : contextPath;
+			let putPath = scope === 'site' ? pathScopedBySite : contextPath;
+			putPath = putPath.concat(
+				'/by-external-reference-code/',
+				`\${externalReferenceCode}`
+			);
 
+			let patchPath = scope === 'site' ? pathScopedBySite : contextPath;
 			patchPath = patchPath.concat(
 				'/by-external-reference-code/',
 				`\${externalReferenceCode}`
 			);
 
-			return externalReferenceCode ? patchPath : postPath;
+			if (!externalReferenceCode) {
+				return postPath;
+			}
+			return isDefaultLayout ? putPath : patchPath;
 		}
 
 		function <portlet:namespace />getValues(fields) {
@@ -190,18 +201,13 @@ portletDisplay.setURLBack(backURL);
 
 		Liferay.provide(window, '<portlet:namespace />submitObjectEntry', () => {
 			const form = document.getElementById('<portlet:namespace />fm');
-
 			const DDMFormInstance = Liferay.component('editObjectEntry');
-
 			const current = DDMFormInstance.reactComponentRef.current;
 
 			const loadingElement = document.createElement('span');
-
 			loadingElement.className =
 				'loading-animation loading-animation-secondary loading-animation-sm';
-
 			loadingElement.ariaHidden = 'true';
-
 			form.insertAdjacentElement('afterbegin', loadingElement);
 
 			current.validate().then((result) => {
@@ -216,7 +222,6 @@ portletDisplay.setURLBack(backURL);
 							field.value.length > 280
 						) {
 							shouldSubmitForm = false;
-
 							loadingElement.remove();
 
 							Liferay.Util.openToast({
@@ -234,7 +239,7 @@ portletDisplay.setURLBack(backURL);
 
 					let scheduleContainerInputValue;
 
-					if (Liferay.FeatureFlags['LPD-17564']) {
+					if (Liferay.FeatureFlags['LPD-17564'] && isDefaultLayout) {
 						const scheduleContainerInput = document.getElementById(
 							'<portlet:namespace />scheduleContainer'
 						);
@@ -248,9 +253,7 @@ portletDisplay.setURLBack(backURL);
 							isPastDate(scheduleContainerInputValue.expirationDate)
 						) {
 							shouldSubmitForm = false;
-
 							loadingElement.remove();
-
 							return false;
 						}
 					}
@@ -327,6 +330,12 @@ portletDisplay.setURLBack(backURL);
 							};
 						}
 
+						const method = !externalReferenceCode
+							? 'POST'
+							: isDefaultLayout
+								? 'PUT'
+								: 'PATCH';
+
 						Liferay.Util.fetch(path, {
 							body: JSON.stringify(values),
 							headers: new Headers({
@@ -335,7 +344,7 @@ portletDisplay.setURLBack(backURL);
 									'<%= LanguageUtil.getBCP47LanguageId(request) %>',
 								'Content-Type': 'application/json',
 							}),
-							method: externalReferenceCode ? 'PATCH' : 'POST',
+							method: method,
 						})
 							.then((response) => {
 								Liferay.fire('submitButtonClicked');
@@ -376,7 +385,6 @@ portletDisplay.setURLBack(backURL);
 									);
 
 									const alertClassName = '<portlet:namespace />alert';
-
 									const alertElements =
 										document.getElementsByClassName(alertClassName);
 
@@ -387,7 +395,6 @@ portletDisplay.setURLBack(backURL);
 									for (const error of errorMessageArray) {
 										const portletBody =
 											document.querySelector('.portlet-body');
-
 										const existingAlert =
 											portletBody.querySelector('.alert');
 
@@ -397,7 +404,6 @@ portletDisplay.setURLBack(backURL);
 
 										const alertElement =
 											document.createElement('div');
-
 										alertElement.className =
 											'alert alert-danger ' + alertClassName;
 										alertElement.setAttribute('role', 'alert');
@@ -409,7 +415,6 @@ portletDisplay.setURLBack(backURL);
 											'afterbegin',
 											"<span class='alert-indicator'><svg class='lexicon-icon lexicon-icon-exclamation-full' focusable='false' role='presentation'><use xlink:href='/o/admin-theme/images/clay/icons.svg#exclamation-full'/></svg> <strong class='lead'>Error:</strong></span>"
 										);
-
 										alertElement.insertAdjacentHTML(
 											'beforeend',
 											error.errorMessage
@@ -428,12 +433,12 @@ portletDisplay.setURLBack(backURL);
 										};
 
 										alertElement.appendChild(closeButton);
-
 										form.insertAdjacentElement(
 											'afterbegin',
 											alertElement
 										);
 									}
+
 									scroll(0, 0);
 								}
 								else if (response && response.title) {
@@ -449,7 +454,6 @@ portletDisplay.setURLBack(backURL);
 				}
 				else {
 					current.updateLocalesDropdownToDefaultLanguage();
-
 					loadingElement.remove();
 				}
 			});
