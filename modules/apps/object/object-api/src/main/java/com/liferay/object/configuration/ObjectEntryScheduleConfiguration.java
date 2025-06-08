@@ -20,7 +20,8 @@ import org.osgi.annotation.versioning.ProviderType;
 )
 @Meta.OCD(
 	id = "com.liferay.object.configuration.ObjectEntryScheduleConfiguration",
-	localization = "content/Language", name = "schedule-configuration-name"
+	localization = "content/Language",
+	name = "object-entry-schedule-configuration-name"
 )
 @ProviderType
 public interface ObjectEntryScheduleConfiguration {
