@@ -266,6 +266,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import java.util.ArrayList;
@@ -597,8 +598,11 @@ public class ObjectEntryLocalServiceImpl
 
 		_companyPreviousCheckDate.computeIfAbsent(
 			companyId,
-			key -> new Date(
-				date.getTime() - _getObjectEntryCheckInterval(companyId)));
+			key -> Date.from(
+				date.toInstant(
+				).minus(
+					Duration.ofMinutes(_getObjectEntryCheckInterval(companyId))
+				)));
 
 		_checkObjectEntriesByReviewDate(companyId, date);
 
