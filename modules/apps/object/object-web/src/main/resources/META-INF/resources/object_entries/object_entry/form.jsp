@@ -239,11 +239,11 @@ portletDisplay.setURLBack(backURL);
 
 					let scheduleContainerInputValue;
 
-					if (Liferay.FeatureFlags['LPD-17564'] && !hasObjectLayout) {
 						const scheduleContainerInput = document.getElementById(
 							'<portlet:namespace />scheduleContainer'
 						);
 
+					if (scheduleContainerInput) {
 						scheduleContainerInputValue = JSON.parse(
 							scheduleContainerInput.value
 						);

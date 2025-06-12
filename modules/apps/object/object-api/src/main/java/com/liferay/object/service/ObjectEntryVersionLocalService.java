@@ -241,6 +241,10 @@ public interface ObjectEntryVersionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryVersion getLatestObjectEntryVersion(
+		long objectEntryId, int status);
+
 	/**
 	 * Returns the object entry version with the primary key.
 	 *
