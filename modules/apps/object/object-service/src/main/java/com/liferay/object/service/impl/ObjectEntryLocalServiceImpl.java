@@ -621,11 +621,11 @@ public class ObjectEntryLocalServiceImpl
 			key -> new Date(
 				date.getTime() - _getObjectEntryCheckInterval(companyId)));
 
+		_checkObjectEntriesByDisplayDate(companyId, date);
+
 		_checkObjectEntriesByExpirationDate(companyId, date);
 
 		_checkObjectEntriesByReviewDate(companyId, date);
-
-		_checkObjectEntriesByExpirationDate(companyId, date);
 
 		_companyIdPreviousCheckDate.put(companyId, date);
 	}
