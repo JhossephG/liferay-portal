@@ -3772,6 +3772,7 @@ public class ObjectEntryLocalServiceTest {
 			_objectDefinition.isEnableLocalization(),
 			_objectDefinition.isEnableObjectEntryDraft(),
 			_objectDefinition.isEnableObjectEntryHistory(),
+			_objectDefinition.getEnableObjectEntrySchedule(),
 			_objectDefinition.isEnableObjectEntryVersioning(),
 			_objectDefinition.getFriendlyURLSeparator(),
 			_objectDefinition.getLabelMap(), _objectDefinition.getName(),

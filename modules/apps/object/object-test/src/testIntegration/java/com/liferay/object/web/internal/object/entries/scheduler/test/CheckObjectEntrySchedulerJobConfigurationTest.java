@@ -35,16 +35,18 @@ import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import java.io.Serializable;
+
+import java.util.Date;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author Jhosseph Gonzalez
@@ -226,6 +228,7 @@ public class CheckObjectEntrySchedulerJobConfigurationTest {
 		"a" + RandomTestUtil.randomString();
 
 	private static UnsafeRunnable<Exception> _jobExecutorUnsafeRunnable;
+	@DeleteAfterTestRun
 	private static ObjectDefinition _objectDefinition;
 
 	@Inject(
