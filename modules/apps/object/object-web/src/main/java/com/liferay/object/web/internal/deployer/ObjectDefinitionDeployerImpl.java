@@ -590,11 +590,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				MVCActionCommand.class,
 				new ExpireObjectEntryMVCActionCommand(
-<<<<<<< HEAD
 					_objectEntryLocalService, _objectEntryService),
-=======
-					_objectEntryLocalService, _objectEntryResourceFactory),
->>>>>>> d562a42 (LPD-44845 feature: create ExpireObjectEntryMVCActionCommand and expire action in ViewObjectEntriesDisplayContext)
 				HashMapDictionaryBuilder.<String, Object>put(
 					"jakarta.portlet.name", objectDefinition.getPortletId()
 				).put(
@@ -850,9 +846,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 	@Reference
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
-
-	@Reference
-	private ObjectEntryResource.Factory _objectEntryResourceFactory;
 
 	@Reference
 	private ObjectEntryService _objectEntryService;
