@@ -2016,22 +2016,10 @@ test.describe('Manage object entries through Workflow', () => {
 scheduleTest.describe('Manage object entries schedule properties', () => {
 	let _objectDefinition: ObjectDefinition;
 
-	scheduleTest.afterEach(async ({apiHelpers}) => {
-		const objectDefinitionAPIClient =
-			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
-
-		await objectDefinitionAPIClient.patchObjectDefinition(
-			_objectDefinition.id,
-			{
-				enableObjectEntrySchedule: false,
-			}
-		);
-	});
-
 	scheduleTest.beforeEach(async ({apiHelpers}) => {
 		const objectDefinition =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
-				status: {code: 0},
+				status: {code: 2},
 			});
 
 		_objectDefinition = objectDefinition;
@@ -2039,12 +2027,22 @@ scheduleTest.describe('Manage object entries schedule properties', () => {
 		const objectDefinitionAPIClient =
 			await apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
-		await objectDefinitionAPIClient.patchObjectDefinition(
-			_objectDefinition.id,
-			{
-				enableObjectEntrySchedule: true,
-			}
-		);
+		const shouldEnableConfiguration = !scheduleTest
+			.info()
+			.title.endsWith('disabled');
+
+		if (shouldEnableConfiguration) {
+			await objectDefinitionAPIClient.patchObjectDefinition(
+				_objectDefinition.id,
+				{
+					enableObjectEntrySchedule: true,
+				}
+			);
+
+			await objectDefinitionAPIClient.postObjectDefinitionPublish(
+				_objectDefinition.id
+			);
+		}
 
 		apiHelpers.data.push({
 			id: objectDefinition.id,
@@ -2142,24 +2140,8 @@ scheduleTest.describe('Manage object entries schedule properties', () => {
 	);
 
 	scheduleTest(
-		'schedule container is only visible when enableObjectEntrySchedule is enabled',
-		async ({apiHelpers, page, viewObjectEntriesPage}) => {
-			await viewObjectEntriesPage.goto(_objectDefinition.className);
-
-			await viewObjectEntriesPage.clickAddObjectEntry(
-				_objectDefinition.label['en_US']
-			);
-
-			await expect(
-				viewObjectEntriesPage.schedulePanelButton
-			).toBeVisible();
-
-			await expect(
-				viewObjectEntriesPage.expirationDateInput
-			).toBeVisible();
-
-			await expect(viewObjectEntriesPage.reviewDateInput).toBeVisible();
-
+		'schedule container is not visible when enableObjectEntrySchedule is disabled',
+		async ({apiHelpers, viewObjectEntriesPage}) => {
 			const objectDefinitionAPIClient =
 				await apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
@@ -2170,7 +2152,15 @@ scheduleTest.describe('Manage object entries schedule properties', () => {
 				}
 			);
 
-			await page.reload();
+			await objectDefinitionAPIClient.postObjectDefinitionPublish(
+				_objectDefinition.id
+			);
+
+			await viewObjectEntriesPage.goto(_objectDefinition.className);
+
+			await viewObjectEntriesPage.clickAddObjectEntry(
+				_objectDefinition.label['en_US']
+			);
 
 			await expect(
 				viewObjectEntriesPage.schedulePanelButton
