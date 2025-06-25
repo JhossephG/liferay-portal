@@ -3812,6 +3812,70 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testCompleteTaskAfterDisplayDate() throws Exception {
+		_enableObjectEntrySchedule();
+
+		_registerSingleApproverWorkflow();
+
+		Date date = new Date();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"displayDate", date
+			).put(
+				"emailAddressRequired", "john@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		Assert.assertEquals(date, objectEntry.getDisplayDate());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, objectEntry.getStatus());
+
+		_completeWorkflowTask();
+
+		objectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntry.getObjectEntryId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, objectEntry.getStatus());
+	}
+
+	@Test
+	public void testCompleteTaskBeforeDisplayDate() throws Exception {
+		_enableObjectEntrySchedule();
+
+		_registerSingleApproverWorkflow();
+
+		Date date = new Date();
+
+		date = new Date(date.getTime() + TimeUnit.MINUTE.toMillis(1));
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"displayDate", date
+			).put(
+				"emailAddressRequired", "john@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		Assert.assertEquals(date, objectEntry.getDisplayDate());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, objectEntry.getStatus());
+
+		_completeWorkflowTask();
+
+		objectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntry.getObjectEntryId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_SCHEDULED, objectEntry.getStatus());
+	}
+
+	@Test
 	public void testDeleteObjectEntry() throws Exception {
 		ObjectEntry objectEntry1 = _addObjectEntry(
 			HashMapBuilder.<String, Serializable>put(
@@ -5966,6 +6030,42 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateObjectEntryDisplayDateWithWorkflow()
+		throws Exception {
+
+		_enableObjectEntrySchedule();
+
+		_registerSingleApproverWorkflow();
+
+		Date date = new Date();
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"displayDate", date
+			).put(
+				"emailAddressRequired", "john@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		Assert.assertEquals(date, objectEntry.getDisplayDate());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, objectEntry.getStatus());
+
+		date = new Date();
+
+		objectEntry.setDisplayDate(date);
+
+		objectEntry = _objectEntryLocalService.updateObjectEntry(objectEntry);
+
+		Assert.assertEquals(date, objectEntry.getDisplayDate());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, objectEntry.getStatus());
+	}
+
+	@Test
 	public void testUpdateObjectEntryWithJavaDelegateObjectValidationRule()
 		throws Exception {
 
@@ -6947,6 +7047,12 @@ public class ObjectEntryLocalServiceTest {
 		return listTypeEntries;
 	}
 
+	private void _enableObjectEntrySchedule() {
+		_objectDefinition.setEnableObjectEntrySchedule(true);
+
+		_objectDefinitionLocalService.updateObjectDefinition(_objectDefinition);
+	}
+
 	private BigDecimal _getBigDecimal(long value) {
 		return BigDecimalUtil.stripTrailingZeros(BigDecimal.valueOf(value));
 	}
@@ -7055,6 +7161,12 @@ public class ObjectEntryLocalServiceTest {
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
 			TestPropsValues.getUserId(),
 			objectDefinition.getObjectDefinitionId());
+	}
+
+	private void _registerSingleApproverWorkflow() throws Exception {
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
+			TestPropsValues.getUserId(), TestPropsValues.getCompanyId(), 0,
+			_objectDefinition.getClassName(), 0, 0, "Single Approver", 1);
 	}
 
 	private Closeable _registerTestObjectValidationRuleEngine(
