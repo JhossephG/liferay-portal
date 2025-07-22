@@ -149,6 +149,17 @@ public class ObjectEntry1toMObjectRelatedModelsProviderImpl
 	@Override
 	public List<ObjectEntry> getRelatedModels(
 			long groupId, long objectRelationshipId, long primaryKey,
+			List<Long> primaryKeys, String search, int start, int end)
+		throws PortalException {
+
+		return _objectEntryService.getOneToManyObjectEntries(
+			groupId, objectRelationshipId, primaryKey, primaryKeys, true,
+			search, start, end);
+	}
+
+	@Override
+	public List<ObjectEntry> getRelatedModels(
+			long groupId, long objectRelationshipId, long primaryKey,
 			String search, int start, int end)
 		throws PortalException {
 

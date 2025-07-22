@@ -361,6 +361,28 @@ public class ObjectEntryServiceImpl extends ObjectEntryServiceBaseImpl {
 		return objectEntries;
 	}
 
+	public List<ObjectEntry> getOneToManyObjectEntries(
+			long groupId, long objectRelationshipId, long primaryKey,
+			List<Long> primaryKeys, boolean related, String search, int start,
+			int end)
+		throws PortalException {
+
+		List<ObjectEntry> objectEntries =
+			objectEntryLocalService.getOneToManyObjectEntries(
+				groupId, objectRelationshipId, primaryKey, primaryKeys, related,
+				search, start, end);
+
+		if (!ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission()) {
+			for (ObjectEntry objectEntry : objectEntries) {
+				objectEntryService.checkModelResourcePermission(
+					objectEntry.getObjectDefinitionId(),
+					objectEntry.getObjectEntryId(), ActionKeys.VIEW);
+			}
+		}
+
+		return objectEntries;
+	}
+
 	@Override
 	public int getOneToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
