@@ -106,6 +106,15 @@ public class ObjectEntryMtoMObjectRelatedModelsProviderImpl
 		return ObjectRelationshipConstants.TYPE_MANY_TO_MANY;
 	}
 
+	@Override
+	public List<ObjectEntry> getRelatedModels(
+			long groupId, long objectRelationshipId, long primaryKey,
+			List<Long> primaryKeys, String search, int start, int end)
+		throws PortalException {
+
+		return null;
+	}
+
 	public List<ObjectEntry> getRelatedModels(
 			long groupId, long objectRelationshipId, long primaryKey,
 			String search, int start, int end)
