@@ -116,6 +116,7 @@ import java.sql.Timestamp;
 
 import java.text.SimpleDateFormat;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -886,11 +887,67 @@ public class ObjectEntryDTOConverter
 					relatedObjectDefinitionGroupId = 0;
 				}
 
-				List<?> relatedModels =
-					objectRelatedModelsProvider.getRelatedModels(
-						relatedObjectDefinitionGroupId,
-						objectRelationship.getObjectRelationshipId(),
-						primaryKey, null, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+				Map<Long, Object> relatedModelsMap =
+					(Map<Long, Object>)dtoConverterContext.getAttribute(
+						"relatedMap");
+
+				boolean hasValues = true;
+
+				for (Object value : relatedModelsMap.values()) {
+					if (value instanceof List<?>) {
+						hasValues = false;
+
+						break;
+					}
+				}
+
+				if (hasValues) {
+					List<Long> primaryKeys = new ArrayList<>(
+						relatedModelsMap.keySet());
+
+					List<com.liferay.object.model.ObjectEntry> relatedEntries =
+						objectRelatedModelsProvider.getRelatedModels(
+							relatedObjectDefinitionGroupId,
+							objectRelationship.getObjectRelationshipId(),
+							primaryKey, primaryKeys, null, QueryUtil.ALL_POS,
+							QueryUtil.ALL_POS);
+
+					String relationshipColumnName = StringBundler.concat(
+						"r_", objectRelationship.getName(), "_",
+						objectDefinition.getPKObjectFieldName());
+
+					for (Long primaryKeyList : primaryKeys) {
+						List<com.liferay.object.model.ObjectEntry> children =
+							new ArrayList<>();
+
+						for (com.liferay.object.model.ObjectEntry relatedEntry :
+								relatedEntries) {
+
+							Object parent = relatedEntry.getValues(
+							).get(
+								relationshipColumnName
+							);
+
+							if ((parent != null) &&
+								Objects.equals(parent, primaryKeyList)) {
+
+								children.add(relatedEntry);
+							}
+						}
+
+						relatedModelsMap.put(primaryKeyList, children);
+					}
+
+					dtoConverterContext.setAttribute(
+						"relatedMap", relatedModelsMap);
+				}
+
+				relatedModelsMap =
+					(Map<Long, Object>)dtoConverterContext.getAttribute(
+						"relatedMap");
+
+				List<?> relatedModels = (List<?>)relatedModelsMap.get(
+					primaryKey);
 
 				if (relatedObjectDefinition.isUnmodifiableSystemObject()) {
 					SystemObjectDefinitionManager
