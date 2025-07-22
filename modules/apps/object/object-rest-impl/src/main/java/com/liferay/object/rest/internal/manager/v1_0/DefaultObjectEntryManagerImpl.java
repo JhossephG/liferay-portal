@@ -567,6 +567,22 @@ public class DefaultObjectEntryManagerImpl
 			groupIds = new Long[] {groupId};
 		}
 
+		List<Long> primaryKeys = objectEntryLocalService.getPrimaryKeys(
+			groupIds, companyId, dtoConverterContext.getUserId(),
+			objectDefinition.getObjectDefinitionId(), predicate, search, start,
+			end, sorts);
+
+		Map<Long, Object> relatedMap = new HashMap<>();
+
+		primaryKeys.forEach(primaryKey -> relatedMap.put(primaryKey, null));
+
+		dtoConverterContext.setAttribute("relatedMap", relatedMap);
+
+		List<ObjectEntry> objectEntries = TransformUtil.transform(
+			primaryKeys,
+			primaryKey -> _getObjectEntry(
+				dtoConverterContext, objectDefinition, primaryKey));
+
 		return Page.of(
 			HashMapBuilder.put(
 				"create",
@@ -605,15 +621,7 @@ public class DefaultObjectEntryManagerImpl
 					objectDefinition.getResourceName(), groupId,
 					dtoConverterContext.getUriInfo())
 			).build(),
-			facets,
-			TransformUtil.transform(
-				objectEntryLocalService.getPrimaryKeys(
-					groupIds, companyId, dtoConverterContext.getUserId(),
-					objectDefinition.getObjectDefinitionId(), predicate, search,
-					start, end, sorts),
-				primaryKey -> _getObjectEntry(
-					dtoConverterContext, objectDefinition, primaryKey)),
-			pagination,
+			facets, objectEntries, pagination,
 			objectEntryLocalService.getValuesListCount(
 				groupIds, companyId, dtoConverterContext.getUserId(),
 				objectDefinition.getObjectDefinitionId(), predicate, search));
@@ -2341,6 +2349,11 @@ public class DefaultObjectEntryManagerImpl
 
 		defaultDTOConverterContext.setAttribute(
 			"objectDefinition", objectDefinition);
+
+		Map<Long, Object> relatedMap =
+			(Map<Long, Object>)dtoConverterContext.getAttribute("relatedMap");
+
+		defaultDTOConverterContext.setAttribute("relatedMap", relatedMap);
 
 		return _objectEntryDTOConverter.toDTO(
 			defaultDTOConverterContext, serviceBuilderObjectEntry);
