@@ -43,6 +43,11 @@ public interface ObjectRelatedModelsProvider<T extends BaseModel<T>> {
 
 	public List<T> getRelatedModels(
 			long groupId, long objectRelationshipId, long primaryKey,
+			List<Long> primaryKeys, String search, int start, int end)
+		throws PortalException;
+
+	public List<T> getRelatedModels(
+			long groupId, long objectRelationshipId, long primaryKey,
 			String search, int start, int end)
 		throws PortalException;
 
