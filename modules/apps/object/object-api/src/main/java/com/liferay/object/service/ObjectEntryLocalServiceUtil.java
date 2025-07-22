@@ -554,6 +554,17 @@ public class ObjectEntryLocalServiceUtil {
 			end);
 	}
 
+	public static List<ObjectEntry> getOneToManyObjectEntries(
+			long groupId, long objectRelationshipId, long primaryKey,
+			List<Long> primaryKeys, boolean related, String search, int start,
+			int end)
+		throws PortalException {
+
+		return getService().getOneToManyObjectEntries(
+			groupId, objectRelationshipId, primaryKey, primaryKeys, related,
+			search, start, end);
+	}
+
 	public static int getOneToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
 			boolean related, String search)
