@@ -71,6 +71,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -1647,187 +1650,121 @@ public class ObjectFieldLocalServiceTest {
 
 	@Test
 	public void testObjectFieldSettings() throws Exception {
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
 
-		// Business type attachment
+		try {
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
 
-		ObjectDefinition objectDefinition =
-			ObjectDefinitionTestUtil.addCustomObjectDefinition(
-				false,
-				Arrays.asList(
-					ObjectFieldUtil.createObjectField(
-						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-						ObjectFieldConstants.DB_TYPE_STRING, "text",
-						StringUtil.randomId())));
+			// Business type attachment
 
-		ObjectField attachmentObjectField = _addCustomObjectField(
-			new AttachmentObjectFieldBuilder(
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
-			).name(
-				"upload"
-			).objectDefinitionId(
-				objectDefinition.getObjectDefinitionId()
-			).objectFieldSettings(
+			ObjectDefinition objectDefinition =
+				ObjectDefinitionTestUtil.addCustomObjectDefinition(
+					false,
+					Arrays.asList(
+						ObjectFieldUtil.createObjectField(
+							ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+							ObjectFieldConstants.DB_TYPE_STRING, "text",
+							StringUtil.randomId())));
+
+			ObjectField attachmentObjectField = _addCustomObjectField(
+				new AttachmentObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"upload"
+				).objectDefinitionId(
+					objectDefinition.getObjectDefinitionId()
+				).objectFieldSettings(
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.
+								NAME_ACCEPTED_FILE_EXTENSIONS
+						).value(
+							"jpg, png"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_FILE_SOURCE
+						).value(
+							ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+						).value(
+							"100"
+						).build())
+				).build());
+
+			_assertObjectFieldSettingsValues(
+				attachmentObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS,
+					"jpg, png"
+				).put(
+					ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+					ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+				).put(
+					ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE, "100"
+				).build());
+
+			_addOrUpdateCustomObjectField(
+				attachmentObjectField,
 				Arrays.asList(
 					new ObjectFieldSettingBuilder(
 					).name(
 						ObjectFieldSettingConstants.
 							NAME_ACCEPTED_FILE_EXTENSIONS
 					).value(
-						"jpg, png"
+						"jpg"
 					).build(),
 					new ObjectFieldSettingBuilder(
 					).name(
 						ObjectFieldSettingConstants.NAME_FILE_SOURCE
 					).value(
-						ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+						ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA
 					).build(),
 					new ObjectFieldSettingBuilder(
 					).name(
 						ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
 					).value(
-						"100"
-					).build())
-			).build());
+						"10"
+					).build()));
 
-		_assertObjectFieldSettingsValues(
-			attachmentObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS,
-				"jpg, png"
-			).put(
-				ObjectFieldSettingConstants.NAME_FILE_SOURCE,
-				ObjectFieldSettingConstants.VALUE_USER_COMPUTER
-			).put(
-				ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE, "100"
-			).build());
-
-		_addOrUpdateCustomObjectField(
-			attachmentObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS
-				).value(
+			_assertObjectFieldSettingsValues(
+				attachmentObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS,
 					"jpg"
-				).build(),
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_FILE_SOURCE
-				).value(
+				).put(
+					ObjectFieldSettingConstants.NAME_FILE_SOURCE,
 					ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA
-				).build(),
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
-				).value(
-					"10"
-				).build()));
+				).put(
+					ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE, "10"
+				).build());
 
-		_assertObjectFieldSettingsValues(
-			attachmentObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS, "jpg"
-			).put(
-				ObjectFieldSettingConstants.NAME_FILE_SOURCE,
-				ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA
-			).put(
-				ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE, "10"
-			).build());
+			// Business type auto increment
 
-		// Business type auto increment
+			ObjectField autoIncrementObjectField = _addCustomObjectField(
+				_getAutoIncrementObjectField(
+					"1", objectDefinition.getObjectDefinitionId(), "LPS-", null,
+					false, "-private"));
 
-		ObjectField autoIncrementObjectField = _addCustomObjectField(
-			_getAutoIncrementObjectField(
-				"1", objectDefinition.getObjectDefinitionId(), "LPS-", null,
-				false, "-private"));
-
-		_assertObjectFieldSettingsValues(
-			autoIncrementObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_INITIAL_VALUE, "1"
-			).put(
-				ObjectFieldSettingConstants.NAME_PREFIX, "LPS-"
-			).put(
-				ObjectFieldSettingConstants.NAME_SUFFIX, "-private"
-			).build());
-
-		_addOrUpdateCustomObjectField(
-			autoIncrementObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_INITIAL_VALUE
-				).value(
-					"2"
-				).build(),
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_PREFIX
-				).value(
-					"PTR-"
-				).build()));
-
-		_assertObjectFieldSettingsValues(
-			autoIncrementObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_INITIAL_VALUE, "2"
-			).put(
-				ObjectFieldSettingConstants.NAME_PREFIX, "PTR-"
-			).build());
-
-		Assert.assertNull(
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
+			_assertObjectFieldSettingsValues(
 				autoIncrementObjectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_SUFFIX));
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_INITIAL_VALUE, "1"
+				).put(
+					ObjectFieldSettingConstants.NAME_PREFIX, "LPS-"
+				).put(
+					ObjectFieldSettingConstants.NAME_SUFFIX, "-private"
+				).build());
 
-		_objectDefinitionLocalService.publishCustomObjectDefinition(
-			TestPropsValues.getUserId(),
-			objectDefinition.getObjectDefinitionId());
-
-		AssertUtils.assertFailure(
-			ObjectFieldSettingValueException.UnmodifiableValue.class,
-			"The value of setting \"initialValue\" is unmodifiable when " +
-				"object definition is published",
-			() -> _addOrUpdateCustomObjectField(
-				autoIncrementObjectField,
-				Arrays.asList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_INITIAL_VALUE
-					).value(
-						"3"
-					).build(),
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_PREFIX
-					).value(
-						"PTR-"
-					).build())));
-		AssertUtils.assertFailure(
-			ObjectFieldSettingValueException.UnmodifiableValue.class,
-			"The value of setting \"prefix\" is unmodifiable when object " +
-				"definition is published",
-			() -> _addOrUpdateCustomObjectField(
-				autoIncrementObjectField,
-				Arrays.asList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_INITIAL_VALUE
-					).value(
-						"2"
-					).build(),
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_PREFIX
-					).value(
-						"LPP-"
-					).build())));
-		AssertUtils.assertFailure(
-			ObjectFieldSettingValueException.UnmodifiableValue.class,
-			"The value of setting \"suffix\" is unmodifiable when object " +
-				"definition is published",
-			() -> _addOrUpdateCustomObjectField(
+			_addOrUpdateCustomObjectField(
 				autoIncrementObjectField,
 				Arrays.asList(
 					new ObjectFieldSettingBuilder(
@@ -1841,216 +1778,300 @@ public class ObjectFieldLocalServiceTest {
 						ObjectFieldSettingConstants.NAME_PREFIX
 					).value(
 						"PTR-"
-					).build(),
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_SUFFIX
-					).value(
-						"-private"
-					).build())));
+					).build()));
 
-		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+			_assertObjectFieldSettingsValues(
+				autoIncrementObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_INITIAL_VALUE, "2"
+				).put(
+					ObjectFieldSettingConstants.NAME_PREFIX, "PTR-"
+				).build());
 
-		// Business type integer
+			Assert.assertNull(
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					autoIncrementObjectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_SUFFIX));
 
-		objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			false, Collections.emptyList());
+			_objectDefinitionLocalService.publishCustomObjectDefinition(
+				TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId());
 
-		ObjectField integerObjectField = _addCustomObjectField(
-			_getIntegerObjectField(
-				objectDefinition.getObjectDefinitionId(),
-				Arrays.asList(
-					new ObjectFieldSettingBuilder(
-					).name(
-						ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
-					).value(
-						"TRUE"
-					).build())));
+			AssertUtils.assertFailure(
+				ObjectFieldSettingValueException.UnmodifiableValue.class,
+				"The value of setting \"initialValue\" is unmodifiable when " +
+					"object definition is published",
+				() -> _addOrUpdateCustomObjectField(
+					autoIncrementObjectField,
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_INITIAL_VALUE
+						).value(
+							"3"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_PREFIX
+						).value(
+							"PTR-"
+						).build())));
+			AssertUtils.assertFailure(
+				ObjectFieldSettingValueException.UnmodifiableValue.class,
+				"The value of setting \"prefix\" is unmodifiable when object " +
+					"definition is published",
+				() -> _addOrUpdateCustomObjectField(
+					autoIncrementObjectField,
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_INITIAL_VALUE
+						).value(
+							"2"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_PREFIX
+						).value(
+							"LPP-"
+						).build())));
+			AssertUtils.assertFailure(
+				ObjectFieldSettingValueException.UnmodifiableValue.class,
+				"The value of setting \"suffix\" is unmodifiable when object " +
+					"definition is published",
+				() -> _addOrUpdateCustomObjectField(
+					autoIncrementObjectField,
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_INITIAL_VALUE
+						).value(
+							"2"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_PREFIX
+						).value(
+							"PTR-"
+						).build(),
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_SUFFIX
+						).value(
+							"-private"
+						).build())));
 
-		_assertObjectFieldSettingsValues(
-			integerObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_UNIQUE_VALUES, "TRUE"
-			).build());
+			_objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition);
 
-		_addOrUpdateCustomObjectField(
-			integerObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
-				).value(
-					"False"
-				).build()));
+			// Business type integer
 
-		_assertObjectFieldSettingsValues(
-			integerObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_UNIQUE_VALUES, "False"
-			).build());
+			objectDefinition =
+				ObjectDefinitionTestUtil.addCustomObjectDefinition(
+					false, Collections.emptyList());
 
-		_objectDefinitionLocalService.publishCustomObjectDefinition(
-			TestPropsValues.getUserId(),
-			objectDefinition.getObjectDefinitionId());
+			ObjectField integerObjectField = _addCustomObjectField(
+				_getIntegerObjectField(
+					objectDefinition.getObjectDefinitionId(),
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
+						).value(
+							"TRUE"
+						).build())));
 
-		AssertUtils.assertFailure(
-			ObjectFieldSettingValueException.UnmodifiableValue.class,
-			"The value of setting \"uniqueValues\" is unmodifiable when " +
-				"object definition is published",
-			() -> _addOrUpdateCustomObjectField(
+			_assertObjectFieldSettingsValues(
+				integerObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_UNIQUE_VALUES, "TRUE"
+				).build());
+
+			_addOrUpdateCustomObjectField(
 				integerObjectField,
 				Arrays.asList(
 					new ObjectFieldSettingBuilder(
 					).name(
 						ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
 					).value(
-						"true"
-					).build())));
+						"False"
+					).build()));
 
-		// Business type picklist
+			_assertObjectFieldSettingsValues(
+				integerObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_UNIQUE_VALUES, "False"
+				).build());
 
-		ObjectField picklistObjectField = _addPicklistObjectField(
-			objectDefinition, false, false);
+			_objectDefinitionLocalService.publishCustomObjectDefinition(
+				TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId());
 
-		_assertObjectFieldSettingsValues(
-			picklistObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
-				_listTypeEntryKey
-			).put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
-				ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE
-			).build());
+			AssertUtils.assertFailure(
+				ObjectFieldSettingValueException.UnmodifiableValue.class,
+				"The value of setting \"uniqueValues\" is unmodifiable when " +
+					"object definition is published",
+				() -> _addOrUpdateCustomObjectField(
+					integerObjectField,
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_UNIQUE_VALUES
+						).value(
+							"true"
+						).build())));
 
-		_assertObjectEntryDefaultValue(
-			_listTypeEntryKey, picklistObjectField, new HashMap<>());
+			// Business type picklist
 
-		_addOrUpdateCustomObjectField(
-			picklistObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE
-				).value(
-					"text"
-				).build(),
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE
-				).value(
+			ObjectField picklistObjectField = _addPicklistObjectField(
+				objectDefinition, false, false);
+
+			_assertObjectFieldSettingsValues(
+				picklistObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+					_listTypeEntryKey
+				).put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+					ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE
+				).build());
+
+			_assertObjectEntryDefaultValue(
+				_listTypeEntryKey, picklistObjectField, new HashMap<>());
+
+			_addOrUpdateCustomObjectField(
+				picklistObjectField,
+				Arrays.asList(
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_DEFAULT_VALUE
+					).value(
+						"text"
+					).build(),
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE
+					).value(
+						ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER
+					).build()));
+
+			_assertObjectFieldSettingsValues(
+				picklistObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE, "text"
+				).put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
 					ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER
-				).build()));
+				).build());
 
-		_assertObjectFieldSettingsValues(
-			picklistObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE, "text"
-			).put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
-				ObjectFieldSettingConstants.VALUE_EXPRESSION_BUILDER
-			).build());
+			_assertObjectEntryDefaultValue(
+				_listTypeEntryKey, picklistObjectField,
+				HashMapBuilder.<String, Serializable>put(
+					"text", _listTypeEntryKey
+				).build());
 
-		_assertObjectEntryDefaultValue(
-			_listTypeEntryKey, picklistObjectField,
-			HashMapBuilder.<String, Serializable>put(
-				"text", _listTypeEntryKey
-			).build());
+			picklistObjectField = _addPicklistObjectField(
+				objectDefinition, true, true);
 
-		picklistObjectField = _addPicklistObjectField(
-			objectDefinition, true, true);
+			_assertObjectFieldSettingsValues(
+				picklistObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
+					_listTypeEntryKey
+				).put(
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
+					ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE
+				).build());
 
-		_assertObjectFieldSettingsValues(
-			picklistObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE,
-				_listTypeEntryKey
-			).put(
-				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE,
-				ObjectFieldSettingConstants.VALUE_INPUT_AS_VALUE
-			).build());
+			_assertObjectEntryDefaultValue(
+				_listTypeEntryKey, picklistObjectField, new HashMap<>());
 
-		_assertObjectEntryDefaultValue(
-			_listTypeEntryKey, picklistObjectField, new HashMap<>());
+			// Business type text
 
-		// Business type text
+			ObjectField textObjectField = _addCustomObjectField(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"a" + RandomTestUtil.randomString()
+				).objectDefinitionId(
+					objectDefinition.getObjectDefinitionId()
+				).objectFieldSettings(
+					Arrays.asList(
+						new ObjectFieldSettingBuilder(
+						).name(
+							ObjectFieldSettingConstants.NAME_SHOW_COUNTER
+						).value(
+							"false"
+						).build())
+				).build());
 
-		ObjectField textObjectField = _addCustomObjectField(
-			new TextObjectFieldBuilder(
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
-			).name(
-				"a" + RandomTestUtil.randomString()
-			).objectDefinitionId(
-				objectDefinition.getObjectDefinitionId()
-			).objectFieldSettings(
+			Assert.assertNull(
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					textObjectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS));
+			Assert.assertNull(
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					textObjectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_FILE_SOURCE));
+			Assert.assertNull(
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					textObjectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE));
+
+			_addOrUpdateCustomObjectField(
+				textObjectField,
+				Arrays.asList(
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_MAX_LENGTH
+					).value(
+						"10"
+					).build(),
+					new ObjectFieldSettingBuilder(
+					).name(
+						ObjectFieldSettingConstants.NAME_SHOW_COUNTER
+					).value(
+						"true"
+					).build()));
+
+			_assertObjectFieldSettingsValues(
+				textObjectField.getObjectFieldId(),
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_MAX_LENGTH, "10"
+				).put(
+					ObjectFieldSettingConstants.NAME_SHOW_COUNTER, "true"
+				).build());
+
+			_addOrUpdateCustomObjectField(
+				textObjectField,
 				Arrays.asList(
 					new ObjectFieldSettingBuilder(
 					).name(
 						ObjectFieldSettingConstants.NAME_SHOW_COUNTER
 					).value(
 						"false"
-					).build())
-			).build());
+					).build()));
 
-		Assert.assertNull(
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
+			Assert.assertNull(
+				_objectFieldSettingLocalService.fetchObjectFieldSetting(
+					textObjectField.getObjectFieldId(),
+					ObjectFieldSettingConstants.NAME_MAX_LENGTH));
+
+			_assertObjectFieldSettingsValues(
 				textObjectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_ACCEPTED_FILE_EXTENSIONS));
-		Assert.assertNull(
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				textObjectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_FILE_SOURCE));
-		Assert.assertNull(
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				textObjectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE));
+				HashMapBuilder.put(
+					ObjectFieldSettingConstants.NAME_SHOW_COUNTER, "false"
+				).build());
 
-		_addOrUpdateCustomObjectField(
-			textObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_MAX_LENGTH
-				).value(
-					"10"
-				).build(),
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_SHOW_COUNTER
-				).value(
-					"true"
-				).build()));
-
-		_assertObjectFieldSettingsValues(
-			textObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_MAX_LENGTH, "10"
-			).put(
-				ObjectFieldSettingConstants.NAME_SHOW_COUNTER, "true"
-			).build());
-
-		_addOrUpdateCustomObjectField(
-			textObjectField,
-			Arrays.asList(
-				new ObjectFieldSettingBuilder(
-				).name(
-					ObjectFieldSettingConstants.NAME_SHOW_COUNTER
-				).value(
-					"false"
-				).build()));
-
-		Assert.assertNull(
-			_objectFieldSettingLocalService.fetchObjectFieldSetting(
-				textObjectField.getObjectFieldId(),
-				ObjectFieldSettingConstants.NAME_MAX_LENGTH));
-
-		_assertObjectFieldSettingsValues(
-			textObjectField.getObjectFieldId(),
-			HashMapBuilder.put(
-				ObjectFieldSettingConstants.NAME_SHOW_COUNTER, "false"
-			).build());
-
-		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+			_objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition);
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
 	}
 
 	@Test
