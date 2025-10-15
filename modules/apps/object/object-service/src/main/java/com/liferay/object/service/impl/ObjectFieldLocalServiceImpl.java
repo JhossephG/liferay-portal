@@ -180,6 +180,11 @@ public class ObjectFieldLocalServiceImpl
 			existingObjectField = objectFieldPersistence.fetchByERC_C_ODI(
 				externalReferenceCode, objectDefinition.getCompanyId(),
 				objectDefinitionId);
+
+			if (existingObjectField == null) {
+				existingObjectField = objectFieldPersistence.fetchByODI_N(
+					objectDefinition.getObjectDefinitionId(), name);
+			}
 		}
 
 		if (existingObjectField == null) {
