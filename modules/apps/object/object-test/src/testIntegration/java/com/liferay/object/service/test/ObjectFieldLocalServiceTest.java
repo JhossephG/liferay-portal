@@ -845,6 +845,17 @@ public class ObjectFieldLocalServiceTest {
 			).build());
 
 		_testAddOrUpdateCustomObjectField(
+			objectFieldBuilder.externalReferenceCode(
+				RandomTestUtil.randomString()
+			).objectFieldId(
+				0
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).name(
+				objectField1.getName()
+			).build());
+
+		_testAddOrUpdateCustomObjectField(
 			objectFieldBuilder.businessType(
 				ObjectFieldConstants.BUSINESS_TYPE_PICKLIST
 			).dbType(
