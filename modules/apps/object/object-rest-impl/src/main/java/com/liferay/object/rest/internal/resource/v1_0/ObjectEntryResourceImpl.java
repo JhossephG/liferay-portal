@@ -36,9 +36,11 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -72,7 +74,7 @@ public class ObjectEntryResourceImpl
 	implements ExportImportVulcanBatchEngineTaskItemDelegate<ObjectEntry> {
 
 	public ObjectEntryResourceImpl(
-		CommentManager commentManager,
+		CommentManager commentManager, CompanyLocalService companyLocalService,
 		DTOConverterRegistry dtoConverterRegistry,
 		EntityModelProvider entityModelProvider,
 		ObjectDefinition objectDefinition,
@@ -89,6 +91,7 @@ public class ObjectEntryResourceImpl
 		UserLocalService userLocalService) {
 
 		_commentManager = commentManager;
+		_companyLocalService = companyLocalService;
 		_dtoConverterRegistry = dtoConverterRegistry;
 		_entityModelProvider = entityModelProvider;
 		_objectDefinition = objectDefinition;
@@ -720,7 +723,8 @@ public class ObjectEntryResourceImpl
 
 		return CommentUtil.toComment(
 			_commentManager.addEntityComment(
-				comment.getExternalReferenceCode(), objectEntry.getScopeId(),
+				comment.getExternalReferenceCode(),
+				_getGroupId(objectEntry.getScopeId(), objectEntry.getId()),
 				ObjectEntry.class.getName(), objectEntry.getId(),
 				comment.getText()),
 			_commentManager, PortalUtil.getPortal());
@@ -1372,6 +1376,22 @@ public class ObjectEntryResourceImpl
 			"(", filterString, ") and ", assigneeFilterString);
 	}
 
+	private long _getGroupId(long groupId, long objectEntryId)
+		throws Exception {
+
+		if (groupId == 0) {
+			com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+				_objectEntryLocalService.getObjectEntry(objectEntryId);
+
+			Company company = _companyLocalService.getCompany(
+				serviceBuilderObjectEntry.getCompanyId());
+
+			return company.getGroupId();
+		}
+
+		return groupId;
+	}
+
 	private String _getScopeKey(Map<String, Serializable> parameters) {
 		if (parameters.containsKey("scopeKey")) {
 			return String.valueOf(parameters.get("scopeKey"));
@@ -1436,6 +1456,7 @@ public class ObjectEntryResourceImpl
 		ObjectEntryResourceImpl.class);
 
 	private final CommentManager _commentManager;
+	private final CompanyLocalService _companyLocalService;
 	private final DTOConverterRegistry _dtoConverterRegistry;
 	private final EntityModelProvider _entityModelProvider;
 
