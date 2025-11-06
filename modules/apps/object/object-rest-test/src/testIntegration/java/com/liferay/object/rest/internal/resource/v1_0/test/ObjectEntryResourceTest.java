@@ -9029,6 +9029,59 @@ public class ObjectEntryResourceTest {
 	}
 
 	@Test
+	public void testPostByExternalReferenceCodeComment() throws Exception {
+
+		// Company scope
+
+		ObjectEntry companyObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_objectDefinition1, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+
+		String comment1 = RandomTestUtil.randomString();
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"externalReferenceCode", _ERC_VALUE_1
+			).put(
+				"text", comment1
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_objectDefinition1, 0),
+				"/by-external-reference-code/",
+				companyObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		Assert.assertEquals("<p>" + comment1 + "</p>", jsonObject.get("text"));
+		Assert.assertEquals(
+			_ERC_VALUE_1, jsonObject.get("externalReferenceCode"));
+
+		// Site scope
+
+		Group group = _groupLocalService.fetchGroup(_testGroupId);
+
+		ObjectEntry siteObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_siteScopedObjectDefinition1, _OBJECT_FIELD_NAME_1,
+			_OBJECT_FIELD_VALUE_1);
+
+		String comment2 = RandomTestUtil.randomString();
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"externalReferenceCode", _ERC_VALUE_2
+			).put(
+				"text", comment2
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_siteScopedObjectDefinition1, group.getGroupId()),
+				"/by-external-reference-code/",
+				siteObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		Assert.assertEquals("<p>" + comment2 + "</p>", jsonObject.get("text"));
+		Assert.assertEquals(
+			_ERC_VALUE_2, jsonObject.get("externalReferenceCode"));
+	}
+
+	@Test
 	public void testPostCustomObjectEntryWithAssigneeObjectField()
 		throws Exception {
 
