@@ -17,7 +17,6 @@ import com.liferay.headless.delivery.resource.v1_0.util.CommentResourceUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.knowledge.base.exception.NoSuchCommentException;
-import com.liferay.message.boards.exception.MessageSubjectException;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -46,7 +45,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedMap;
 
@@ -455,9 +453,11 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 	public Comment putComment(Long commentId, Comment comment)
 		throws Exception {
 
-		return _updateComment(
-			_commentManager.fetchComment(commentId), commentId,
-			comment.getText());
+		return CommentUtil.toComment(
+			_commentManager.updateComment(
+				_commentManager.fetchComment(commentId), commentId,
+				comment.getText()),
+			_commentManager, _portal);
 	}
 
 	@Override
@@ -477,9 +477,11 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				blogsEntry.getEntryId());
 
 		if (existingComment != null) {
-			return _updateComment(
-				existingComment, existingComment.getCommentId(),
-				comment.getText());
+			return CommentUtil.toComment(
+				_commentManager.updateComment(
+					existingComment, existingComment.getCommentId(),
+					comment.getText()),
+				_commentManager, _portal);
 		}
 
 		return CommentUtil.toComment(
@@ -509,9 +511,11 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 			(parentComment.getCommentId() ==
 				existingComment.getParentCommentId())) {
 
-			return _updateComment(
-				existingComment, existingComment.getCommentId(),
-				comment.getText());
+			return CommentUtil.toComment(
+				_commentManager.updateComment(
+					existingComment, existingComment.getCommentId(),
+					comment.getText()),
+				_commentManager, _portal);
 		}
 
 		return _postParentCommentComment(
@@ -537,9 +541,11 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				dlFileEntry.getFileEntryId());
 
 		if (existingComment != null) {
-			return _updateComment(
-				existingComment, existingComment.getCommentId(),
-				comment.getText());
+			return CommentUtil.toComment(
+				_commentManager.updateComment(
+					existingComment, existingComment.getCommentId(),
+					comment.getText()),
+				_commentManager, _portal);
 		}
 
 		return CommentUtil.toComment(
@@ -567,9 +573,11 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				journalArticle.getResourcePrimKey());
 
 		if (existingComment != null) {
-			return _updateComment(
-				existingComment, existingComment.getCommentId(),
-				comment.getText());
+			return CommentUtil.toComment(
+				_commentManager.updateComment(
+					existingComment, existingComment.getCommentId(),
+					comment.getText()),
+				_commentManager, _portal);
 		}
 
 		return CommentUtil.toComment(
@@ -735,31 +743,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 					_createServiceContextFunction()),
 				className, classPK, groupId),
 			_commentManager, _portal);
-	}
-
-	private Comment _updateComment(
-			com.liferay.portal.kernel.comment.Comment comment, long commentId,
-			String text)
-		throws Exception {
-
-		_discussionPermission.checkUpdatePermission(
-			PermissionThreadLocal.getPermissionChecker(), commentId);
-
-		try {
-			_commentManager.updateComment(
-				comment.getUserId(), comment.getClassName(),
-				comment.getClassPK(), comment.getCommentId(), StringPool.BLANK,
-				StringBundler.concat("<p>", text, "</p>"),
-				_createServiceContextFunction());
-
-			return CommentUtil.toComment(
-				_commentManager.fetchComment(comment.getCommentId()),
-				_commentManager, _portal);
-		}
-		catch (MessageSubjectException messageSubjectException) {
-			throw new ClientErrorException(
-				"Comment text is null", 422, messageSubjectException);
-		}
 	}
 
 	@Reference
