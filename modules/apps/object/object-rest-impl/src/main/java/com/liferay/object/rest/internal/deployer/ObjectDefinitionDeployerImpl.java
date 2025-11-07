@@ -217,11 +217,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		ObjectDefinition objectDefinition, String restContextPath) {
 
 		return new ObjectEntryResourceImpl(
-<<<<<<< HEAD
 			_commentManager, _discussionPermission, _dtoConverterRegistry,
-=======
-			_commentManager, _companyLocalService, _dtoConverterRegistry,
->>>>>>> 80d7b87 (LPD-65252 create _getGroupId in resourceImpl)
 			_entityModelProvider, objectDefinition,
 			_objectDefinitionsMap.get(restContextPath),
 			_objectDefinitionLocalService, _objectEntryLocalService,

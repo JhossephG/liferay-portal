@@ -8,6 +8,7 @@ package com.liferay.object.rest.internal.resource.v1_0;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.headless.delivery.dto.v1_0.util.CommentUtil;
+import com.liferay.headless.delivery.resource.v1_0.util.CommentResourceUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.exception.ObjectEntryValidationException;
 import com.liferay.object.model.ObjectDefinition;
@@ -1153,6 +1154,45 @@ public class ObjectEntryResourceImpl
 	}
 
 	@Override
+	public Comment
+			putByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCode(
+				String objectEntryExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
+					_objectDefinition.getStorageType()));
+
+		ObjectEntry objectEntry = defaultObjectEntryManager.getObjectEntry(
+			contextCompany.getCompanyId(), _getDTOConverterContext(null),
+			objectEntryExternalReferenceCode, _objectDefinition, null);
+
+		long groupId = _getNonzeroGroupId(objectEntry.getId());
+
+		com.liferay.portal.kernel.comment.Comment existingComment =
+			_fetchComment(
+				ObjectEntry.class.getName(), objectEntry.getId(),
+				externalReferenceCode, groupId);
+
+		if (existingComment != null) {
+			return _updateComment(comment, existingComment);
+		}
+
+		return _addComment(
+			objectEntry.getScopeId(), comment, objectEntry.getId());
+	}
+
+	@Override
 	public ObjectEntry putByExternalReferenceCodeRestore(
 			String externalReferenceCode)
 		throws Exception {
@@ -1290,6 +1330,43 @@ public class ObjectEntryResourceImpl
 	}
 
 	@Override
+	public Comment
+			putScopeScopeKeyByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCode(
+				String scopeKey, String objectEntryExternalReferenceCode,
+				String externalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		DefaultObjectEntryManager defaultObjectEntryManager =
+			DefaultObjectEntryManagerProvider.provide(
+				_objectEntryManagerRegistry.getObjectEntryManager(
+					_objectDefinition.getCompanyId(),
+					_objectDefinition.getStorageType()));
+
+		ObjectEntry objectEntry = defaultObjectEntryManager.getObjectEntry(
+			contextCompany.getCompanyId(), _getDTOConverterContext(null),
+			objectEntryExternalReferenceCode, _objectDefinition, scopeKey);
+
+		com.liferay.portal.kernel.comment.Comment existingComment =
+			_fetchComment(
+				ObjectEntry.class.getName(), objectEntry.getId(),
+				externalReferenceCode, objectEntry.getScopeId());
+
+		if (existingComment != null) {
+			return _updateComment(comment, existingComment);
+		}
+
+		return _addComment(
+			objectEntry.getScopeId(), comment, objectEntry.getId());
+	}
+
+	@Override
 	public ObjectEntry putScopeScopeKeyByExternalReferenceCodeRestore(
 			String scopeKey, String externalReferenceCode)
 		throws Exception {
@@ -1390,6 +1467,22 @@ public class ObjectEntryResourceImpl
 			_commentManager, PortalUtil.getPortal());
 	}
 
+	private com.liferay.portal.kernel.comment.Comment _fetchComment(
+		String className, long classPK, String externalReferenceCode,
+		long groupId) {
+
+		com.liferay.portal.kernel.comment.Comment comment =
+			_commentManager.fetchComment(groupId, externalReferenceCode);
+
+		if ((comment != null) &&
+			CommentResourceUtil.isAssociated(className, classPK, comment)) {
+
+			return comment;
+		}
+
+		return null;
+	}
+
 	private DefaultDTOConverterContext _getDTOConverterContext(
 		Long objectEntryId) {
 
@@ -1478,6 +1571,22 @@ public class ObjectEntryResourceImpl
 		}
 
 		return null;
+	}
+
+	private Comment _updateComment(
+			Comment comment,
+			com.liferay.portal.kernel.comment.Comment existingComment)
+		throws Exception {
+
+		_discussionPermission.checkUpdatePermission(
+			PermissionThreadLocal.getPermissionChecker(),
+			existingComment.getCommentId());
+
+		return CommentUtil.toComment(
+			() -> _commentManager.updateComment(
+				existingComment, existingComment.getCommentId(),
+				StringBundler.concat("<p>", comment.getText(), "</p>")),
+			_commentManager, PortalUtil.getPortal());
 	}
 
 	private ValidationResponse _validateObjectEntry(
