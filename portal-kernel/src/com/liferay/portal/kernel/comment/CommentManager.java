@@ -160,6 +160,9 @@ public interface CommentManager {
 			long userId, String className, long classPK)
 		throws PortalException;
 
+	public Comment updateComment(Comment comment, long commentId, String text)
+		throws PortalException;
+
 	public long updateComment(
 			long userId, String className, long classPK, long commentId,
 			String subject, String body,

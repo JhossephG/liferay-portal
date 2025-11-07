@@ -445,6 +445,28 @@ public class MBCommentManagerImpl implements CommentManager {
 	}
 
 	@Override
+	public Comment updateComment(Comment comment, long commentId, String text)
+		throws PortalException {
+
+		_discussionPermission.checkUpdatePermission(
+			PermissionThreadLocal.getPermissionChecker(), commentId);
+
+		try {
+			updateComment(
+				comment.getUserId(), comment.getClassName(),
+				comment.getClassPK(), comment.getCommentId(), StringPool.BLANK,
+				StringBundler.concat("<p>", text, "</p>"),
+				_createServiceContextFunction());
+
+			return fetchComment(comment.getCommentId());
+		}
+		catch (MessageSubjectException messageSubjectException) {
+			throw new ClientErrorException(
+				"Comment text is null", 422, messageSubjectException);
+		}
+	}
+
+	@Override
 	public long updateComment(
 			long userId, String className, long classPK, long commentId,
 			String subject, String body,
