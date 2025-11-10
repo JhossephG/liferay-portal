@@ -10819,6 +10819,92 @@ public class ObjectEntryResourceTest {
 				_OBJECT_FIELD_NAME_TEXT));
 	}
 
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testPutByExternalReferenceCodeComment() throws Exception {
+
+		// Company scope
+
+		_objectDefinition1.setEnableComments(true);
+
+		_objectDefinitionLocalService.updateObjectDefinition(
+			_objectDefinition1);
+
+		ObjectEntry companyObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_objectDefinition1, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"externalReferenceCode", _ERC_VALUE_1
+			).put(
+				"text", RandomTestUtil.randomString()
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_objectDefinition1, 0),
+				"/by-external-reference-code/",
+				companyObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		String comment = RandomTestUtil.randomString();
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"text", comment
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_objectDefinition1, 0),
+				"/by-external-reference-code/",
+				companyObjectEntry.getExternalReferenceCode(), "/comments",
+				"/by-external-reference-code/",
+				jsonObject.getString("externalReferenceCode")),
+			Http.Method.PUT);
+
+		Assert.assertEquals(
+			_ERC_VALUE_1, jsonObject.get("externalReferenceCode"));
+		Assert.assertEquals("<p>" + comment + "</p>", jsonObject.get("text"));
+
+		// Site scope
+
+		_siteScopedObjectDefinition1.setEnableComments(true);
+
+		_objectDefinitionLocalService.updateObjectDefinition(
+			_siteScopedObjectDefinition1);
+
+		ObjectEntry siteObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_siteScopedObjectDefinition1, _OBJECT_FIELD_NAME_1,
+			_OBJECT_FIELD_VALUE_1);
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"externalReferenceCode", _ERC_VALUE_2
+			).put(
+				"text", RandomTestUtil.randomString()
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
+				"/by-external-reference-code/",
+				siteObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		comment = RandomTestUtil.randomString();
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"text", comment
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
+				"/by-external-reference-code/",
+				siteObjectEntry.getExternalReferenceCode(), "/comments",
+				"/by-external-reference-code/",
+				jsonObject.getString("externalReferenceCode")),
+			Http.Method.PUT);
+
+		Assert.assertEquals(
+			_ERC_VALUE_2, jsonObject.get("externalReferenceCode"));
+		Assert.assertEquals("<p>" + comment + "</p>", jsonObject.get("text"));
+	}
+
 	@Test
 	public void testPutByExternalReferenceCodeCurrentExternalReferenceCodeObjectRelationshipNameRelatedExternalReferenceCodeWithSlash()
 		throws Exception {
