@@ -61,6 +61,7 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.NotSupportedException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -761,8 +762,41 @@ public class ObjectEntryResourceImpl
 		ObjectEntry objectEntry = _getObjectEntry(externalReferenceCode, null);
 
 		return _addComment(
-			_getNonzeroGroupId(objectEntry.getId()), comment,
-			objectEntry.getId());
+			comment.getExternalReferenceCode(),
+			_getNonzeroGroupId(objectEntry.getId()), null, objectEntry.getId(),
+			comment.getText());
+	}
+
+	@Override
+	public Comment
+			postByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCodeParentCommentExternalReferenceCodeComment(
+				String objectEntryExternalReferenceCode,
+				String parentCommentExternalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		ObjectEntry objectEntry = _getObjectEntry(
+			objectEntryExternalReferenceCode, null);
+
+		com.liferay.portal.kernel.comment.Comment parentComment = _fetchComment(
+			ObjectEntry.class.getName(), objectEntry.getId(),
+			parentCommentExternalReferenceCode,
+			_getNonzeroGroupId(objectEntry.getId()));
+
+		if (parentComment == null) {
+			throw new NotFoundException();
+		}
+
+		return _addComment(
+			comment.getExternalReferenceCode(), parentComment.getGroupId(),
+			parentComment.getCommentId(), objectEntry.getId(),
+			comment.getText());
 	}
 
 	@Override
@@ -1025,7 +1059,8 @@ public class ObjectEntryResourceImpl
 			externalReferenceCode, scopeKey);
 
 		return _addComment(
-			objectEntry.getScopeId(), comment, objectEntry.getId());
+			comment.getExternalReferenceCode(), objectEntry.getScopeId(), null,
+			objectEntry.getId(), comment.getText());
 	}
 
 	@Override
@@ -1042,6 +1077,37 @@ public class ObjectEntryResourceImpl
 		return defaultObjectEntryManager.expireObjectEntry(
 			_getDTOConverterContext(null), externalReferenceCode,
 			_objectDefinition, scopeKey);
+	}
+
+	@Override
+	public Comment
+			postScopeScopeKeyByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCodeParentCommentExternalReferenceCodeComment(
+				String scopeKey, String objectEntryExternalReferenceCode,
+				String parentCommentExternalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		ObjectEntry objectEntry = _getObjectEntry(
+			objectEntryExternalReferenceCode, scopeKey);
+
+		com.liferay.portal.kernel.comment.Comment parentComment = _fetchComment(
+			ObjectEntry.class.getName(), objectEntry.getId(),
+			parentCommentExternalReferenceCode, objectEntry.getScopeId());
+
+		if (parentComment == null) {
+			throw new NotFoundException();
+		}
+
+		return _addComment(
+			comment.getExternalReferenceCode(), parentComment.getGroupId(),
+			parentComment.getCommentId(), objectEntry.getId(),
+			comment.getText());
 	}
 
 	@Override
@@ -1158,17 +1224,20 @@ public class ObjectEntryResourceImpl
 		ObjectEntry objectEntry = _getObjectEntry(
 			objectEntryExternalReferenceCode, null);
 
+		long groupId = _getNonzeroGroupId(objectEntry.getId());
+
 		com.liferay.portal.kernel.comment.Comment existingComment =
 			_fetchComment(
 				ObjectEntry.class.getName(), objectEntry.getId(),
-				externalReferenceCode, _getNonzeroGroupId(objectEntry.getId()));
+				externalReferenceCode, groupId);
 
 		if (existingComment != null) {
 			return _updateComment(comment, existingComment);
 		}
 
 		return _addComment(
-			objectEntry.getScopeId(), comment, objectEntry.getId());
+			comment.getExternalReferenceCode(), groupId, null,
+			objectEntry.getId(), comment.getText());
 	}
 
 	@Override
@@ -1328,7 +1397,8 @@ public class ObjectEntryResourceImpl
 		}
 
 		return _addComment(
-			objectEntry.getScopeId(), comment, objectEntry.getId());
+			comment.getExternalReferenceCode(), objectEntry.getScopeId(), null,
+			objectEntry.getId(), comment.getText());
 	}
 
 	@Override
@@ -1416,7 +1486,8 @@ public class ObjectEntryResourceImpl
 	}
 
 	private Comment _addComment(
-			long groupId, Comment comment, long objectEntryId)
+			String externalReferenceCode, long groupId, Long parentCommentId,
+			long objectEntryId, String text)
 		throws Exception {
 
 		_discussionPermission.checkAddPermission(
@@ -1424,14 +1495,25 @@ public class ObjectEntryResourceImpl
 			contextCompany.getCompanyId(), groupId, ObjectEntry.class.getName(),
 			objectEntryId);
 
+		if (parentCommentId != null) {
+			return CommentUtil.toComment(
+				() -> _commentManager.fetchComment(
+					_commentManager.addComment(
+						externalReferenceCode, PrincipalThreadLocal.getUserId(),
+						ObjectEntry.class.getName(), objectEntryId,
+						StringPool.BLANK, parentCommentId, StringPool.BLANK,
+						StringBundler.concat("<p>", text, "</p>"),
+						_createServiceContextFunction())),
+				_commentManager, PortalUtil.getPortal());
+		}
+
 		return CommentUtil.toComment(
 			() -> _commentManager.fetchComment(
 				_commentManager.addComment(
-					comment.getExternalReferenceCode(),
-					PrincipalThreadLocal.getUserId(), groupId,
-					ObjectEntry.class.getName(), objectEntryId,
+					externalReferenceCode, PrincipalThreadLocal.getUserId(),
+					groupId, ObjectEntry.class.getName(), objectEntryId,
 					StringPool.BLANK, StringPool.BLANK,
-					StringBundler.concat("<p>", comment.getText(), "</p>"),
+					StringBundler.concat("<p>", text, "</p>"),
 					_createServiceContextFunction())),
 			_commentManager, PortalUtil.getPortal());
 	}
