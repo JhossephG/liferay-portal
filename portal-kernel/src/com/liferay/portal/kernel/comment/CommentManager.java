@@ -55,6 +55,11 @@ public interface CommentManager {
 			long classPK, String text)
 		throws Exception;
 
+	public Comment addParentCommentComment(
+			String externalReferenceCode, long groupId, long parentCommentId,
+			String className, long classPK, String text)
+		throws Exception;
+
 	public Discussion copyDiscussion(
 			long userId, long groupId, String className, long classPK,
 			long newClassPK,
