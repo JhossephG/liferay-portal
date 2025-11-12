@@ -173,6 +173,13 @@ public interface ObjectEntryResource {
 				com.liferay.headless.delivery.dto.v1_0.Comment comment)
 		throws Exception;
 
+	public com.liferay.headless.delivery.dto.v1_0.Comment
+			postByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCodeParentCommentExternalReferenceCodeComment(
+				String objectEntryExternalReferenceCode,
+				String parentCommentExternalReferenceCode,
+				com.liferay.headless.delivery.dto.v1_0.Comment comment)
+		throws Exception;
+
 	public void postByExternalReferenceCodeSubscribe(
 			String externalReferenceCode)
 		throws Exception;
@@ -241,6 +248,13 @@ public interface ObjectEntryResource {
 
 	public ObjectEntry postScopeScopeKeyByExternalReferenceCodeExpire(
 			String scopeKey, String externalReferenceCode)
+		throws Exception;
+
+	public com.liferay.headless.delivery.dto.v1_0.Comment
+			postScopeScopeKeyByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCodeParentCommentExternalReferenceCodeComment(
+				String scopeKey, String objectEntryExternalReferenceCode,
+				String parentCommentExternalReferenceCode,
+				com.liferay.headless.delivery.dto.v1_0.Comment comment)
 		throws Exception;
 
 	public void postScopeScopeKeyByExternalReferenceCodeSubscribe(
