@@ -22,23 +22,22 @@ import jakarta.ws.rs.ClientErrorException;
 public class CommentUtil {
 
 	public static Comment toComment(
-			com.liferay.portal.kernel.comment.Comment comment,
-			CommentManager commentManager, Portal portal)
-		throws Exception {
+		com.liferay.portal.kernel.comment.Comment comment,
+		CommentManager commentManager, Portal portal) {
 
 		return _toComment(comment, commentManager, portal);
 	}
 
 	public static Comment toComment(
 			UnsafeSupplier<com.liferay.portal.kernel.comment.Comment, Exception>
-				addCommentUnsafeSupplier,
+				commentUnsafeSupplier,
 			CommentManager commentManager, Portal portal)
 		throws Exception {
 
 		com.liferay.portal.kernel.comment.Comment comment;
 
 		try {
-			comment = addCommentUnsafeSupplier.get();
+			comment = commentUnsafeSupplier.get();
 		}
 		catch (DiscussionMaxCommentsException discussionMaxCommentsException) {
 			throw new ClientErrorException(
@@ -66,24 +65,21 @@ public class CommentUtil {
 			return null;
 		}
 
-		com.liferay.portal.kernel.comment.Comment finalComment = comment;
-
 		return new Comment() {
 			{
 				setCreator(
 					() -> CreatorUtil.toCreator(
-						null, portal, finalComment.getUser()));
-				setDateCreated(finalComment::getCreateDate);
-				setDateModified(finalComment::getModifiedDate);
-				setExternalReferenceCode(
-					finalComment::getExternalReferenceCode);
-				setId(finalComment::getCommentId);
+						null, portal, comment.getUser()));
+				setDateCreated(comment::getCreateDate);
+				setDateModified(comment::getModifiedDate);
+				setExternalReferenceCode(comment::getExternalReferenceCode);
+				setId(comment::getCommentId);
 				setNumberOfComments(
 					() -> commentManager.getChildCommentsCount(
-						finalComment.getCommentId(),
+						comment.getCommentId(),
 						WorkflowConstants.STATUS_APPROVED));
-				setParentCommentId(finalComment::getParentCommentId);
-				setText(finalComment::getBody);
+				setParentCommentId(comment::getParentCommentId);
+				setText(comment::getBody);
 			}
 		};
 	}
