@@ -255,6 +255,27 @@ public class ObjectEntryResourceImpl
 	}
 
 	@Override
+	public void
+			deleteByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCode(
+				String objectEntryExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		ObjectEntry objectEntry = _getObjectEntry(
+			objectEntryExternalReferenceCode, null);
+
+		com.liferay.portal.kernel.comment.Comment comment = _fetchComment(
+			ObjectEntry.class.getName(), objectEntry.getId(),
+			externalReferenceCode, _getNonzeroGroupId(objectEntry.getId()));
+
+		if (comment == null) {
+			throw new NotFoundException();
+		}
+
+		_deleteComment(comment.getCommentId());
+	}
+
+	@Override
 	public void deleteObjectEntry(Long objectEntryId) throws Exception {
 		DefaultObjectEntryManager defaultObjectEntryManager =
 			DefaultObjectEntryManagerProvider.provide(
@@ -322,6 +343,27 @@ public class ObjectEntryResourceImpl
 
 		defaultObjectEntryManager.deleteObjectEntryByVersion(
 			externalReferenceCode, _objectDefinition, scopeKey, version);
+	}
+
+	@Override
+	public void
+			deleteScopeScopeKeyByExternalReferenceCodeObjectEntryExternalReferenceCodeCommentByExternalReferenceCode(
+				String scopeKey, String objectEntryExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception {
+
+		ObjectEntry objectEntry = _getObjectEntry(
+			objectEntryExternalReferenceCode, scopeKey);
+
+		com.liferay.portal.kernel.comment.Comment comment = _fetchComment(
+			ObjectEntry.class.getName(), objectEntry.getId(),
+			externalReferenceCode, objectEntry.getScopeId());
+
+		if (comment == null) {
+			throw new NotFoundException();
+		}
+
+		_deleteComment(comment.getCommentId());
 	}
 
 	@Override
@@ -1521,6 +1563,13 @@ public class ObjectEntryResourceImpl
 
 			return serviceContext;
 		};
+	}
+
+	private void _deleteComment(Long commentId) throws Exception {
+		_discussionPermission.checkDeletePermission(
+			PermissionThreadLocal.getPermissionChecker(), commentId);
+
+		_commentManager.deleteComment(commentId);
 	}
 
 	private com.liferay.portal.kernel.comment.Comment _fetchComment(
