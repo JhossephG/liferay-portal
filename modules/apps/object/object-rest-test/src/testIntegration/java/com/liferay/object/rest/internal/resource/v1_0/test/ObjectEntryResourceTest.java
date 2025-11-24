@@ -1088,6 +1088,78 @@ public class ObjectEntryResourceTest {
 		_groupLocalService.deleteGroup(_group);
 	}
 
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testDeleteByExternalReferenceCodeComment() throws Exception {
+
+		// Company scope
+
+		ObjectEntry companyObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_objectDefinition1, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+
+		_objectDefinition1.setEnableComments(true);
+
+		_objectDefinitionLocalService.updateObjectDefinition(
+			_objectDefinition1);
+
+		JSONObject bodyJSONObject = JSONUtil.put(
+			"externalReferenceCode", RandomTestUtil.randomString()
+		).put(
+			"text", RandomTestUtil.randomString()
+		);
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			bodyJSONObject.toString(),
+			StringBundler.concat(
+				_getEndpoint(_objectDefinition1, 0),
+				"/by-external-reference-code/",
+				companyObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		Assert.assertEquals(
+			204,
+			HTTPTestUtil.invokeToHttpCode(
+				null,
+				StringBundler.concat(
+					_getEndpoint(_objectDefinition1, 0),
+					"/by-external-reference-code/",
+					companyObjectEntry.getExternalReferenceCode(), "/comments",
+					"/by-external-reference-code/",
+					jsonObject.getString("externalReferenceCode")),
+				Http.Method.DELETE));
+
+		// Site scope
+
+		ObjectEntry siteObjectEntry = ObjectEntryTestUtil.addObjectEntry(
+			_siteScopedObjectDefinition1, _OBJECT_FIELD_NAME_1,
+			_OBJECT_FIELD_VALUE_1);
+
+		_siteScopedObjectDefinition1.setEnableComments(true);
+
+		_objectDefinitionLocalService.updateObjectDefinition(
+			_siteScopedObjectDefinition1);
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			bodyJSONObject.toString(),
+			StringBundler.concat(
+				_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
+				"/by-external-reference-code/",
+				siteObjectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		Assert.assertEquals(
+			204,
+			HTTPTestUtil.invokeToHttpCode(
+				null,
+				StringBundler.concat(
+					_getEndpoint(_siteScopedObjectDefinition1, _testGroupId),
+					"/by-external-reference-code/",
+					siteObjectEntry.getExternalReferenceCode(), "/comments",
+					"/by-external-reference-code/",
+					jsonObject.getString("externalReferenceCode")),
+				Http.Method.DELETE));
+	}
+
 	@Test
 	public void testDeleteScopeScopeKeyByExternalReferenceCode()
 		throws Exception {
