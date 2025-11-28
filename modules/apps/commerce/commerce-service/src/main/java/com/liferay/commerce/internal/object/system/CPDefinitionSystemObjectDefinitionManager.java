@@ -71,8 +71,8 @@ public class CPDefinitionSystemObjectDefinitionManager
 
 	@Override
 	public void checkModelResourcePermission(
-			long objectDefinitionId, PermissionChecker permissionChecker,
-			long primaryKey, String actionId)
+		long objectDefinitionId, PermissionChecker permissionChecker,
+		long primaryKey, String actionId)
 		throws PortalException {
 
 		CPDefinition cpDefinition = _cpDefinitionLocalService.fetchCPDefinition(

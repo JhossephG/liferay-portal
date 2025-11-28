@@ -107,8 +107,7 @@ public class SystemRelatedModelsFDSDataProvider
 				Map<String, Object> values =
 					ObjectEntryDTOConverterUtil.toValues(
 						relatedModel, _dtoConverterRegistry,
-						objectDefinition.getName(),
-						_systemObjectDefinitionManagerRegistry, user);
+						_systemObjectDefinitionManagerRegistry, user, null,objectDefinition);
 
 				Map<String, Object> modelAttributes =
 					relatedModel.getModelAttributes();

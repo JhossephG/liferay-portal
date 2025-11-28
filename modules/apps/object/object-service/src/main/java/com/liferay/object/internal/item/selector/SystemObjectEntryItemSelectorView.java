@@ -285,9 +285,8 @@ public class SystemObjectEntryItemSelectorView
 				objectField, _themeDisplay.getUser(),
 				ObjectEntryDTOConverterUtil.toValues(
 					_baseModel, _dtoConverterRegistry,
-					_objectDefinition.getName(),
 					_systemObjectDefinitionManagerRegistry,
-					_themeDisplay.getUser()));
+					_themeDisplay.getUser(), null, objectDefinition));
 
 			if (titleFieldValue == null) {
 				return StringPool.BLANK;

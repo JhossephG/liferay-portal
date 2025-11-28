@@ -5,6 +5,7 @@
 
 package com.liferay.object.entry.util;
 
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionManager;
@@ -15,6 +16,8 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -109,17 +112,28 @@ public class ObjectEntryDTOConverterUtil {
 
 	public static Map<String, Object> toValues(
 		BaseModel<?> baseModel, DTOConverterRegistry dtoConverterRegistry,
-		String objectDefinitionName,
 		SystemObjectDefinitionManagerRegistry
 			systemObjectDefinitionManagerRegistry,
-		User user) {
+		User user, JSONFactory jsonFactory, ObjectDefinition objectDefinition) {
+
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(objectDefinition.getName());
 
 		try {
 			Object dto = toDTO(
-				baseModel, dtoConverterRegistry,
-				systemObjectDefinitionManagerRegistry.
-					getSystemObjectDefinitionManager(objectDefinitionName),
+				baseModel, dtoConverterRegistry, systemObjectDefinitionManager,
 				user);
+
+			if (jsonFactory != null) {
+				JSONObject jsonObject = jsonFactory.createJSONObject(
+					dto.toString());
+
+				systemObjectDefinitionManager.checkModelResourcePermission(
+					objectDefinition.getObjectDefinitionId(),
+					PermissionThreadLocal.getPermissionChecker(),
+					jsonObject.getLong("id"), ActionKeys.VIEW);
+			}
 
 			if (dto == null) {
 				return Collections.emptyMap();

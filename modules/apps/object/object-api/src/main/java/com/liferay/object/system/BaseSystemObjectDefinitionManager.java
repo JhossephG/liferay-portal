@@ -5,7 +5,6 @@
 
 package com.liferay.object.system;
 
-import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -39,13 +38,12 @@ import org.osgi.service.component.annotations.Reference;
 public abstract class BaseSystemObjectDefinitionManager
 	implements SystemObjectDefinitionManager {
 
-	@Override
 	public void checkModelResourcePermission(
-			long objectDefinitionId, PermissionChecker permissionChecker,
-			long primaryKey, String actionId)
+		long objectDefinitionId, PermissionChecker permissionChecker,
+		long primaryKey, String actionId)
 		throws PortalException {
 
-		ModelResourcePermission<ObjectEntry> modelResourcePermission =
+		ModelResourcePermission<?> modelResourcePermission =
 			objectEntryService.getModelResourcePermission(objectDefinitionId);
 
 		modelResourcePermission.check(permissionChecker, primaryKey, actionId);

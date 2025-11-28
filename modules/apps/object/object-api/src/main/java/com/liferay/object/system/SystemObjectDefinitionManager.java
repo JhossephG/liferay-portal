@@ -42,8 +42,8 @@ public interface SystemObjectDefinitionManager {
 		throws Exception;
 
 	public void checkModelResourcePermission(
-			long objectDefinitionId, PermissionChecker permissionChecker,
-			long primaryKey, String actionId)
+		long objectDefinitionId, PermissionChecker permissionChecker,
+		long primaryKey, String actionId)
 		throws PortalException;
 
 	public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)

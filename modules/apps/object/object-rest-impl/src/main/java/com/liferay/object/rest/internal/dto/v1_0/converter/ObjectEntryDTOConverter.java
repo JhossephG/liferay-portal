@@ -565,9 +565,9 @@ public class ObjectEntryDTOConverter
 							ObjectEntryDTOConverterUtil.toValues(
 								baseModel,
 								dtoConverterContext.getDTOConverterRegistry(),
-								objectDefinition.getName(),
 								_systemObjectDefinitionManagerRegistry,
-								dtoConverterContext.getUser());
+								dtoConverterContext.getUser(), _jsonFactory,
+								objectDefinition);
 
 						if (MapUtil.isNotEmpty(values)) {
 							ObjectField objectField =

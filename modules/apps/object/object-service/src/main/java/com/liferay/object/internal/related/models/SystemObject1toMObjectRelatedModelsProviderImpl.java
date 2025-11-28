@@ -34,6 +34,8 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -262,6 +264,16 @@ public class SystemObject1toMObjectRelatedModelsProviderImpl
 			boolean preferApproved, long primaryKey, String search, int start,
 			int end, Sort[] sorts)
 		throws PortalException {
+
+		SystemObjectDefinitionManager systemObjectDefinitionManager =
+			_systemObjectDefinitionManagerRegistry.
+				getSystemObjectDefinitionManager(
+					_objectDefinition.getName());
+
+		systemObjectDefinitionManager.checkModelResourcePermission(
+			_objectDefinition.getObjectDefinitionId(),
+			PermissionThreadLocal.getPermissionChecker(), primaryKey,
+			ActionKeys.VIEW);
 
 		PersistedModelLocalService persistedModelLocalService =
 			PersistedModelLocalServiceRegistryUtil.
