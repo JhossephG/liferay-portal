@@ -81,6 +81,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PermissionService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -599,9 +600,17 @@ public class ObjectEntryDTOConverter
 					}
 					else {
 						com.liferay.object.model.ObjectEntry
+							serviceBuilderObjectEntry;
+
+						try {
 							serviceBuilderObjectEntry =
-								_objectEntryLocalService.getObjectEntry(
-									primaryKey);
+								_objectEntryService.getObjectEntry(primaryKey);
+						}
+						catch (PrincipalException principalException) {
+							_log.error(principalException);
+
+							return null;
+						}
 
 						if (GetterUtil.getBoolean(
 								dtoConverterContext.getAttribute(
