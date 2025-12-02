@@ -6299,6 +6299,173 @@ public class ObjectEntryResourceTest {
 		Assert.assertEquals(0, itemsJSONArray.length());
 	}
 
+	private void _testGetCommentsEndpoints(
+		long groupId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		_enableComments(objectDefinition);
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			objectDefinition, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+
+		String commentsEndpoint = StringBundler.concat(
+			_getEndpoint(objectDefinition, groupId),
+			"/by-external-reference-code/",
+			objectEntry.getExternalReferenceCode(), "/comments");
+
+		String externalReferenceCode1 = RandomTestUtil.randomString();
+		String text1 = RandomTestUtil.randomString();
+
+		JSONObject commentJSONObject1 = _postComment(
+			commentsEndpoint, externalReferenceCode1, text1);
+
+		Thread.sleep(Time.SECOND);
+
+		String externalReferenceCode2 = RandomTestUtil.randomString();
+		String text2 = RandomTestUtil.randomString();
+
+		JSONObject commentJSONObject2 = _postComment(
+			commentsEndpoint, externalReferenceCode2, text2);
+
+		JSONObject getCommentJSONObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			StringBundler.concat(
+				commentsEndpoint, StringPool.SLASH,
+				commentJSONObject1.getString("externalReferenceCode")),
+			Http.Method.GET);
+
+		Assert.assertEquals(
+			commentJSONObject1.getString("externalReferenceCode"),
+			getCommentJSONObject.getString("externalReferenceCode"));
+		Assert.assertEquals(
+			"<p>" + text1 + "</p>",
+			getCommentJSONObject.getString("text"));
+
+		String filterString =
+			"externalReferenceCode eq '" + externalReferenceCode1 + "'";
+
+		JSONObject filteredCommentsJSONObject =
+			HTTPTestUtil.invokeToJSONObject(
+				null,
+				commentsEndpoint + "?filter=" + URLCodec.encodeURL(filterString),
+				Http.Method.GET);
+
+		JSONArray itemsJSONArray = filteredCommentsJSONObject.getJSONArray(
+			"items");
+
+		Assert.assertEquals(1, itemsJSONArray.length());
+
+		JSONObject itemJSONObject = itemsJSONArray.getJSONObject(0);
+
+		Assert.assertEquals(
+			"<p>" + text1 + "</p>", itemJSONObject.getString("text"));
+		Assert.assertEquals(
+			externalReferenceCode1,
+			itemJSONObject.getString("externalReferenceCode"));
+
+		JSONObject sortedCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
+			null, commentsEndpoint + "?sort=dateCreated:desc",
+			Http.Method.GET);
+
+		JSONArray sortedItemsJSONArray =
+			sortedCommentsJSONObject.getJSONArray("items");
+
+		Assert.assertEquals(
+			commentJSONObject2.getString("externalReferenceCode"),
+			sortedItemsJSONArray.getJSONObject(
+				0
+			).getString("externalReferenceCode"));
+		Assert.assertEquals(
+			commentJSONObject1.getString("externalReferenceCode"),
+			sortedItemsJSONArray.getJSONObject(
+				1
+			).getString("externalReferenceCode"));
+
+		String childCommentsEndpoint = StringBundler.concat(
+			commentsEndpoint, StringPool.SLASH,
+			commentJSONObject1.getString("externalReferenceCode"),
+			"/child-comments");
+
+		String childExternalReferenceCode1 = RandomTestUtil.randomString();
+		String childText1 = RandomTestUtil.randomString();
+
+		JSONObject childCommentJSONObject1 = _postComment(
+			StringBundler.concat(
+				commentsEndpoint, StringPool.SLASH,
+				commentJSONObject1.getString("externalReferenceCode"),
+				"/reply-comments"),
+			childExternalReferenceCode1, childText1);
+
+		Thread.sleep(Time.SECOND);
+
+		String childExternalReferenceCode2 = RandomTestUtil.randomString();
+		String childText2 = RandomTestUtil.randomString();
+
+		JSONObject childCommentJSONObject2 = _postComment(
+			StringBundler.concat(
+				commentsEndpoint, StringPool.SLASH,
+				commentJSONObject1.getString("externalReferenceCode"),
+				"/reply-comments"),
+			childExternalReferenceCode2, childText2);
+
+		JSONObject filteredChildCommentsJSONObject =
+			HTTPTestUtil.invokeToJSONObject(
+				null,
+				StringBundler.concat(
+					childCommentsEndpoint, "?filter=",
+					URLCodec.encodeURL(
+						StringBundler.concat(
+							"externalReferenceCode eq ",
+							childExternalReferenceCode1, "'"))),
+				Http.Method.GET);
+
+		JSONArray childItemsJSONArray =
+			filteredChildCommentsJSONObject.getJSONArray("items");
+
+		Assert.assertEquals(1, childItemsJSONArray.length());
+
+		JSONObject childItemJSONObject = childItemsJSONArray.getJSONObject(0);
+
+		Assert.assertEquals(
+			"<p>" + childText1 + "</p>",
+			childItemJSONObject.getString("text"));
+		Assert.assertEquals(
+			childExternalReferenceCode1,
+			childItemJSONObject.getString("externalReferenceCode"));
+
+		JSONObject sortedChildCommentsJSONObject =
+			HTTPTestUtil.invokeToJSONObject(
+				null, childCommentsEndpoint + "?sort=dateCreated:asc",
+				Http.Method.GET);
+
+		JSONArray sortedChildItemsJSONArray =
+			sortedChildCommentsJSONObject.getJSONArray("items");
+
+		Assert.assertEquals(
+			childCommentJSONObject1.getString("externalReferenceCode"),
+			sortedChildItemsJSONArray.getJSONObject(
+				0
+			).getString("externalReferenceCode"));
+		Assert.assertEquals(
+			childCommentJSONObject2.getString("externalReferenceCode"),
+			sortedChildItemsJSONArray.getJSONObject(
+				1
+			).getString("externalReferenceCode"));
+	}
+
+	private JSONObject _postComment(
+		String endpoint, String externalReferenceCode, String text)
+		throws Exception {
+
+		return HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"externalReferenceCode", externalReferenceCode
+			).put(
+				"text", text
+			).toString(),
+			endpoint, Http.Method.POST);
+	}
+
 	@Test
 	public void testGetObjectEntriesWithPagination() throws Exception {
 		ObjectEntryTestUtil.addObjectEntry(
@@ -9162,6 +9329,20 @@ public class ObjectEntryResourceTest {
 					jsonObject.getString("externalReferenceCode"),
 			_siteScopedObjectDefinition1, _siteScopedObjectDefinition2,
 			group.getGroupKey());
+	}
+
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testGetByExternalReferenceCodeComment() throws Exception {
+
+		// Company scope
+
+		_testGetCommentsEndpoints(0L, _objectDefinition1);
+
+		// Site scope
+
+		_testGetCommentsEndpoints(
+			_testGroupId, _siteScopedObjectDefinition1);
 	}
 
 	@FeatureFlag("LPD-69419")
