@@ -601,6 +601,12 @@ public class ObjectEntryResourceImpl
 			throw new NotFoundException();
 		}
 
+		if ((filter == null) &&
+			(contextHttpServletRequest.getParameter("filter") != null)) {
+
+			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
+		}
+
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
 				"create",
@@ -648,6 +654,12 @@ public class ObjectEntryResourceImpl
 			discussion.getRootDiscussionComment();
 
 		Creator creator = objectEntry.getCreator();
+
+		if ((filter == null) &&
+			(contextHttpServletRequest.getParameter("filter") != null)) {
+
+			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
+		}
 
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
@@ -969,6 +981,12 @@ public class ObjectEntryResourceImpl
 			throw new NotFoundException();
 		}
 
+		if ((filter == null) &&
+			(contextHttpServletRequest.getParameter("filter") != null)) {
+
+			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
+		}
+
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
 				"create",
@@ -1018,6 +1036,12 @@ public class ObjectEntryResourceImpl
 
 		DiscussionComment rootDiscussionComment =
 			discussion.getRootDiscussionComment();
+
+		if ((filter == null) &&
+			(contextHttpServletRequest.getParameter("filter") != null)) {
+
+			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
+		}
 
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
