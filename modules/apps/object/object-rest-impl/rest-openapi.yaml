@@ -800,12 +800,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/Comment"
+                                    $ref: ../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Comment
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/Comment"
+                                    $ref: ../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Comment
                                 type: array
             tags: ["ObjectEntry"]
         post:
@@ -1687,12 +1687,12 @@ paths:
                         application/json:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/Comment"
+                                    $ref: ../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Comment
                                 type: array
                         application/xml:
                             schema:
                                 items:
-                                    $ref: "#/components/schemas/Comment"
+                                    $ref: ../../headless/headless-delivery/headless-delivery-impl/rest-openapi.yaml#Comment
                                 type: array
             tags: ["ObjectEntry"]
         post:
@@ -2499,12 +2499,10 @@ paths:
                             schema:
                                 items:
                                     $ref: ../../headless/headless-object/headless-object-impl/rest-openapi.yaml#Collaborator
-                                type: array
                         application/xml:
                             schema:
                                 items:
                                     $ref: ../../headless/headless-object/headless-object-impl/rest-openapi.yaml#Collaborator
-                                type: array
             tags: ["Collaborator"]
         post:
             description:
