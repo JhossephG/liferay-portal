@@ -10,6 +10,7 @@ import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.headless.delivery.dto.v1_0.Creator;
 import com.liferay.headless.delivery.dto.v1_0.util.CommentUtil;
 import com.liferay.headless.delivery.resource.v1_0.util.CommentResourceUtil;
+import com.liferay.headless.delivery.search.filter.FilterUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.exception.ObjectEntryValidationException;
 import com.liferay.object.model.ObjectDefinition;
@@ -631,6 +632,11 @@ public class ObjectEntryResourceImpl
 				_objectDefinition.getCompanyId(), "LPD-69419")) {
 
 			throw new UnsupportedOperationException();
+		}
+
+		if (filter == null) {
+			filter = toFilter(
+				contextHttpServletRequest.getParameter("filter"));
 		}
 
 		ObjectEntry objectEntry = _getObjectEntry(externalReferenceCode, null);
