@@ -186,12 +186,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 			throw new NotFoundException();
 		}
 
-		if ((filter == null) &&
-			(contextHttpServletRequest.getParameter("filter") != null)) {
-
-			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
-		}
-
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
 				"create",
@@ -239,12 +233,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 			discussion.getRootDiscussionComment();
 
 		Creator creator = objectEntry.getCreator();
-
-		if ((filter == null) &&
-			(contextHttpServletRequest.getParameter("filter") != null)) {
-
-			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
-		}
 
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
@@ -337,12 +325,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 			throw new NotFoundException();
 		}
 
-		if ((filter == null) &&
-			(contextHttpServletRequest.getParameter("filter") != null)) {
-
-			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
-		}
-
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
 				"create",
@@ -393,12 +375,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 		DiscussionComment rootDiscussionComment =
 			discussion.getRootDiscussionComment();
 
-		if ((filter == null) &&
-			(contextHttpServletRequest.getParameter("filter") != null)) {
-
-			filter = toFilter(contextHttpServletRequest.getParameter("filter"));
-		}
-
 		return CommentResourceUtil.getComments(
 			HashMapBuilder.put(
 				"add-discussion",
@@ -416,6 +392,26 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 			rootDiscussionComment.getCommentId(), contextCompany.getCompanyId(),
 			_commentManager, search, aggregation, filter, pagination,
 			PortalUtil.getPortal(), sorts);
+	}
+
+	@Override
+	public Comment postScopeScopeKeyByExternalReferenceCodeComment(
+		String scopeKey, String externalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		ObjectEntry objectEntry = _getObjectEntry(
+			externalReferenceCode, scopeKey);
+
+		return _addComment(
+			comment.getExternalReferenceCode(), objectEntry.getScopeId(), null,
+			objectEntry.getId(), comment.getText());
 	}
 
 	@Override
@@ -478,6 +474,26 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 
 		return _addComment(
 			commentExternalReferenceCode, groupId, null, objectEntry.getId(),
+			comment.getText());
+	}
+
+	@Override
+	public Comment postByExternalReferenceCodeComment(
+		String externalReferenceCode, Comment comment)
+		throws Exception {
+
+		if (!_objectDefinition.isEnableComments() ||
+			!FeatureFlagManagerUtil.isEnabled(
+				_objectDefinition.getCompanyId(), "LPD-69419")) {
+
+			throw new UnsupportedOperationException();
+		}
+
+		ObjectEntry objectEntry = _getObjectEntry(externalReferenceCode, null);
+
+		return _addComment(
+			comment.getExternalReferenceCode(),
+			_getNonzeroGroupId(objectEntry.getId()), null, objectEntry.getId(),
 			comment.getText());
 	}
 
