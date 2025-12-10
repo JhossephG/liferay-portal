@@ -16593,12 +16593,43 @@ public class ObjectEntryResourceTest {
 		String externalReferenceCode = RandomTestUtil.randomString();
 		String text = RandomTestUtil.randomString();
 
-		JSONObject commentJSONObject1 = _postComment(
+		JSONObject parentCommentJSONObject1 = _postComment(
 			endpoint, externalReferenceCode, text);
 
-		JSONObject commentJSONObject2 = _postComment(
+		JSONObject parentCommentJSONObject2 = _postComment(
 			endpoint, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString());
+
+		_testGetComment(endpoint, externalReferenceCode, text);
+
+		_testGetCommentsPage(
+			endpoint, parentCommentJSONObject1, parentCommentJSONObject2, text);
+
+		// Child Comment
+
+		endpoint = StringBundler.concat(
+			endpoint, StringPool.SLASH,
+			parentCommentJSONObject1.getString("externalReferenceCode"),
+			"/child-comments");
+
+		String childExternalReferenceCode = RandomTestUtil.randomString();
+		String childText = RandomTestUtil.randomString();
+
+		JSONObject childCommentJSONObject1 = _postComment(
+			endpoint, childExternalReferenceCode, childText);
+
+		JSONObject childCommentJSONObject2 = _postComment(
+			endpoint, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
+
+		_testGetCommentsPage(
+			endpoint, childCommentJSONObject1, childCommentJSONObject2,
+			childText);
+	}
+
+	private void _testGetComment(
+			String endpoint, String externalReferenceCode, String text)
+		throws Exception {
 
 		JSONObject getCommentJSONObject = HTTPTestUtil.invokeToJSONObject(
 			null,
@@ -16607,12 +16638,16 @@ public class ObjectEntryResourceTest {
 			Http.Method.GET);
 
 		Assert.assertEquals(
-			commentJSONObject1.getString("externalReferenceCode"),
+			externalReferenceCode,
 			getCommentJSONObject.getString("externalReferenceCode"));
 		Assert.assertEquals(
 			"<p>" + text + "</p>", getCommentJSONObject.getString("text"));
+	}
 
-		// Filter
+	private void _testGetCommentsPage(
+			String endpoint, JSONObject commentJSONObject1,
+			JSONObject commentJSONObject2, String text)
+		throws Exception {
 
 		String filter = URLCodec.encodeURL(
 			"dateCreated eq " + commentJSONObject1.getString("dateCreated"));
@@ -16633,8 +16668,6 @@ public class ObjectEntryResourceTest {
 			commentJSONObject1.getString("dateCreated"),
 			itemJSONObject.getString("dateCreated"));
 
-		// Search
-
 		JSONObject searchedCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
 			null,
 			StringBundler.concat(
@@ -16650,10 +16683,8 @@ public class ObjectEntryResourceTest {
 			searchedItemsJSONArray.getJSONObject(0);
 
 		Assert.assertEquals(
-			externalReferenceCode,
+			commentJSONObject1.getString("externalReferenceCode"),
 			searchedItemJSONObject.getString("externalReferenceCode"));
-
-		// Sort
 
 		JSONObject sortedCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
 			null, endpoint + "?sort=dateCreated:desc", Http.Method.GET);
@@ -16666,81 +16697,6 @@ public class ObjectEntryResourceTest {
 
 		JSONObject sortedItemJSONObject2 = sortedItemsJSONArray.getJSONObject(
 			1);
-
-		Assert.assertEquals(
-			commentJSONObject1.getString("externalReferenceCode"),
-			sortedItemJSONObject2.getString("externalReferenceCode"));
-
-		Assert.assertEquals(
-			commentJSONObject2.getString("externalReferenceCode"),
-			sortedItemJSONObject1.getString("externalReferenceCode"));
-
-		// Child Comment
-
-		endpoint = StringBundler.concat(
-			endpoint, StringPool.SLASH,
-			commentJSONObject1.getString("externalReferenceCode"),
-			"/child-comments");
-
-		String childExternalReferenceCode = RandomTestUtil.randomString();
-		String childText = RandomTestUtil.randomString();
-
-		commentJSONObject1 = _postComment(
-			endpoint, childExternalReferenceCode, childText);
-
-		commentJSONObject2 = _postComment(
-			endpoint, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString());
-
-		// Filter
-
-		filter = URLCodec.encodeURL(
-			"dateCreated eq " + commentJSONObject1.getString("dateCreated"));
-
-		filteredCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
-			null, endpoint + "?filter=" + filter, Http.Method.GET);
-
-		itemsJSONArray = filteredCommentsJSONObject.getJSONArray("items");
-
-		Assert.assertEquals(1, itemsJSONArray.length());
-
-		itemJSONObject = itemsJSONArray.getJSONObject(0);
-
-		Assert.assertEquals(
-			"<p>" + childText + "</p>", itemJSONObject.getString("text"));
-		Assert.assertEquals(
-			commentJSONObject1.getString("dateCreated"),
-			itemJSONObject.getString("dateCreated"));
-
-		// Search
-
-		searchedCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
-			null,
-			StringBundler.concat(
-				endpoint, "?search=", URLCodec.encodeURL(childText)),
-			Http.Method.GET);
-
-		searchedItemsJSONArray = searchedCommentsJSONObject.getJSONArray(
-			"items");
-
-		Assert.assertEquals(1, searchedItemsJSONArray.length());
-
-		searchedItemJSONObject = searchedItemsJSONArray.getJSONObject(0);
-
-		Assert.assertEquals(
-			childExternalReferenceCode,
-			searchedItemJSONObject.getString("externalReferenceCode"));
-
-		// Sort
-
-		sortedCommentsJSONObject = HTTPTestUtil.invokeToJSONObject(
-			null, endpoint + "?sort=dateCreated:desc", Http.Method.GET);
-
-		sortedItemsJSONArray = sortedCommentsJSONObject.getJSONArray("items");
-
-		sortedItemJSONObject1 = sortedItemsJSONArray.getJSONObject(0);
-
-		sortedItemJSONObject2 = sortedItemsJSONArray.getJSONObject(1);
 
 		Assert.assertEquals(
 			commentJSONObject1.getString("externalReferenceCode"),
