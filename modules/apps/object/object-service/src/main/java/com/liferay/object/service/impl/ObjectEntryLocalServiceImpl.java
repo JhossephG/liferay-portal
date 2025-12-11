@@ -161,6 +161,7 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.dao.jdbc.postgresql.PostgreSQLJDBCUtil;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
+import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -2582,6 +2583,11 @@ public class ObjectEntryLocalServiceImpl
 		if (!objectDefinition.isEnableComments() || (comments == null)) {
 			return;
 		}
+
+		_discussionPermission.checkAddPermission(
+			PermissionThreadLocal.getPermissionChecker(),
+			objectDefinition.getCompanyId(), groupId,
+			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
 
 		User user = _userLocalService.getUser(userId);
 
@@ -7889,6 +7895,9 @@ public class ObjectEntryLocalServiceImpl
 
 	@Reference
 	private DDMExpressionFactory _ddmExpressionFactory;
+
+	@Reference
+	private DiscussionPermission _discussionPermission;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
