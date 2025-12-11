@@ -515,9 +515,6 @@ public class ObjectEntryLocalServiceImpl
 				serviceContext.getAssetPriority(), serviceContext);
 		}
 
-		_addComments(
-			groupId, userId, objectDefinition, objectEntry, serviceContext);
-
 		_addFriendlyURLEntry(
 			objectDefinition, objectEntry, serviceContext, values);
 
@@ -527,6 +524,9 @@ public class ObjectEntryLocalServiceImpl
 
 			_startWorkflowInstance(userId, objectEntry, serviceContext, false);
 		}
+
+		_addComments(
+			groupId, userId, objectDefinition, objectEntry, serviceContext);
 
 		_updateResourcePermissions(
 			objectDefinition, objectEntry, serviceContext);
@@ -2582,6 +2582,10 @@ public class ObjectEntryLocalServiceImpl
 
 		if (!objectDefinition.isEnableComments() || (comments == null)) {
 			return;
+		}
+
+		if (groupId == 0) {
+			groupId = objectEntry.getNonzeroGroupId();
 		}
 
 		_discussionPermission.checkAddPermission(
