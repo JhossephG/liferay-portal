@@ -303,6 +303,10 @@ public class MBCommentManagerImpl implements CommentManager {
 		MBDiscussion mbDiscussion = _mbDiscussionLocalService.fetchDiscussion(
 			className, classPK);
 
+		if (mbDiscussion == null) {
+			return Collections.emptyList();
+		}
+
 		return TransformUtil.transform(
 			_mbMessageLocalService.getThreadMessages(
 				mbDiscussion.getThreadId(), status, start, end),
