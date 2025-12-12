@@ -16,6 +16,7 @@ import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.internal.dto.v1_0.converter.ObjectEntryDTOConverter;
 import com.liferay.object.rest.internal.graphql.dto.v1_0.ObjectDefinitionGraphQLDTOContributor;
+import com.liferay.object.rest.internal.jaxrs.application.CommentApplication;
 import com.liferay.object.rest.internal.jaxrs.application.ObjectEntryApplication;
 import com.liferay.object.rest.internal.jaxrs.context.provider.ObjectDefinitionContextProvider;
 import com.liferay.object.rest.internal.jaxrs.exception.mapper.ObjectAssetCategoryExceptionMapper;
@@ -387,10 +388,14 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		}
 	}
 
-	private String _getEntityClassName(ObjectDefinition objectDefinition) {
-		return ObjectEntry.class.getName() + "#" +
-			StringUtil.toLowerCase(objectDefinition.getShortName());
-	}
+        private String _getCommentOSGiJaxRsName(String osgiJaxRsName) {
+                return osgiJaxRsName + "-comment";
+        }
+
+        private String _getEntityClassName(ObjectDefinition objectDefinition) {
+                return ObjectEntry.class.getName() + "#" +
+                        StringUtil.toLowerCase(objectDefinition.getShortName());
+        }
 
 	private String _getResourceLocatorKey(ObjectDefinition objectDefinition) {
 		return objectDefinition.getRESTContextPath() + "/" +
@@ -402,22 +407,26 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		String restContextPath = objectDefinition.getRESTContextPath();
 
-		List<String> companyIds = _restContextPathCompanyIds.computeIfAbsent(
-			restContextPath, key -> new ArrayList<>());
+                List<String> companyIds = _restContextPathCompanyIds.computeIfAbsent(
+                        restContextPath, key -> new ArrayList<>());
 
-		companyIds.add(String.valueOf(objectDefinition.getCompanyId()));
+                companyIds.add(String.valueOf(objectDefinition.getCompanyId()));
 
-		String osgiJaxRsName = objectDefinition.getOSGiJaxRsName();
+                String osgiJaxRsName = objectDefinition.getOSGiJaxRsName();
+                String commentOsgiJaxRsName =
+                        _getCommentOSGiJaxRsName(osgiJaxRsName);
 
-		Dictionary<String, Object> properties =
-			HashMapDictionaryBuilder.<String, Object>put(
-				"companyId", companyIds
-			).put(
-				"liferay.jackson", false
-			).put(
-				"liferay.objects", true
-			).put(
-				"osgi.jaxrs.application.base",
+                Dictionary<String, Object> properties =
+                        HashMapDictionaryBuilder.<String, Object>put(
+                                "companyId", companyIds
+                        ).put(
+                                "liferay.filter.disabled", true
+                        ).put(
+                                "liferay.jackson", false
+                        ).put(
+                                "liferay.objects", true
+                        ).put(
+                                "osgi.jaxrs.application.base",
 				objectDefinition.getRESTContextPath()
 			).put(
 				"osgi.jaxrs.extension.select",
@@ -428,8 +437,8 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 
 		_applicationPropertiesMap.put(restContextPath, properties);
 
-		ServiceRegistration<Application> applicationServiceRegistration =
-			_applicationServiceRegistrationsMap.get(restContextPath);
+                ServiceRegistration<Application> applicationServiceRegistration =
+                        _applicationServiceRegistrationsMap.get(restContextPath);
 
 		if (applicationServiceRegistration == null) {
 			_applicationServiceRegistrationsMap.put(
@@ -441,8 +450,45 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					properties));
 		}
 		else {
-			applicationServiceRegistration.setProperties(properties);
-		}
+                        applicationServiceRegistration.setProperties(properties);
+                }
+
+                Dictionary<String, Object> commentApplicationProperties =
+                        HashMapDictionaryBuilder.<String, Object>put(
+                                "companyId", companyIds
+                        ).put(
+                                "liferay.filter.disabled", false
+                        ).put(
+                                "liferay.jackson", false
+                        ).put(
+                                "liferay.objects", true
+                        ).put(
+                                "osgi.jaxrs.application.base",
+                                objectDefinition.getRESTContextPath()
+                        ).put(
+                                "osgi.jaxrs.extension.select",
+                                "(osgi.jaxrs.name=Liferay.Vulcan)"
+                        ).put(
+                                "osgi.jaxrs.name", commentOsgiJaxRsName
+                        ).build();
+
+                _commentApplicationPropertiesMap.put(
+                        restContextPath, commentApplicationProperties);
+
+                ServiceRegistration<Application> commentApplicationServiceRegistration =
+                        _commentApplicationServiceRegistrationsMap.get(restContextPath);
+
+                if (commentApplicationServiceRegistration == null) {
+                        _commentApplicationServiceRegistrationsMap.put(
+                                restContextPath,
+                                _bundleContext.registerService(
+                                        Application.class, new CommentApplication(),
+                                        commentApplicationProperties));
+                }
+                else {
+                        commentApplicationServiceRegistration.setProperties(
+                                commentApplicationProperties);
+                }
 
 		properties = HashMapDictionaryBuilder.<String, Object>put(
 			"api.version", "v1.0"
@@ -498,15 +544,15 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		properties = HashMapDictionaryBuilder.<String, Object>put(
 			"api.version", "v1.0"
 		).put(
-			"companyId", companyIds
-		).put(
-			"entity.class.name", Comment.class.getName()
-		).put(
-			"osgi.jaxrs.application.select",
-			"(osgi.jaxrs.name=" + osgiJaxRsName + ")"
-		).put(
-			"osgi.jaxrs.resource", "true"
-		).build();
+                        "companyId", companyIds
+                ).put(
+                        "entity.class.name", Comment.class.getName()
+                ).put(
+                        "osgi.jaxrs.application.select",
+                        "(osgi.jaxrs.name=" + commentOsgiJaxRsName + ")"
+                ).put(
+                        "osgi.jaxrs.resource", "true"
+                ).build();
 
 		_commentResourcePropertiesMap.put(restContextPath, properties);
 
@@ -1016,18 +1062,24 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		if (companyIds != null) {
 			companyIds.remove(String.valueOf(companyId));
 
-			if (!companyIds.isEmpty()) {
-				_updateServiceRegistrationProperties(
-					restContextPath, _applicationPropertiesMap,
-					(Map)_applicationServiceRegistrationsMap);
-				_updateServiceRegistrationProperties(
-					restContextPath, _collaboratorResourcePropertiesMap,
-					(Map)_collaboratorResourceServiceRegistrationsMap);
-				_updateServiceRegistrationProperties(
-					restContextPath, _objectEntryResourcePropertiesMap,
-					(Map)_objectEntryResourceServiceRegistrationsMap);
-			}
-		}
+                        if (!companyIds.isEmpty()) {
+                                _updateServiceRegistrationProperties(
+                                        restContextPath, _applicationPropertiesMap,
+                                        (Map)_applicationServiceRegistrationsMap);
+                                _updateServiceRegistrationProperties(
+                                        restContextPath, _collaboratorResourcePropertiesMap,
+                                        (Map)_collaboratorResourceServiceRegistrationsMap);
+                                _updateServiceRegistrationProperties(
+                                        restContextPath, _commentApplicationPropertiesMap,
+                                        (Map)_commentApplicationServiceRegistrationsMap);
+                                _updateServiceRegistrationProperties(
+                                        restContextPath, _commentResourcePropertiesMap,
+                                        (Map)_commentResourceServiceRegistrationsMap);
+                                _updateServiceRegistrationProperties(
+                                        restContextPath, _objectEntryResourcePropertiesMap,
+                                        (Map)_objectEntryResourceServiceRegistrationsMap);
+                        }
+                }
 	}
 
 	private void _undeployScopedServiceRegistrationsMap(
@@ -1082,26 +1134,42 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	}
 
 	private void _unregisterApplication(String restContextPath) {
-		ServiceRegistration<?> serviceRegistration1 =
-			_applicationServiceRegistrationsMap.remove(restContextPath);
+                ServiceRegistration<?> serviceRegistration1 =
+                        _applicationServiceRegistrationsMap.remove(restContextPath);
 
-		if (serviceRegistration1 != null) {
-			serviceRegistration1.unregister();
-		}
+                if (serviceRegistration1 != null) {
+                        serviceRegistration1.unregister();
+                }
 
-		serviceRegistration1 =
-			_collaboratorResourceServiceRegistrationsMap.remove(
-				restContextPath);
+                serviceRegistration1 =
+                        _commentApplicationServiceRegistrationsMap.remove(
+                                restContextPath);
 
-		if (serviceRegistration1 != null) {
-			serviceRegistration1.unregister();
-		}
+                if (serviceRegistration1 != null) {
+                        serviceRegistration1.unregister();
+                }
 
-		serviceRegistration1 =
-			_objectEntryResourceServiceRegistrationsMap.remove(restContextPath);
+                serviceRegistration1 =
+                        _collaboratorResourceServiceRegistrationsMap.remove(
+                                restContextPath);
 
-		if (serviceRegistration1 != null) {
-			serviceRegistration1.unregister();
+                if (serviceRegistration1 != null) {
+                        serviceRegistration1.unregister();
+                }
+
+                serviceRegistration1 =
+                        _commentResourceServiceRegistrationsMap.remove(
+                                restContextPath);
+
+                if (serviceRegistration1 != null) {
+                        serviceRegistration1.unregister();
+                }
+
+                serviceRegistration1 =
+                        _objectEntryResourceServiceRegistrationsMap.remove(restContextPath);
+
+                if (serviceRegistration1 != null) {
+                        serviceRegistration1.unregister();
 		}
 
 		List<ServiceRegistration<?>> serviceRegistrations =
@@ -1129,11 +1197,15 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectDefinitionDeployerImpl.class);
 
-	private final Map<String, Dictionary<String, Object>>
-		_applicationPropertiesMap = new HashMap<>();
-	private final Map<String, ServiceRegistration<Application>>
-		_applicationServiceRegistrationsMap = new HashMap<>();
-	private BundleContext _bundleContext;
+        private final Map<String, Dictionary<String, Object>>
+                _applicationPropertiesMap = new HashMap<>();
+        private final Map<String, ServiceRegistration<Application>>
+                _applicationServiceRegistrationsMap = new HashMap<>();
+        private final Map<String, Dictionary<String, Object>>
+                _commentApplicationPropertiesMap = new HashMap<>();
+        private final Map<String, ServiceRegistration<Application>>
+                _commentApplicationServiceRegistrationsMap = new HashMap<>();
+        private BundleContext _bundleContext;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
@@ -1143,27 +1215,27 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	)
 	private DTOConverter<SharingEntry, Collaborator> _collaboratorDTOConverter;
 
-	private final Map<String, Dictionary<String, Object>>
-		_collaboratorResourcePropertiesMap = new HashMap<>();
-	private final Map<String, ServiceRegistration<CollaboratorResource>>
-		_collaboratorResourceServiceRegistrationsMap = new HashMap<>();
+        private final Map<String, Dictionary<String, Object>>
+                _collaboratorResourcePropertiesMap = new HashMap<>();
+        private final Map<String, ServiceRegistration<CollaboratorResource>>
+                _collaboratorResourceServiceRegistrationsMap = new HashMap<>();
 
-	@Reference
-	private CommentManager _commentManager;
+        @Reference
+        private CommentManager _commentManager;
 
-	private final Map<String, Dictionary<String, Object>>
-		_commentResourcePropertiesMap = new HashMap<>();
-	private final Map<String, ServiceRegistration<CommentResource>>
-		_commentResourceServiceRegistrationsMap = new HashMap<>();
+        private final Map<String, Dictionary<String, Object>>
+                _commentResourcePropertiesMap = new HashMap<>();
+        private final Map<String, ServiceRegistration<CommentResource>>
+                _commentResourceServiceRegistrationsMap = new HashMap<>();
 
-	@Reference
-	private CompanyLocalService _companyLocalService;
+        @Reference
+        private CompanyLocalService _companyLocalService;
 
-	private final Map<String, List<ComponentInstance>> _componentInstancesMap =
-		new HashMap<>();
+        private final Map<String, List<ComponentInstance>> _componentInstancesMap =
+                new HashMap<>();
 
-	@Reference
-	private ConfigurationAdmin _configurationAdmin;
+        @Reference
+        private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
 	private PermissionCheckerFactory _defaultPermissionCheckerFactory;
