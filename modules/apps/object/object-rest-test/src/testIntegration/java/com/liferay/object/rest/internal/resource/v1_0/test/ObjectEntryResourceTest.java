@@ -9151,6 +9151,17 @@ public class ObjectEntryResourceTest {
 
 	@FeatureFlag("LPD-69419")
 	@Test
+	public void testGetObjectEntryWithCommentsNestedField() throws Exception {
+
+		_testGetObjectEntryWithCommentsNestedField(
+			0L, _objectDefinition1);
+
+		_testGetObjectEntryWithCommentsNestedField(
+			_testGroupId, _siteScopedObjectDefinition1);
+	}
+
+	@FeatureFlag("LPD-69419")
+	@Test
 	public void testPostByExternalReferenceCodeComment() throws Exception {
 
 		// Company scope
@@ -9176,6 +9187,17 @@ public class ObjectEntryResourceTest {
 		// Site scope
 
 		_testPostByExternalReferenceCodeCommentReplyComment(
+			_testGroupId, _siteScopedObjectDefinition1);
+	}
+
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testPostObjectEntryWithCommentsNestedField() throws Exception {
+
+		_testPostObjectEntryWithCommentsNestedField(
+			0L, _objectDefinition1);
+
+		_testPostObjectEntryWithCommentsNestedField(
 			_testGroupId, _siteScopedObjectDefinition1);
 	}
 
@@ -18092,6 +18114,43 @@ public class ObjectEntryResourceTest {
 				endpoint2 + externalReferenceCode1, httpMethod));
 	}
 
+	private void _testGetObjectEntryWithCommentsNestedField(
+			long groupId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		_enableComments(objectDefinition);
+
+		ObjectEntry objectEntry = ObjectEntryTestUtil.addObjectEntry(
+			objectDefinition, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+
+		String text = RandomTestUtil.randomString();
+
+		HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put("text", text).toString(),
+			StringBundler.concat(
+				_getEndpoint(objectDefinition, groupId),
+				"/by-external-reference-code/",
+				objectEntry.getExternalReferenceCode(), "/comments"),
+			Http.Method.POST);
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			StringBundler.concat(
+				_getEndpoint(objectDefinition, groupId),
+				"/by-external-reference-code/",
+				objectEntry.getExternalReferenceCode(), "?nestedFields=comments"),
+			Http.Method.GET);
+
+		JSONArray commentsJSONArray = jsonObject.getJSONArray("comments");
+
+		Assert.assertEquals(1, commentsJSONArray.length());
+
+		JSONAssert.assertEquals(
+			JSONUtil.put("text", "<p>" + text + "</p>").toString(),
+			commentsJSONArray.getJSONObject(0).toString(),
+			JSONCompareMode.LENIENT);
+	}
+
 	private void _testPostByExternalReferenceCodeComment(
 			long groupId, ObjectDefinition objectDefinition)
 		throws Exception {
@@ -18173,6 +18232,26 @@ public class ObjectEntryResourceTest {
 		Assert.assertEquals("<p>" + text + "</p>", jsonObject.get("text"));
 		Assert.assertEquals(
 			parentCommentId, jsonObject.getLong("parentCommentId"));
+	}
+
+	private void _testPostObjectEntryWithCommentsNestedField(
+			long groupId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		_enableComments(objectDefinition);
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).toString(),
+			StringBundler.concat(
+				_getEndpoint(objectDefinition, groupId),
+				"?nestedFields=comments"),
+			Http.Method.POST);
+
+		JSONArray commentsJSONArray = jsonObject.getJSONArray("comments");
+
+		Assert.assertEquals(0, commentsJSONArray.length());
 	}
 
 	private void _testPostCustomObjectEntryWithAssigneeObjectField(
