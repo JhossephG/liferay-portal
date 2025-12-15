@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -92,6 +93,22 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 		}
 
 		_deleteComment(serviceBuilderComment.getCommentId());
+	}
+
+	private Filter _getFilterString() {
+		if (contextHttpServletRequest != null) {
+			return toFilter(ParamUtil.getString(
+					contextHttpServletRequest, "filter"));
+		}
+
+		if (contextUriInfo == null) {
+			return null;
+		}
+
+		MultivaluedMap<String, String> queryParameters =
+			contextUriInfo.getQueryParameters();
+
+		return toFilter(queryParameters.getFirst("filter"));
 	}
 
 	@Override
@@ -523,7 +540,7 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 					groupId)
 			).build(),
 			serviceBuilderComment.getCommentId(), contextCompany.getCompanyId(),
-			_commentManager, search, aggregation, filter, pagination,
+			_commentManager, search, aggregation, _getFilterString(), pagination,
 			PortalUtil.getPortal(), sorts);
 	}
 
@@ -582,7 +599,7 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 					groupId)
 			).build(),
 			rootDiscussionComment.getCommentId(), contextCompany.getCompanyId(),
-			_commentManager, search, aggregation, filter, pagination,
+			_commentManager, search, aggregation, _getFilterString(), pagination,
 			PortalUtil.getPortal(), sorts);
 	}
 
