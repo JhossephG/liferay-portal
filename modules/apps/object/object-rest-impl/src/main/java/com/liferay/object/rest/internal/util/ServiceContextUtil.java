@@ -43,7 +43,7 @@ public class ServiceContextUtil {
 	public static ServiceContext createServiceContext(
 		List<Comment> comments, long companyId, long groupId, Locale locale,
 		ModelPermissions modelPermissions, ObjectEntry objectEntry,
-		long userId) {
+		List<String> parentCommentExternalReferenceCode, long userId) {
 
 		ServiceContext serviceContext = createServiceContext(
 			companyId, groupId, objectEntry, userId);
@@ -55,6 +55,9 @@ public class ServiceContextUtil {
 				LocaleUtil.toLanguageId(locale),
 				objectEntry.getFriendlyUrlPath_i18n(),
 				objectEntry.getFriendlyUrlPath()));
+		serviceContext.setAttribute(
+			"parentCommentExternalReferenceCodes",
+			(Serializable) parentCommentExternalReferenceCode);
 		serviceContext.setCompanyId(companyId);
 		serviceContext.setLanguageId(LocaleUtil.toLanguageId(locale));
 		serviceContext.setModelPermissions(modelPermissions);
