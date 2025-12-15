@@ -2047,18 +2047,25 @@ public class DefaultObjectEntryManagerImpl
 			String scopeKey)
 		throws Exception {
 
-		List<Comment> comments = null;
+		List<Comment> serviceBuilderComments = null;
+		List<String> parentCommentsERC = null;
 
 		if ((objectEntry.getComments() != null) &&
 			FeatureFlagManagerUtil.isEnabled(
 				objectDefinition.getCompanyId(), "LPD-69419")) {
 
-			comments = CommentUtil.toComments(
-				objectDefinition.getClassName(),
-				GetterUtil.getLong(objectEntry.getId()), _commentManager,
-				objectEntry.getComments(), objectDefinition.getCompanyId(),
-				getGroupId(objectDefinition, scopeKey),
-				dtoConverterContext.getUserId());
+			com.liferay.headless.delivery.dto.v1_0.Comment[] comments =
+				objectEntry.getComments();
+
+			serviceBuilderComments = CommentUtil.toComments(
+				objectDefinition.getClassName(), GetterUtil.getLong(objectEntry.getId()), _commentManager,
+				comments, objectDefinition.getCompanyId(), getGroupId(objectDefinition, scopeKey), dtoConverterContext.getUserId());
+
+			parentCommentsERC = TransformUtil.transformToList(
+				comments,
+				com.liferay.headless.delivery.dto.v1_0.Comment::
+					getParentCommentExternalReferenceCode
+			);
 		}
 
 		ModelPermissions modelPermissions = null;
@@ -2072,10 +2079,10 @@ public class DefaultObjectEntryManagerImpl
 		}
 
 		return ServiceContextUtil.createServiceContext(
-			comments, objectDefinition.getCompanyId(),
+			serviceBuilderComments, objectDefinition.getCompanyId(),
 			getGroupId(objectDefinition, scopeKey),
 			dtoConverterContext.getLocale(), modelPermissions, objectEntry,
-			dtoConverterContext.getUserId());
+			parentCommentsERC, dtoConverterContext.getUserId());
 	}
 
 	private byte[] _decode(String fileBase64) {
