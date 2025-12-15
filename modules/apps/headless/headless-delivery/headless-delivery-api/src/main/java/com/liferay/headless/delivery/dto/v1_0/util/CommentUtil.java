@@ -22,9 +22,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import jakarta.ws.rs.ClientErrorException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Javier Gamarra
@@ -80,8 +84,10 @@ public class CommentUtil {
 
 		Map<String, Long> toIdMap = new HashMap<>();
 
+		List<Comment> sortedComments = _topologicallySortComments(comments);
+
 		return TransformUtil.transformToList(
-			comments,
+			sortedComments,
 			comment -> {
 				long parentCommentId = 0;
 
@@ -89,26 +95,105 @@ public class CommentUtil {
 					comment.getParentCommentExternalReferenceCode();
 
 				if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
-					parentCommentId = toIdMap.computeIfAbsent(
-						parentCommentExternalReferenceCode,
-						externalReferenceCode -> {
-							com.liferay.portal.kernel.comment.Comment
-								parentComment = commentManager.fetchComment(
-									finalGroupId, externalReferenceCode);
+					Long parentExternalReferenceCodeId = toIdMap.get(
+						parentCommentExternalReferenceCode);
 
-							if (parentComment == null) {
-								return 0L;
-							}
+					if (parentExternalReferenceCodeId != null) {
+						parentCommentId = parentExternalReferenceCodeId;
+					}
+					else {
+						com.liferay.portal.kernel.comment.Comment parentComment =
+							commentManager.fetchComment(
+								finalGroupId, parentCommentExternalReferenceCode);
 
-							return parentComment.getCommentId();
-						});
+						if (parentComment != null) {
+							parentCommentId = parentComment.getCommentId();
+
+							toIdMap.put(
+								parentCommentExternalReferenceCode,
+								parentCommentId);
+						}
+					}
 				}
 
-				return commentManager.createComment(
-					0L, comment.getExternalReferenceCode(), userId,
-					finalGroupId, className, classPK, parentCommentId,
-					StringPool.BLANK, comment.getText());
+				com.liferay.portal.kernel.comment.Comment liferayComment =
+					commentManager.createComment(
+						0L, comment.getExternalReferenceCode(), userId,
+						finalGroupId, className, classPK, parentCommentId,
+						StringPool.BLANK, comment.getText());
+
+				toIdMap.put(
+					comment.getExternalReferenceCode(),
+					liferayComment.getCommentId());
+
+				return liferayComment;
 			});
+
+	}
+
+	private static List<Comment> _topologicallySortComments(Comment[] comments)
+		throws PortalException {
+
+		Map<String, Comment> commentMap = new LinkedHashMap<>();
+
+		for (Comment comment : comments) {
+			commentMap.put(comment.getExternalReferenceCode(), comment);
+		}
+
+		List<Comment> sortedComments = new ArrayList<>();
+		Set<String> visitingExternalReferenceCodes = new HashSet<>();
+		Set<String> visitedExternalReferenceCodes = new HashSet<>();
+
+		for (Comment comment : commentMap.values()) {
+			if (visitedExternalReferenceCodes.contains(
+					comment.getExternalReferenceCode())) {
+				continue;
+			}
+
+			_sortComments(
+				comment, commentMap, sortedComments,
+				visitingExternalReferenceCodes, visitedExternalReferenceCodes);
+		}
+
+		return sortedComments;
+	}
+
+	private static void _sortComments(
+		Comment comment, Map<String, Comment> commentMap,
+		List<Comment> sortedComments, Set<String> visitingExternalReferenceCodes,
+		Set<String> visitedExternalReferenceCodes)
+	throws PortalException {
+
+		String externalReferenceCode = comment.getExternalReferenceCode();
+
+		if (visitedExternalReferenceCodes.contains(externalReferenceCode)) {
+			return;
+		}
+
+		if (!visitingExternalReferenceCodes.add(externalReferenceCode)) {
+			throw new PortalException(
+					"Circular parent comment reference detected for external " +
+						externalReferenceCode);
+		}
+
+		String parentCommentExternalReferenceCode =
+			comment.getParentCommentExternalReferenceCode();
+
+		if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
+			Comment parentComment = commentMap.get(
+				parentCommentExternalReferenceCode);
+
+			if (parentComment != null) {
+				_sortComments(
+					parentComment, commentMap, sortedComments,
+					visitingExternalReferenceCodes, visitedExternalReferenceCodes);
+			}
+		}
+
+		visitingExternalReferenceCodes.remove(externalReferenceCode);
+		visitedExternalReferenceCodes.add(externalReferenceCode);
+
+		sortedComments.add(comment);
 	}
 
 	private static Comment _toComment(
