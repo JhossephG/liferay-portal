@@ -790,6 +790,15 @@ public class MBMessageLocalServiceUtil {
 		return getService().getMessages(className, classPK, status);
 	}
 
+	public static MBMessage getOrAddEmptyDiscussionMessage(
+			String externalReferenceCode, String className, long classPK,
+			long groupId, long userId)
+		throws PortalException {
+
+		return getService().getOrAddEmptyDiscussionMessage(
+			externalReferenceCode, className, classPK, groupId, userId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
