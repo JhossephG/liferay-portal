@@ -9,7 +9,6 @@ import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.message.boards.exception.DiscussionMaxCommentsException;
 import com.liferay.message.boards.exception.MessageSubjectException;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DuplicateCommentException;
@@ -22,6 +21,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import jakarta.ws.rs.ClientErrorException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +65,7 @@ public class CommentUtil {
 		}
 	}
 
-	public static List<com.liferay.portal.kernel.comment.Comment> toComments(
+	public static CommentBatch toComments(
 			String className, long classPK, CommentManager commentManager,
 			Comment[] comments, long companyId, long groupId, long userId)
 		throws PortalException {
@@ -78,37 +78,72 @@ public class CommentUtil {
 
 		long finalGroupId = groupId;
 
-		Map<String, Long> toId = new HashMap<>();
+		List<com.liferay.portal.kernel.comment.Comment> serviceBuilderComments =
+			new ArrayList<>();
+		Map<String, String> parentCommentExternalReferenceCodes =
+			new HashMap<>();
+		Map<String, Long> resolvedParentCommentIds = new HashMap<>();
 
-		return TransformUtil.transformToList(
-			comments,
-			comment -> {
-				long parentCommentId = 0;
+		for (Comment comment : comments) {
+			String parentCommentExternalReferenceCode =
+				comment.getParentCommentExternalReferenceCode();
 
-				String parentCommentExternalReferenceCode =
-					comment.getParentCommentExternalReferenceCode();
+			if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
+				parentCommentExternalReferenceCodes.put(
+					comment.getExternalReferenceCode(),
+					parentCommentExternalReferenceCode);
 
-				if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
-					parentCommentId = toId.computeIfAbsent(
+				com.liferay.portal.kernel.comment.Comment parentComment =
+					commentManager.fetchComment(
+						finalGroupId, parentCommentExternalReferenceCode);
+
+				if (parentComment != null) {
+					resolvedParentCommentIds.put(
 						parentCommentExternalReferenceCode,
-						externalReferenceCode -> {
-							com.liferay.portal.kernel.comment.Comment
-								parentComment = commentManager.fetchComment(
-									finalGroupId, externalReferenceCode);
-
-							if (parentComment == null) {
-								return 0L;
-							}
-
-							return parentComment.getCommentId();
-						});
+						parentComment.getCommentId());
 				}
+			}
 
-				return commentManager.createComment(
+			serviceBuilderComments.add(
+				commentManager.createComment(
 					0L, comment.getExternalReferenceCode(), userId,
-					finalGroupId, className, classPK, parentCommentId,
-					StringPool.BLANK, comment.getText());
-			});
+					finalGroupId, className, classPK, 0, StringPool.BLANK,
+					comment.getText()));
+		}
+
+		return new CommentBatch(
+			serviceBuilderComments, parentCommentExternalReferenceCodes,
+			resolvedParentCommentIds);
+	}
+
+	public static class CommentBatch {
+
+		public CommentBatch(
+			List<com.liferay.portal.kernel.comment.Comment> comments,
+			Map<String, String> parentExternalReferenceCodes,
+			Map<String, Long> resolvedParentCommentIds) {
+
+			_comments = comments;
+			_parentExternalReferenceCodes = parentExternalReferenceCodes;
+			_resolvedParentCommentIds = resolvedParentCommentIds;
+		}
+
+		public List<com.liferay.portal.kernel.comment.Comment> getComments() {
+			return _comments;
+		}
+
+		public Map<String, String> getParentExternalReferenceCodes() {
+			return _parentExternalReferenceCodes;
+		}
+
+		public Map<String, Long> getResolvedParentCommentIds() {
+			return _resolvedParentCommentIds;
+		}
+
+		private final List<com.liferay.portal.kernel.comment.Comment> _comments;
+		private final Map<String, String> _parentExternalReferenceCodes;
+		private final Map<String, Long> _resolvedParentCommentIds;
+
 	}
 
 	private static Comment _toComment(
