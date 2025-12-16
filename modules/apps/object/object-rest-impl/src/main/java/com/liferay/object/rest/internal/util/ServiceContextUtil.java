@@ -7,12 +7,12 @@ package com.liferay.object.rest.internal.util;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CommentUtil;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
 import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,8 +30,8 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -41,14 +41,17 @@ import java.util.Set;
 public class ServiceContextUtil {
 
 	public static ServiceContext createServiceContext(
-		List<Comment> comments, long companyId, long groupId, Locale locale,
-		ModelPermissions modelPermissions, ObjectEntry objectEntry,
-		List<String> parentCommentExternalReferenceCode, long userId) {
+		CommentUtil.CommentBatch commentBatch, long companyId, long groupId,
+		Locale locale, ModelPermissions modelPermissions,
+		ObjectEntry objectEntry, long userId) {
 
 		ServiceContext serviceContext = createServiceContext(
 			companyId, groupId, objectEntry, userId);
 
-		serviceContext.setAttribute("comments", (Serializable)comments);
+		serviceContext.setAttribute(
+			"comments",
+			(commentBatch != null) ? (Serializable)commentBatch.getComments() :
+				(Serializable)Collections.emptyList());
 		serviceContext.setAttribute(
 			"friendlyUrlMap",
 			(Serializable)LocalizedMapUtil.populateI18nMap(
@@ -57,7 +60,14 @@ public class ServiceContextUtil {
 				objectEntry.getFriendlyUrlPath()));
 		serviceContext.setAttribute(
 			"parentCommentExternalReferenceCodes",
-			(Serializable) parentCommentExternalReferenceCode);
+			(commentBatch != null) ?
+				(Serializable)commentBatch.getParentExternalReferenceCodes() :
+					(Serializable)Collections.emptyMap());
+		serviceContext.setAttribute(
+			"resolvedParentCommentIds",
+			(commentBatch != null) ?
+				(Serializable)commentBatch.getResolvedParentCommentIds() :
+					(Serializable)Collections.emptyMap());
 		serviceContext.setCompanyId(companyId);
 		serviceContext.setLanguageId(LocaleUtil.toLanguageId(locale));
 		serviceContext.setModelPermissions(modelPermissions);
