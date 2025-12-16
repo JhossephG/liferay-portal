@@ -179,6 +179,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -305,6 +306,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -2584,6 +2586,13 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
+		Map<String, String> parentCommentExternalReferenceCodes =
+			(Map<String, String>)serviceContext.getAttribute(
+				"parentCommentExternalReferenceCodes");
+		Map<String, Long> resolvedParentCommentIds =
+			(Map<String, Long>)serviceContext.getAttribute(
+				"commentResolvedParentCommentIds");
+
 		if (groupId == 0) {
 			groupId = objectEntry.getNonzeroGroupId();
 		}
@@ -2595,22 +2604,47 @@ public class ObjectEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
+		Map<String, Comment> commentsMap = new LinkedHashMap<>();
+
 		for (Comment comment : comments) {
-			if (comment.getParentCommentId() == 0) {
-				_commentManager.addComment(
+			commentsMap.put(comment.getExternalReferenceCode(), comment);
+		}
+
+		Map<String, Long> commentIdsByExternalReferenceCode = new HashMap<>();
+
+		if (resolvedParentCommentIds != null) {
+			commentIdsByExternalReferenceCode.putAll(resolvedParentCommentIds);
+		}
+
+		for (Comment comment :
+				_sortComments(
+					commentsMap, parentCommentExternalReferenceCodes)) {
+
+			long parentCommentId = _getParentCommentId(
+				comment.getExternalReferenceCode(),
+				commentIdsByExternalReferenceCode, groupId, objectDefinition,
+				objectEntry, parentCommentExternalReferenceCodes, userId);
+
+			long commentId;
+
+			if (parentCommentId == 0) {
+				commentId = _commentManager.addComment(
 					comment.getExternalReferenceCode(), userId, groupId,
 					objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(), null,
 					comment.getBody(), _createServiceContextFunction());
 			}
 			else {
-				_commentManager.addComment(
+				commentId = _commentManager.addComment(
 					comment.getExternalReferenceCode(), userId,
 					objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(),
-					comment.getParentCommentId(), null, comment.getBody(),
+					parentCommentId, null, comment.getBody(),
 					_createServiceContextFunction());
 			}
+
+			commentIdsByExternalReferenceCode.put(
+				comment.getExternalReferenceCode(), commentId);
 		}
 	}
 
@@ -4566,6 +4600,62 @@ public class ObjectEntryLocalServiceImpl
 		);
 	}
 
+	private long _getParentCommentId(
+			String externalReferenceCode,
+			Map<String, Long> commentIdsByExternalReferenceCode, long groupId,
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			Map<String, String> parentCommentExternalReferenceCodes,
+			long userId)
+		throws PortalException {
+
+		if (parentCommentExternalReferenceCodes == null) {
+			return 0;
+		}
+
+		String parentExternalReferenceCode =
+			parentCommentExternalReferenceCodes.get(externalReferenceCode);
+
+		if (Validator.isNull(parentExternalReferenceCode)) {
+			return 0;
+		}
+
+		Long parentCommentId = commentIdsByExternalReferenceCode.get(
+			parentExternalReferenceCode);
+
+		if (parentCommentId != null) {
+			return parentCommentId;
+		}
+
+		Comment parentComment = _commentManager.fetchComment(
+			groupId, parentExternalReferenceCode);
+
+		if (parentComment != null) {
+			parentCommentId = parentComment.getCommentId();
+
+			commentIdsByExternalReferenceCode.put(
+				parentExternalReferenceCode, parentCommentId);
+
+			return parentCommentId;
+		}
+
+		if (!LazyReferencingThreadLocal.isEnabled()) {
+			throw new PortalException(
+				"No comment exists with external reference code " +
+					parentExternalReferenceCode);
+		}
+
+		Comment comment = _commentManager.getOrAddEmptyDiscussionMessage(
+			parentExternalReferenceCode, objectDefinition.getClassName(),
+			objectEntry.getObjectEntryId(), groupId, userId);
+
+		parentCommentId = comment.getCommentId();
+
+		commentIdsByExternalReferenceCode.put(
+			parentExternalReferenceCode, parentCommentId);
+
+		return parentCommentId;
+	}
+
 	private Predicate _getPermissionWherePredicate(
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
 			long groupId, long rootObjectDefinitionId)
@@ -6376,6 +6466,25 @@ public class ObjectEntryLocalServiceImpl
 			parentObjectEntry.getRootObjectEntryId());
 	}
 
+	private List<Comment> _sortComments(
+			Map<String, Comment> comments,
+			Map<String, String> parentCommentExternalReferenceCodes)
+		throws PortalException {
+
+		List<Comment> orderedComments = new ArrayList<>();
+		Set<String> processingExternalReferenceCodes = new HashSet<>();
+		Set<String> processedExternalReferenceCodes = new HashSet<>();
+
+		for (Map.Entry<String, Comment> entry : comments.entrySet()) {
+			_visitComment(
+				entry.getKey(), comments, parentCommentExternalReferenceCodes,
+				processingExternalReferenceCodes,
+				processedExternalReferenceCodes, orderedComments);
+		}
+
+		return orderedComments;
+	}
+
 	private void _startWorkflowInstance(
 			long userId, ObjectEntry objectEntry, ServiceContext serviceContext,
 			boolean skipModelListener)
@@ -7828,6 +7937,44 @@ public class ObjectEntryLocalServiceImpl
 
 			throw new ObjectEntryStatusException("Draft status is not allowed");
 		}
+	}
+
+	private void _visitComment(
+			String externalReferenceCode, Map<String, Comment> comments,
+			Map<String, String> parentCommentExternalReferenceCodes,
+			Set<String> processingExternalReferenceCodes,
+			Set<String> processedExternalReferenceCodes,
+			List<Comment> orderedComments)
+		throws PortalException {
+
+		if (processedExternalReferenceCodes.contains(externalReferenceCode)) {
+			return;
+		}
+
+		if (!processingExternalReferenceCodes.add(externalReferenceCode)) {
+			throw new PortalException(
+				"Circular parent comment reference detected for external " +
+					externalReferenceCode);
+		}
+
+		String parentExternalReferenceCode =
+			(parentCommentExternalReferenceCodes == null) ? null :
+				parentCommentExternalReferenceCodes.get(externalReferenceCode);
+
+		if ((parentExternalReferenceCode != null) &&
+			comments.containsKey(parentExternalReferenceCode)) {
+
+			_visitComment(
+				parentExternalReferenceCode, comments,
+				parentCommentExternalReferenceCodes,
+				processingExternalReferenceCodes,
+				processedExternalReferenceCodes, orderedComments);
+		}
+
+		processingExternalReferenceCodes.remove(externalReferenceCode);
+		processedExternalReferenceCodes.add(externalReferenceCode);
+
+		orderedComments.add(comments.get(externalReferenceCode));
 	}
 
 	private static final Expression<?>[] _EXPRESSIONS = {
