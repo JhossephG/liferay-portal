@@ -79,7 +79,6 @@ import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -2047,25 +2046,18 @@ public class DefaultObjectEntryManagerImpl
 			String scopeKey)
 		throws Exception {
 
-		List<Comment> serviceBuilderComments = null;
-		List<String> parentCommentsERC = null;
+		CommentUtil.CommentBatch commentBatch = null;
 
 		if ((objectEntry.getComments() != null) &&
 			FeatureFlagManagerUtil.isEnabled(
 				objectDefinition.getCompanyId(), "LPD-69419")) {
 
-			com.liferay.headless.delivery.dto.v1_0.Comment[] comments =
-				objectEntry.getComments();
-
-			serviceBuilderComments = CommentUtil.toComments(
-				objectDefinition.getClassName(), GetterUtil.getLong(objectEntry.getId()), _commentManager,
-				comments, objectDefinition.getCompanyId(), getGroupId(objectDefinition, scopeKey), dtoConverterContext.getUserId());
-
-			parentCommentsERC = TransformUtil.transformToList(
-				comments,
-				com.liferay.headless.delivery.dto.v1_0.Comment::
-					getParentCommentExternalReferenceCode
-			);
+			commentBatch = CommentUtil.toComments(
+				objectDefinition.getClassName(),
+				GetterUtil.getLong(objectEntry.getId()), _commentManager,
+				objectEntry.getComments(), objectDefinition.getCompanyId(),
+				getGroupId(objectDefinition, scopeKey),
+				dtoConverterContext.getUserId());
 		}
 
 		ModelPermissions modelPermissions = null;
@@ -2079,10 +2071,10 @@ public class DefaultObjectEntryManagerImpl
 		}
 
 		return ServiceContextUtil.createServiceContext(
-			serviceBuilderComments, objectDefinition.getCompanyId(),
+			commentBatch, objectDefinition.getCompanyId(),
 			getGroupId(objectDefinition, scopeKey),
 			dtoConverterContext.getLocale(), modelPermissions, objectEntry,
-			parentCommentsERC, dtoConverterContext.getUserId());
+			dtoConverterContext.getUserId());
 	}
 
 	private byte[] _decode(String fileBase64) {
