@@ -2047,18 +2047,21 @@ public class DefaultObjectEntryManagerImpl
 			String scopeKey)
 		throws Exception {
 
+		CommentUtil.CommentBatch commentBatch = null;
 		List<Comment> comments = null;
 
 		if ((objectEntry.getComments() != null) &&
 			FeatureFlagManagerUtil.isEnabled(
 				objectDefinition.getCompanyId(), "LPD-69419")) {
 
-			comments = CommentUtil.toComments(
+			commentBatch = CommentUtil.toComments(
 				objectDefinition.getClassName(),
 				GetterUtil.getLong(objectEntry.getId()), _commentManager,
 				objectEntry.getComments(), objectDefinition.getCompanyId(),
 				getGroupId(objectDefinition, scopeKey),
 				dtoConverterContext.getUserId());
+
+			comments = commentBatch.getComments();
 		}
 
 		ModelPermissions modelPermissions = null;
@@ -2072,7 +2075,12 @@ public class DefaultObjectEntryManagerImpl
 		}
 
 		return ServiceContextUtil.createServiceContext(
-			comments, objectDefinition.getCompanyId(),
+			comments,
+			(commentBatch == null) ? null :
+				commentBatch.getParentExternalReferenceCodes(),
+			(commentBatch == null) ? null :
+				commentBatch.getResolvedParentCommentIds(),
+			objectDefinition.getCompanyId(),
 			getGroupId(objectDefinition, scopeKey),
 			dtoConverterContext.getLocale(), modelPermissions, objectEntry,
 			dtoConverterContext.getUserId());

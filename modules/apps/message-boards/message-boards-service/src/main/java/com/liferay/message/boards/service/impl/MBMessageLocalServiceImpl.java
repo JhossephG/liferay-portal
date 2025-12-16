@@ -12,6 +12,7 @@ import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.comment.configuration.CommentGroupServiceConfiguration;
 import com.liferay.comment.constants.CommentConstants;
+import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -270,6 +271,38 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		return message;
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public MBMessage getOrAddEmptyDiscussionMessage(
+			String externalReferenceCode, String className, long classPK,
+			long companyId, long groupId, long userId)
+		throws PortalException {
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setAddGroupPermissions(true);
+		serviceContext.setAddGuestPermissions(true);
+		serviceContext.setCompanyId(companyId);
+		serviceContext.setScopeGroupId(groupId);
+
+		return _emptyModelManager.getOrAddEmptyModel(
+			MBMessage.class.getName(), companyId,
+			() -> addDiscussionMessage(
+				externalReferenceCode, userId,
+				_userLocalService.getUser(userId).getFullName(), groupId,
+				className, classPK, 0,
+				MBMessageConstants.DEFAULT_PARENT_MESSAGE_ID,
+				String.valueOf(classPK), StringPool.BLANK, serviceContext),
+			externalReferenceCode,
+			(_externalReferenceCode, scopedGroupId) ->
+				fetchMBMessageByExternalReferenceCode(
+					_externalReferenceCode, scopedGroupId),
+			(_externalReferenceCode, scopedGroupId) ->
+				getMBMessageByExternalReferenceCode(
+					_externalReferenceCode, scopedGroupId),
+			groupId, MBMessage.class.getName());
+	}
+
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
 	 *             #addMessage(String, long, String, long, long, long, long,
@@ -472,7 +505,14 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		message.setUrlSubject(
 			_getUniqueUrlSubject(groupId, messageId, subject));
 		message.setAllowPingbacks(allowPingbacks);
-		message.setStatus(WorkflowConstants.STATUS_DRAFT);
+
+		int status = WorkflowConstants.STATUS_DRAFT;
+
+		if (_emptyModelManager.isEmptyModel()) {
+			status = WorkflowConstants.STATUS_EMPTY;
+		}
+
+		message.setStatus(status);
 		message.setStatusByUserId(user.getUserId());
 		message.setStatusByUserName(userName);
 		message.setStatusDate(modifiedDate);
@@ -586,6 +626,10 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			serviceContext.isAssetEntryVisible());
 
 		// Workflow
+
+		if (status == WorkflowConstants.STATUS_EMPTY) {
+			return message;
+		}
 
 		return _startWorkflowInstance(userId, message, serviceContext);
 	}
@@ -3071,6 +3115,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Reference
+	private EmptyModelManager _emptyModelManager;
 
 	@Reference
 	private ExpandoRowLocalService _expandoRowLocalService;

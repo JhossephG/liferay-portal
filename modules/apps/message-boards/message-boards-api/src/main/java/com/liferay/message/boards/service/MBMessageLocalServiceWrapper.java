@@ -54,6 +54,17 @@ public class MBMessageLocalServiceWrapper
 			classPK, threadId, parentMessageId, subject, body, serviceContext);
 	}
 
+	@Override
+	public MBMessage getOrAddEmptyDiscussionMessage(
+			String externalReferenceCode, String className, long classPK,
+			long companyId, long groupId, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _mbMessageLocalService.getOrAddEmptyDiscussionMessage(
+			externalReferenceCode, className, classPK, companyId, groupId,
+			userId);
+	}
+
 	/**
 	 * Adds the message-boards message to the database. Also notifies the appropriate model listeners.
 	 *

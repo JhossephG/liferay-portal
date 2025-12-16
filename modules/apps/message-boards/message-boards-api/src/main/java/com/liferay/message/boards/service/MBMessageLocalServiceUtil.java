@@ -59,6 +59,16 @@ public class MBMessageLocalServiceUtil {
 			classPK, threadId, parentMessageId, subject, body, serviceContext);
 	}
 
+	public static MBMessage getOrAddEmptyDiscussionMessage(
+			String externalReferenceCode, String className, long classPK,
+			long companyId, long groupId, long userId)
+		throws PortalException {
+
+		return getService().getOrAddEmptyDiscussionMessage(
+			externalReferenceCode, className, classPK, companyId, groupId,
+			userId);
+	}
+
 	/**
 	 * Adds the message-boards message to the database. Also notifies the appropriate model listeners.
 	 *

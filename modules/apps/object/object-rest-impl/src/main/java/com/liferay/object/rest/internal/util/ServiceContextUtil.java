@@ -30,9 +30,12 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,10 +48,34 @@ public class ServiceContextUtil {
 		ModelPermissions modelPermissions, ObjectEntry objectEntry,
 		long userId) {
 
+		return createServiceContext(
+			comments, Collections.emptyMap(), Collections.emptyMap(), companyId,
+			groupId, locale, modelPermissions, objectEntry, userId);
+	}
+
+	public static ServiceContext createServiceContext(
+		List<Comment> comments,
+		Map<String, String> commentParentExternalReferenceCodes,
+		Map<String, Long> resolvedParentCommentIds, long companyId,
+		long groupId, Locale locale, ModelPermissions modelPermissions,
+		ObjectEntry objectEntry, long userId) {
+
 		ServiceContext serviceContext = createServiceContext(
 			companyId, groupId, objectEntry, userId);
 
 		serviceContext.setAttribute("comments", (Serializable)comments);
+		serviceContext.setAttribute(
+			"commentParentExternalReferenceCodes",
+			(Serializable)new HashMap<>(
+				commentParentExternalReferenceCodes == null ?
+					Collections.emptyMap() :
+					commentParentExternalReferenceCodes));
+		serviceContext.setAttribute(
+			"commentResolvedParentCommentIds",
+			(Serializable)new HashMap<>(
+				resolvedParentCommentIds == null ?
+					Collections.emptyMap() :
+					resolvedParentCommentIds));
 		serviceContext.setAttribute(
 			"friendlyUrlMap",
 			(Serializable)LocalizedMapUtil.populateI18nMap(

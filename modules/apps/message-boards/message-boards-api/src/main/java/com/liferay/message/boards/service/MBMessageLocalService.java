@@ -84,6 +84,12 @@ public interface MBMessageLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public MBMessage getOrAddEmptyDiscussionMessage(
+			String externalReferenceCode, String className, long classPK,
+			long companyId, long groupId, long userId)
+		throws PortalException;
+
 	/**
 	 * Adds the message-boards message to the database. Also notifies the appropriate model listeners.
 	 *

@@ -9,7 +9,6 @@ import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.message.boards.exception.DiscussionMaxCommentsException;
 import com.liferay.message.boards.exception.MessageSubjectException;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DuplicateCommentException;
@@ -22,12 +21,10 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import jakarta.ws.rs.ClientErrorException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Javier Gamarra
@@ -68,7 +65,7 @@ public class CommentUtil {
 		}
 	}
 
-	public static List<com.liferay.portal.kernel.comment.Comment> toComments(
+	public static CommentBatch toComments(
 			String className, long classPK, CommentManager commentManager,
 			Comment[] comments, long companyId, long groupId, long userId)
 		throws PortalException {
@@ -81,81 +78,42 @@ public class CommentUtil {
 
 		long finalGroupId = groupId;
 
-		Map<String, Comment> commentMap = new LinkedHashMap<>();
-		Map<String, com.liferay.portal.kernel.comment.Comment> createdComments =
-			new HashMap<>();
-		Set<String> creatingExternalReferenceCodes = new HashSet<>();
+		List<com.liferay.portal.kernel.comment.Comment> liferayComments =
+			new ArrayList<>();
+		Map<String, String> parentExternalReferenceCodes = new HashMap<>();
+		Map<String, Long> resolvedParentCommentIds = new HashMap<>();
 
 		for (Comment comment : comments) {
-			commentMap.put(comment.getExternalReferenceCode(), comment);
-		}
+			String parentCommentExternalReferenceCode =
+				comment.getParentCommentExternalReferenceCode();
 
-		return TransformUtil.transformToList(
-			commentMap.values(),
-			comment -> _createComment(
-				className, classPK, comment, commentManager, commentMap,
-				createdComments, creatingExternalReferenceCodes, finalGroupId,
-				userId));
+			if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
+				parentExternalReferenceCodes.put(
+					comment.getExternalReferenceCode(),
+					parentCommentExternalReferenceCode);
 
-	}
-
-	private static com.liferay.portal.kernel.comment.Comment _createComment(
-		String className, long classPK, Comment comment,
-		CommentManager commentManager, Map<String, Comment> commentMap,
-		Map<String, com.liferay.portal.kernel.comment.Comment> createdComments,
-		Set<String> creatingExternalReferenceCodes, long groupId, long userId)
-	throws PortalException {
-
-		String externalReferenceCode = comment.getExternalReferenceCode();
-
-		if (createdComments.containsKey(externalReferenceCode)) {
-			return createdComments.get(externalReferenceCode);
-		}
-
-		if (!creatingExternalReferenceCodes.add(externalReferenceCode)) {
-			throw new PortalException(
-				"Circular parent comment reference detected for external " +
-					externalReferenceCode);
-		}
-
-		long parentCommentId = 0;
-
-		String parentCommentExternalReferenceCode =
-			comment.getParentCommentExternalReferenceCode();
-
-		if (Validator.isNotNull(parentCommentExternalReferenceCode)) {
-			Comment parentComment = commentMap.get(
-				parentCommentExternalReferenceCode);
-
-			if (parentComment != null) {
-				com.liferay.portal.kernel.comment.Comment parentLiferayComment =
-					_createComment(
-						className, classPK, parentComment, commentManager, commentMap,
-						createdComments, creatingExternalReferenceCodes, groupId,
-						userId);
-
-				parentCommentId = parentLiferayComment.getCommentId();
-			}
-			else {
-				com.liferay.portal.kernel.comment.Comment parentCommentFetch =
+				com.liferay.portal.kernel.comment.Comment parentComment =
 					commentManager.fetchComment(
-						groupId, parentCommentExternalReferenceCode);
+						finalGroupId, parentCommentExternalReferenceCode);
 
-				if (parentCommentFetch != null) {
-					parentCommentId = parentCommentFetch.getCommentId();
+				if (parentComment != null) {
+					resolvedParentCommentIds.put(
+						parentCommentExternalReferenceCode,
+						parentComment.getCommentId());
 				}
 			}
+
+			liferayComments.add(
+				commentManager.createComment(
+					0L, comment.getExternalReferenceCode(), userId,
+					finalGroupId, className, classPK, 0, StringPool.BLANK,
+					comment.getText()));
 		}
 
-		com.liferay.portal.kernel.comment.Comment liferayComment =
-			commentManager.createComment(
-				0L, externalReferenceCode, userId, groupId, className, classPK,
-				parentCommentId, StringPool.BLANK, comment.getText());
+		return new CommentBatch(
+			liferayComments, parentExternalReferenceCodes,
+			resolvedParentCommentIds);
 
-		createdComments.put(externalReferenceCode, liferayComment);
-		creatingExternalReferenceCodes.remove(externalReferenceCode);
-
-		return liferayComment;
 	}
 
 
@@ -196,6 +154,36 @@ public class CommentUtil {
 				setText(comment::getBody);
 			}
 		};
+	}
+
+	public static class CommentBatch {
+
+		public CommentBatch(
+			List<com.liferay.portal.kernel.comment.Comment> comments,
+			Map<String, String> parentExternalReferenceCodes,
+			Map<String, Long> resolvedParentCommentIds) {
+
+			_comments = comments;
+			_parentExternalReferenceCodes = parentExternalReferenceCodes;
+			_resolvedParentCommentIds = resolvedParentCommentIds;
+		}
+
+		public List<com.liferay.portal.kernel.comment.Comment> getComments() {
+			return _comments;
+		}
+
+		public Map<String, String> getParentExternalReferenceCodes() {
+			return _parentExternalReferenceCodes;
+		}
+
+		public Map<String, Long> getResolvedParentCommentIds() {
+			return _resolvedParentCommentIds;
+		}
+
+		private final List<com.liferay.portal.kernel.comment.Comment> _comments;
+		private final Map<String, String> _parentExternalReferenceCodes;
+		private final Map<String, Long> _resolvedParentCommentIds;
+
 	}
 
 }
