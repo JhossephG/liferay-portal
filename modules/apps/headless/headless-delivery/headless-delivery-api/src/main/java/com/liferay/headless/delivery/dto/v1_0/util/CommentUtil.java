@@ -9,7 +9,6 @@ import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.message.boards.exception.DiscussionMaxCommentsException;
 import com.liferay.message.boards.exception.MessageSubjectException;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DuplicateCommentException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -20,6 +19,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import jakarta.ws.rs.ClientErrorException;
+
+import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,8 +67,8 @@ public class CommentUtil {
 	}
 
 	public static CommentBatch toComments(
-			String className, long classPK, CommentManager commentManager,
-			Comment[] comments, long companyId, long groupId, long userId)
+			CommentManager commentManager,
+			Comment[] comments, long companyId, long groupId)
 		throws PortalException {
 
 		if (groupId == 0) {
@@ -78,8 +79,7 @@ public class CommentUtil {
 
 		long finalGroupId = groupId;
 
-		List<com.liferay.portal.kernel.comment.Comment> serviceBuilderComments =
-			new ArrayList<>();
+		List<CommentBatch.Comment> commentsReference = new ArrayList<>();
 		Map<String, String> parentCommentExternalReferenceCodes =
 			new HashMap<>();
 		Map<String, Long> resolvedParentCommentIds = new HashMap<>();
@@ -104,22 +104,20 @@ public class CommentUtil {
 				}
 			}
 
-			serviceBuilderComments.add(
-				commentManager.createComment(
-					0L, comment.getExternalReferenceCode(), userId,
-					finalGroupId, className, classPK, 0, StringPool.BLANK,
-					comment.getText()));
+			commentsReference.add(
+				new CommentBatch.Comment(
+					comment.getExternalReferenceCode(), comment.getText()));
 		}
 
 		return new CommentBatch(
-			serviceBuilderComments, parentCommentExternalReferenceCodes,
+			commentsReference, parentCommentExternalReferenceCodes,
 			resolvedParentCommentIds);
 	}
 
 	public static class CommentBatch {
 
 		public CommentBatch(
-			List<com.liferay.portal.kernel.comment.Comment> comments,
+			List<Comment> comments,
 			Map<String, String> parentExternalReferenceCodes,
 			Map<String, Long> resolvedParentCommentIds) {
 
@@ -128,7 +126,7 @@ public class CommentUtil {
 			_resolvedParentCommentIds = resolvedParentCommentIds;
 		}
 
-		public List<com.liferay.portal.kernel.comment.Comment> getComments() {
+		public List<Comment> getComments() {
 			return _comments;
 		}
 
@@ -140,7 +138,27 @@ public class CommentUtil {
 			return _resolvedParentCommentIds;
 		}
 
-		private final List<com.liferay.portal.kernel.comment.Comment> _comments;
+		public static class Comment implements Serializable {
+
+			public Comment(String externalReferenceCode, String text) {
+				_externalReferenceCode = externalReferenceCode;
+				_text = text;
+			}
+
+			public String getExternalReferenceCode() {
+				return _externalReferenceCode;
+			}
+
+			public String getText() {
+				return _text;
+			}
+
+			private final String _externalReferenceCode;
+			private final String _text;
+
+		}
+
+		private final List<Comment> _comments;
 		private final Map<String, String> _parentExternalReferenceCodes;
 		private final Map<String, Long> _resolvedParentCommentIds;
 

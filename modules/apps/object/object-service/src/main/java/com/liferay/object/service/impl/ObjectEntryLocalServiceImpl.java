@@ -33,6 +33,7 @@ import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.headless.delivery.dto.v1_0.util.CommentUtil;
 import com.liferay.list.type.exception.NoSuchListTypeEntryException;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
@@ -2579,8 +2580,9 @@ public class ObjectEntryLocalServiceImpl
 			ObjectEntry objectEntry, ServiceContext serviceContext)
 		throws PortalException {
 
-		List<Comment> comments = (List<Comment>)serviceContext.getAttribute(
-			"comments");
+		List<CommentUtil.CommentBatch.Comment> comments =
+			(List<CommentUtil.CommentBatch.Comment>)serviceContext.getAttribute(
+				"comments");
 
 		if (!objectDefinition.isEnableComments() || (comments == null)) {
 			return;
@@ -2591,7 +2593,7 @@ public class ObjectEntryLocalServiceImpl
 				"parentCommentExternalReferenceCodes");
 		Map<String, Long> resolvedParentCommentIds =
 			(Map<String, Long>)serviceContext.getAttribute(
-				"commentResolvedParentCommentIds");
+				"resolvedParentCommentIds");
 
 		if (groupId == 0) {
 			groupId = objectEntry.getNonzeroGroupId();
@@ -2604,9 +2606,10 @@ public class ObjectEntryLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
-		Map<String, Comment> commentsMap = new LinkedHashMap<>();
+		Map<String, CommentUtil.CommentBatch.Comment> commentsMap =
+			new LinkedHashMap<>();
 
-		for (Comment comment : comments) {
+		for (CommentUtil.CommentBatch.Comment comment : comments) {
 			commentsMap.put(comment.getExternalReferenceCode(), comment);
 		}
 
@@ -2616,7 +2619,7 @@ public class ObjectEntryLocalServiceImpl
 			commentIdsByExternalReferenceCode.putAll(resolvedParentCommentIds);
 		}
 
-		for (Comment comment :
+		for (CommentUtil.CommentBatch.Comment comment :
 				_sortComments(
 					commentsMap, parentCommentExternalReferenceCodes)) {
 
@@ -2632,14 +2635,14 @@ public class ObjectEntryLocalServiceImpl
 					comment.getExternalReferenceCode(), userId, groupId,
 					objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(), null,
-					comment.getBody(), _createServiceContextFunction());
+					comment.getText(), _createServiceContextFunction());
 			}
 			else {
 				commentId = _commentManager.addComment(
 					comment.getExternalReferenceCode(), userId,
 					objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(),
-					parentCommentId, null, comment.getBody(),
+					parentCommentId, null, comment.getText(),
 					_createServiceContextFunction());
 			}
 
@@ -6466,16 +6469,19 @@ public class ObjectEntryLocalServiceImpl
 			parentObjectEntry.getRootObjectEntryId());
 	}
 
-	private List<Comment> _sortComments(
-			Map<String, Comment> comments,
+	private List<CommentUtil.CommentBatch.Comment> _sortComments(
+			Map<String, CommentUtil.CommentBatch.Comment> comments,
 			Map<String, String> parentCommentExternalReferenceCodes)
 		throws PortalException {
 
-		List<Comment> orderedComments = new ArrayList<>();
+		List<CommentUtil.CommentBatch.Comment> orderedComments =
+			new ArrayList<>();
 		Set<String> processingExternalReferenceCodes = new HashSet<>();
 		Set<String> processedExternalReferenceCodes = new HashSet<>();
 
-		for (Map.Entry<String, Comment> entry : comments.entrySet()) {
+		for (Map.Entry<String, CommentUtil.CommentBatch.Comment> entry :
+				comments.entrySet()) {
+
 			_visitComment(
 				entry.getKey(), comments, parentCommentExternalReferenceCodes,
 				processingExternalReferenceCodes,
@@ -7940,11 +7946,12 @@ public class ObjectEntryLocalServiceImpl
 	}
 
 	private void _visitComment(
-			String externalReferenceCode, Map<String, Comment> comments,
+			String externalReferenceCode,
+			Map<String, CommentUtil.CommentBatch.Comment> comments,
 			Map<String, String> parentCommentExternalReferenceCodes,
 			Set<String> processingExternalReferenceCodes,
 			Set<String> processedExternalReferenceCodes,
-			List<Comment> orderedComments)
+			List<CommentUtil.CommentBatch.Comment> orderedComments)
 		throws PortalException {
 
 		if (processedExternalReferenceCodes.contains(externalReferenceCode)) {

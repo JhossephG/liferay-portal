@@ -2053,11 +2053,9 @@ public class DefaultObjectEntryManagerImpl
 				objectDefinition.getCompanyId(), "LPD-69419")) {
 
 			commentBatch = CommentUtil.toComments(
-				objectDefinition.getClassName(),
-				GetterUtil.getLong(objectEntry.getId()), _commentManager,
+				_commentManager,
 				objectEntry.getComments(), objectDefinition.getCompanyId(),
-				getGroupId(objectDefinition, scopeKey),
-				dtoConverterContext.getUserId());
+				getGroupId(objectDefinition, scopeKey));
 		}
 
 		ModelPermissions modelPermissions = null;
