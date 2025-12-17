@@ -115,7 +115,7 @@ public interface CommentManager {
 
 	public DiscussionStagingHandler getDiscussionStagingHandler();
 
-	public Comment getOrAddEmptyDiscussionMessage(
+	public long getOrAddEmptyDiscussionMessage(
 		String externalReferenceCode, String className, long classPK,
 		long groupId, long userId)
 		throws PortalException;

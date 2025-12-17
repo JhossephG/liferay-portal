@@ -4647,11 +4647,9 @@ public class ObjectEntryLocalServiceImpl
 					parentExternalReferenceCode);
 		}
 
-		Comment comment = _commentManager.getOrAddEmptyDiscussionMessage(
+		parentCommentId = _commentManager.getOrAddEmptyDiscussionMessage(
 			parentExternalReferenceCode, objectDefinition.getClassName(),
 			objectEntry.getObjectEntryId(), groupId, userId);
-
-		parentCommentId = comment.getCommentId();
 
 		commentIdsByExternalReferenceCode.put(
 			parentExternalReferenceCode, parentCommentId);

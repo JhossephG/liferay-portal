@@ -1554,7 +1554,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
-	public MBMessage getOrAddEmptyDiscussionMessage(
+	public long getOrAddEmptyDiscussionMessage(
 			String externalReferenceCode, String className, long classPK,
 			long groupId, long userId)
 		throws PortalException {
@@ -1563,7 +1563,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		User user = _userLocalService.getUser(userId);
 
-		return _emptyModelManager.getOrAddEmptyModel(
+		MBMessage mbMessage = _emptyModelManager.getOrAddEmptyModel(
 			MBMessage.class.getName(), group.getCompanyId(),
 			() -> mbMessageLocalService.addDiscussionMessage(
 				externalReferenceCode, userId, user.getFullName(), groupId,
@@ -1574,6 +1574,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			externalReferenceCode, this::fetchMBMessageByExternalReferenceCode,
 			this::getMBMessageByExternalReferenceCode, groupId,
 			MBMessage.class.getName());
+
+		return mbMessage.getMessageId();
 	}
 
 	@Override

@@ -349,12 +349,12 @@ public class MBCommentManagerImpl implements CommentManager {
 	}
 
 	@Override
-	public Comment getOrAddEmptyDiscussionMessage(
+	public long getOrAddEmptyDiscussionMessage(
 			String externalReferenceCode, String className, long classPK,
 			long groupId, long userId)
 		throws PortalException {
 
-		return (Comment)_mbMessageLocalService.getOrAddEmptyDiscussionMessage(
+		return _mbMessageLocalService.getOrAddEmptyDiscussionMessage(
 			externalReferenceCode, className, classPK, groupId, userId);
 	}
 
