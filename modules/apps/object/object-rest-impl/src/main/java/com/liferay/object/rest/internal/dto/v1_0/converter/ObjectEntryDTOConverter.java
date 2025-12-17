@@ -1364,28 +1364,64 @@ public class ObjectEntryDTOConverter
 		return NestedFieldsSupplier.supply(
 			"comments",
 			nestedFieldNames -> {
-				if (!objectDefinition.isEnableComments() ||
-					!_discussionPermission.hasViewPermission(
-						PermissionThreadLocal.getPermissionChecker(),
-						objectDefinition.getCompanyId(),
-						objectEntry.getGroupId(),
-						objectDefinition.getClassName(),
-						objectEntry.getObjectEntryId())) {
+                                if (!objectDefinition.isEnableComments() ||
+                                        !_discussionPermission.hasViewPermission(
+                                                PermissionThreadLocal.getPermissionChecker(),
+                                                objectDefinition.getCompanyId(),
+                                                objectEntry.getGroupId(),
+                                                objectDefinition.getClassName(),
+                                                objectEntry.getObjectEntryId())) {
 
-					return null;
-				}
+                                        return null;
+                                }
 
-				return TransformUtil.transformToArray(
-					_commentManager.getComments(
-						objectDefinition.getClassName(),
-						objectEntry.getObjectEntryId(),
-						WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS),
-					comment -> CommentUtil.toComment(
-						comment, _commentManager, PortalUtil.getPortal()),
-					Comment.class);
-			});
-	}
+                                List<com.liferay.portal.kernel.comment.Comment> comments =
+                                        _commentManager.getComments(
+                                                objectDefinition.getClassName(),
+                                                objectEntry.getObjectEntryId(),
+                                                WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+                                                QueryUtil.ALL_POS);
+
+                                Map<Long, String> parentCommentExternalReferenceCodes =
+                                        new HashMap<>();
+
+                                for (com.liferay.portal.kernel.comment.Comment comment :
+                                                comments) {
+
+                                        parentCommentExternalReferenceCodes.put(
+                                                comment.getCommentId(),
+                                                comment.getExternalReferenceCode());
+                                }
+
+                                for (com.liferay.portal.kernel.comment.Comment comment :
+                                                comments) {
+
+                                        long parentCommentId = comment.getParentCommentId();
+
+                                        if ((parentCommentId == 0) ||
+                                                parentCommentExternalReferenceCodes.containsKey(
+                                                        parentCommentId)) {
+
+                                                continue;
+                                        }
+
+                                        com.liferay.portal.kernel.comment.Comment parentComment =
+                                                _commentManager.fetchComment(parentCommentId);
+
+                                        parentCommentExternalReferenceCodes.put(
+                                                parentCommentId,
+                                                (parentComment == null) ? null :
+                                                        parentComment.getExternalReferenceCode());
+                                }
+
+                                return TransformUtil.transformToArray(
+                                        comments,
+                                        comment -> CommentUtil.toComment(
+                                                comment, _commentManager, PortalUtil.getPortal(),
+                                                parentCommentExternalReferenceCodes),
+                                        Comment.class);
+                        });
+        }
 
 	private ExtendedEntity _toExtendedEntity(
 			BaseModel<?> baseModel, DTOConverterContext dtoConverterContext,

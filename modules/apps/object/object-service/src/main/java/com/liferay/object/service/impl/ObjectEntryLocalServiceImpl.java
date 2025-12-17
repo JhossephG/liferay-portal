@@ -33,6 +33,7 @@ import com.liferay.exportimport.kernel.empty.model.EmptyModelManager;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.headless.delivery.dto.v1_0.util.CommentUtil;
 import com.liferay.list.type.exception.NoSuchListTypeEntryException;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
@@ -159,7 +160,6 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.dao.jdbc.postgresql.PostgreSQLJDBCUtil;
-import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.comment.DiscussionPermission;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -2574,79 +2574,81 @@ public class ObjectEntryLocalServiceImpl
 	@Reference
 	protected ConfigurationProvider configurationProvider;
 
-	private void _addComments(
-			long groupId, long userId, ObjectDefinition objectDefinition,
-			ObjectEntry objectEntry, ServiceContext serviceContext)
-		throws PortalException {
+        private void _addComments(
+                        long groupId, long userId, ObjectDefinition objectDefinition,
+                        ObjectEntry objectEntry, ServiceContext serviceContext)
+                throws PortalException {
 
-		List<Comment> comments = (List<Comment>)serviceContext.getAttribute(
-			"comments");
+                List<CommentUtil.CommentBatch.Comment> comments =
+                        (List<CommentUtil.CommentBatch.Comment>)serviceContext.getAttribute(
+                                "comments");
 
-		if (!objectDefinition.isEnableComments() || (comments == null)) {
-			return;
-		}
+                if (!objectDefinition.isEnableComments() || (comments == null)) {
+                        return;
+                }
 
-		Map<String, String> parentCommentExternalReferenceCodes =
-			(Map<String, String>)serviceContext.getAttribute(
-				"parentCommentExternalReferenceCodes");
-		Map<String, Long> resolvedParentCommentIds =
-			(Map<String, Long>)serviceContext.getAttribute(
-				"commentResolvedParentCommentIds");
+                Map<String, String> parentCommentExternalReferenceCodes =
+                        (Map<String, String>)serviceContext.getAttribute(
+                                "parentCommentExternalReferenceCodes");
+                Map<String, Long> resolvedParentCommentIds =
+                        (Map<String, Long>)serviceContext.getAttribute(
+                                "resolvedParentCommentIds");
 
-		if (groupId == 0) {
-			groupId = objectEntry.getNonzeroGroupId();
-		}
+                if (groupId == 0) {
+                        groupId = objectEntry.getNonzeroGroupId();
+                }
 
-		_discussionPermission.checkAddPermission(
-			PermissionThreadLocal.getPermissionChecker(),
-			objectDefinition.getCompanyId(), groupId,
-			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
+                _discussionPermission.checkAddPermission(
+                        PermissionThreadLocal.getPermissionChecker(),
+                        objectDefinition.getCompanyId(), groupId,
+                        objectDefinition.getClassName(), objectEntry.getObjectEntryId());
 
-		User user = _userLocalService.getUser(userId);
+                User user = _userLocalService.getUser(userId);
 
-		Map<String, Comment> commentsMap = new LinkedHashMap<>();
+                Map<String, CommentUtil.CommentBatch.Comment> commentsMap =
+                        new LinkedHashMap<>();
 
-		for (Comment comment : comments) {
-			commentsMap.put(comment.getExternalReferenceCode(), comment);
-		}
+                for (CommentUtil.CommentBatch.Comment comment : comments) {
+                        commentsMap.put(comment.getExternalReferenceCode(), comment);
+                }
 
-		Map<String, Long> commentIdsByExternalReferenceCode = new HashMap<>();
+                Map<String, Long> commentIdsByExternalReferenceCode = new HashMap<>();
 
-		if (resolvedParentCommentIds != null) {
-			commentIdsByExternalReferenceCode.putAll(resolvedParentCommentIds);
-		}
+                if (resolvedParentCommentIds != null) {
+                        commentIdsByExternalReferenceCode.putAll(resolvedParentCommentIds);
+                }
 
-		for (Comment comment :
-				_sortComments(
-					commentsMap, parentCommentExternalReferenceCodes)) {
+                for (CommentUtil.CommentBatch.Comment comment :
+                                _sortComments(
+                                        commentsMap, parentCommentExternalReferenceCodes)) {
 
-			long parentCommentId = _getParentCommentId(
-				comment.getExternalReferenceCode(),
-				commentIdsByExternalReferenceCode, groupId, objectDefinition,
-				objectEntry, parentCommentExternalReferenceCodes, userId);
+                        long parentCommentId = _getParentCommentId(
+                                comment.getExternalReferenceCode(),
+                                commentIdsByExternalReferenceCode, groupId, objectDefinition,
+                                objectEntry, parentCommentExternalReferenceCodes, userId);
 
-			long commentId;
+                        long commentId;
 
-			if (parentCommentId == 0) {
-				commentId = _commentManager.addComment(
-					comment.getExternalReferenceCode(), userId, groupId,
-					objectDefinition.getClassName(),
-					objectEntry.getObjectEntryId(), user.getFullName(), null,
-					comment.getBody(), _createServiceContextFunction());
-			}
-			else {
-				commentId = _commentManager.addComment(
-					comment.getExternalReferenceCode(), userId,
-					objectDefinition.getClassName(),
-					objectEntry.getObjectEntryId(), user.getFullName(),
-					parentCommentId, null, comment.getBody(),
-					_createServiceContextFunction());
-			}
+                        if (parentCommentId == 0) {
+                                commentId = _commentManager.addComment(
+                                        comment.getExternalReferenceCode(), userId, groupId,
+                                        objectDefinition.getClassName(),
+                                        objectEntry.getObjectEntryId(), user.getFullName(), null,
+                                        comment.getText(), _createServiceContextFunction());
+                        }
+                        else {
+                                commentId = _commentManager.addComment(
+                                        comment.getExternalReferenceCode(), userId,
+                                        objectDefinition.getClassName(),
+                                        objectEntry.getObjectEntryId(), user.getFullName(),
+                                        parentCommentId, null, comment.getText(),
+                                        _createServiceContextFunction());
+                        }
 
-			commentIdsByExternalReferenceCode.put(
-				comment.getExternalReferenceCode(), commentId);
-		}
-	}
+                        commentIdsByExternalReferenceCode.put(
+                                comment.getExternalReferenceCode(), commentId);
+                }
+        }
 
 	private void _addDLFileEntries(
 			Map<ObjectField, Set<DLFileEntry>> dlFileEntriesMap, long groupId,
@@ -6466,19 +6468,21 @@ public class ObjectEntryLocalServiceImpl
 			parentObjectEntry.getRootObjectEntryId());
 	}
 
-	private List<Comment> _sortComments(
-			Map<String, Comment> comments,
-			Map<String, String> parentCommentExternalReferenceCodes)
-		throws PortalException {
+        private List<CommentUtil.CommentBatch.Comment> _sortComments(
+                        Map<String, CommentUtil.CommentBatch.Comment> comments,
+                        Map<String, String> parentCommentExternalReferenceCodes)
+                throws PortalException {
 
-		List<Comment> orderedComments = new ArrayList<>();
-		Set<String> processingExternalReferenceCodes = new HashSet<>();
-		Set<String> processedExternalReferenceCodes = new HashSet<>();
+                List<CommentUtil.CommentBatch.Comment> orderedComments =
+                        new ArrayList<>();
+                Set<String> processingExternalReferenceCodes = new HashSet<>();
+                Set<String> processedExternalReferenceCodes = new HashSet<>();
 
-		for (Map.Entry<String, Comment> entry : comments.entrySet()) {
-			_visitComment(
-				entry.getKey(), comments, parentCommentExternalReferenceCodes,
-				processingExternalReferenceCodes,
+                for (Map.Entry<String, CommentUtil.CommentBatch.Comment> entry :
+                                comments.entrySet()) {
+                        _visitComment(
+                                entry.getKey(), comments, parentCommentExternalReferenceCodes,
+                                processingExternalReferenceCodes,
 				processedExternalReferenceCodes, orderedComments);
 		}
 
@@ -7939,13 +7943,14 @@ public class ObjectEntryLocalServiceImpl
 		}
 	}
 
-	private void _visitComment(
-			String externalReferenceCode, Map<String, Comment> comments,
-			Map<String, String> parentCommentExternalReferenceCodes,
-			Set<String> processingExternalReferenceCodes,
-			Set<String> processedExternalReferenceCodes,
-			List<Comment> orderedComments)
-		throws PortalException {
+        private void _visitComment(
+                        String externalReferenceCode,
+                        Map<String, CommentUtil.CommentBatch.Comment> comments,
+                        Map<String, String> parentCommentExternalReferenceCodes,
+                        Set<String> processingExternalReferenceCodes,
+                        Set<String> processedExternalReferenceCodes,
+                        List<CommentUtil.CommentBatch.Comment> orderedComments)
+                throws PortalException {
 
 		if (processedExternalReferenceCodes.contains(externalReferenceCode)) {
 			return;
