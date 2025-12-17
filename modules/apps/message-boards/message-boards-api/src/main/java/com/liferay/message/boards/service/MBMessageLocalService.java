@@ -582,7 +582,7 @@ public interface MBMessageLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public MBMessage getOrAddEmptyDiscussionMessage(
+	public long getOrAddEmptyDiscussionMessage(
 			String externalReferenceCode, String className, long classPK,
 			long groupId, long userId)
 		throws PortalException;

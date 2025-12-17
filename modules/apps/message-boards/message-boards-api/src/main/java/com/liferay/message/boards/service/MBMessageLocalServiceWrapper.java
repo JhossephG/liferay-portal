@@ -890,7 +890,7 @@ public class MBMessageLocalServiceWrapper
 	}
 
 	@Override
-	public MBMessage getOrAddEmptyDiscussionMessage(
+	public long getOrAddEmptyDiscussionMessage(
 			String externalReferenceCode, String className, long classPK,
 			long groupId, long userId)
 		throws com.liferay.portal.kernel.exception.PortalException {

@@ -790,7 +790,7 @@ public class MBMessageLocalServiceUtil {
 		return getService().getMessages(className, classPK, status);
 	}
 
-	public static MBMessage getOrAddEmptyDiscussionMessage(
+	public static long getOrAddEmptyDiscussionMessage(
 			String externalReferenceCode, String className, long classPK,
 			long groupId, long userId)
 		throws PortalException {
