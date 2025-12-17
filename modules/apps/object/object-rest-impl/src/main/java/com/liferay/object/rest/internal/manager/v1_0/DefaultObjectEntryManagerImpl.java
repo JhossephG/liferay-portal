@@ -3802,20 +3802,23 @@ public class DefaultObjectEntryManagerImpl
 
 		_checkObjectEntryObjectDefinitionId(
 			objectDefinition, serviceBuilderObjectEntry);
-		_checkObjectEntryStatus(serviceBuilderObjectEntry);
-		_checkRootDescendantNode(
-			serviceBuilderObjectEntry, skipCheckRootDescendantNode);
+                _checkObjectEntryStatus(serviceBuilderObjectEntry);
+                _checkRootDescendantNode(
+                        serviceBuilderObjectEntry, skipCheckRootDescendantNode);
 
-		validateReadOnlyObjectFields(
-			serviceBuilderObjectEntry.getExternalReferenceCode(),
-			serviceBuilderObjectEntry.getGroupId(), objectDefinition,
-			objectEntry);
+                validateReadOnlyObjectFields(
+                        serviceBuilderObjectEntry.getExternalReferenceCode(),
+                        serviceBuilderObjectEntry.getGroupId(), objectDefinition,
+                        objectEntry);
 
-		String scopeKey = String.valueOf(
-			serviceBuilderObjectEntry.getGroupId());
+                String scopeKey = String.valueOf(
+                        serviceBuilderObjectEntry.getGroupId());
 
-		ServiceContext serviceContext = _createServiceContext(
-			dtoConverterContext, objectDefinition, objectEntry, scopeKey);
+                objectEntry.setId(
+                        () -> serviceBuilderObjectEntry.getObjectEntryId());
+
+                ServiceContext serviceContext = _createServiceContext(
+                        dtoConverterContext, objectDefinition, objectEntry, scopeKey);
 
 		Map<String, Serializable> values = _toObjectValues(
 			allowedRelationshipObjectFieldId, dtoConverterContext.getLocale(),

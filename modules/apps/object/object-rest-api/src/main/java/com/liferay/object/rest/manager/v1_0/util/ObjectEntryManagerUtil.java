@@ -64,12 +64,14 @@ public class ObjectEntryManagerUtil {
 				objectEntry::getObjectEntryFolderExternalReferenceCode);
 		}
 
-		if (objectEntry.getObjectEntryFolderId() != null) {
-			existingObjectEntry.setObjectEntryFolderId(
-				objectEntry::getObjectEntryFolderId);
-		}
+                if (objectEntry.getObjectEntryFolderId() != null) {
+                        existingObjectEntry.setObjectEntryFolderId(
+                                objectEntry::getObjectEntryFolderId);
+                }
 
-		existingObjectEntry.setPermissions(objectEntry::getPermissions);
+                existingObjectEntry.setComments(objectEntry::getComments);
+
+                existingObjectEntry.setPermissions(objectEntry::getPermissions);
 
 		if (objectEntry.getProperties() != null) {
 			Map<String, Object> existingProperties =
