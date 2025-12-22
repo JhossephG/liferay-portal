@@ -10632,6 +10632,20 @@ public class ObjectEntryResourceTest {
 				_objectDefinition1.getRESTContextPath(), Http.Method.POST));
 	}
 
+	@FeatureFlag("LPD-69419")
+	@Test
+	public void testPostObjectEntriesWithComments() throws Exception {
+
+		// Company scope
+
+		_testPostObjectEntriesWithComments(0, _objectDefinition1);
+
+		// Site scope
+
+		_testPostObjectEntriesWithComments(
+			_testGroupId, _siteScopedObjectDefinition1);
+	}
+
 	@Test
 	public void testPostObjectEntryExpire() throws Exception {
 
@@ -15840,17 +15854,17 @@ public class ObjectEntryResourceTest {
 	}
 
 	private JSONArray _getCommentsJSONArray(
-			long groupId, ObjectDefinition objectDefinition,
-			String externalReferenceCode)
+			long groupId, int index, ObjectDefinition objectDefinition)
 		throws Exception {
 
 		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
 			null,
-			StringBundler.concat(
-				_getEndpoint(objectDefinition, groupId),
-				"/by-external-reference-code/", externalReferenceCode,
-				"?nestedFields=comments"),
+			_getEndpoint(objectDefinition, groupId) + "?nestedFields=comments",
 			Http.Method.GET);
+
+		JSONArray jsonArray = jsonObject.getJSONArray("items");
+
+		jsonObject = jsonArray.getJSONObject(index);
 
 		return jsonObject.getJSONArray("comments");
 	}
@@ -16511,8 +16525,8 @@ public class ObjectEntryResourceTest {
 	}
 
 	private JSONObject _postObjectEntryWithComments(
-			long groupId, ObjectDefinition objectDefinition,
-			JSONArray commentsJSONArray)
+			JSONArray commentsJSONArray, long groupId,
+			ObjectDefinition objectDefinition)
 		throws Exception {
 
 		return HTTPTestUtil.invokeToJSONObject(
@@ -16822,28 +16836,12 @@ public class ObjectEntryResourceTest {
 			long groupId, ObjectDefinition objectDefinition)
 		throws Exception {
 
-		JSONObject jsonObject = _postObjectEntryWithComments(
-			groupId, objectDefinition,
-			JSONUtil.put(
-				JSONUtil.put(
-					"externalReferenceCode", RandomTestUtil.randomString()
-				).put(
-					"text", RandomTestUtil.randomString()
-				)));
-
-		JSONArray jsonArray = _getCommentsJSONArray(
-			groupId, objectDefinition,
-			jsonObject.getString("externalReferenceCode"));
-
-		Assert.assertNull(jsonArray);
-
 		_enableComments(objectDefinition);
 
 		String text1 = RandomTestUtil.randomString();
 		String text2 = RandomTestUtil.randomString();
 
-		jsonObject = _postObjectEntryWithComments(
-			groupId, objectDefinition,
+		_postObjectEntryWithComments(
 			JSONUtil.putAll(
 				JSONUtil.put(
 					"externalReferenceCode", _ERC_VALUE_1
@@ -16854,15 +16852,15 @@ public class ObjectEntryResourceTest {
 					"externalReferenceCode", _ERC_VALUE_2
 				).put(
 					"text", text2
-				)));
+				)),
+			groupId, objectDefinition);
 
-		jsonArray = _getCommentsJSONArray(
-			groupId, objectDefinition,
-			jsonObject.getString("externalReferenceCode"));
+		JSONArray jsonArray = _getCommentsJSONArray(
+			groupId, 0, objectDefinition);
 
 		Assert.assertEquals(3, jsonArray.length());
 
-		jsonObject = jsonArray.getJSONObject(0);
+		JSONObject jsonObject = jsonArray.getJSONObject(0);
 
 		JSONAssert.assertEquals(
 			JSONUtil.put(
@@ -19255,6 +19253,42 @@ public class ObjectEntryResourceTest {
 				).toString(),
 				JSONCompareMode.LENIENT);
 		}
+	}
+
+	private void _testPostObjectEntriesWithComments(
+			long groupId, ObjectDefinition objectDefinition)
+		throws Exception {
+
+		_postObjectEntryWithComments(
+			JSONUtil.put(
+				JSONUtil.put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"text", RandomTestUtil.randomString()
+				)),
+			groupId, objectDefinition);
+
+		JSONArray jsonArray = _getCommentsJSONArray(
+			groupId, 0, objectDefinition);
+
+		Assert.assertNull(jsonArray);
+
+		_enableComments(objectDefinition);
+
+		String text = RandomTestUtil.randomString();
+
+		_postObjectEntryWithComments(
+			JSONUtil.put(
+				JSONUtil.put(
+					"externalReferenceCode", RandomTestUtil.randomString()
+				).put(
+					"text", text
+				)),
+			groupId, objectDefinition);
+
+		jsonArray = _getCommentsJSONArray(groupId, 1, objectDefinition);
+
+		Assert.assertEquals(2, jsonArray.length());
 	}
 
 	private void _testPostValidate(
