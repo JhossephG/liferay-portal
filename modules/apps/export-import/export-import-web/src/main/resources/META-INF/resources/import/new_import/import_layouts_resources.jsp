@@ -390,39 +390,37 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(user
 
 										</ul>
 
-										<c:if test="<%= !stagingGroupHelper.isCompanyGroup(group) %>">
-											<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-import-their">
-												<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
+										<aui:fieldset cssClass="content-options" label="for-each-of-the-selected-content-types,-import-their">
+											<span class="selected-labels" id="<portlet:namespace />selectedContentOptions"></span>
 
-												<clay:button
-													cssClass="modify-link options-link pr-1"
-													displayType="link"
-													id='<%= liferayPortletResponse.getNamespace() + "contentOptionsLink" %>'
-													label="change"
+											<clay:button
+												cssClass="modify-link options-link pr-1"
+												displayType="link"
+												id='<%= liferayPortletResponse.getNamespace() + "contentOptionsLink" %>'
+												label="change"
+											/>
+
+											<span id="<portlet:namespace />rightContentOptionsArrow">
+												<clay:icon
+													symbol="angle-right-small"
 												/>
+											</span>
+											<span class="hide" id="<portlet:namespace />downContentOptionsArrow">
+												<clay:icon
+													symbol="angle-down-small"
+												/>
+											</span>
 
-												<span id="<portlet:namespace />rightContentOptionsArrow">
-													<clay:icon
-														symbol="angle-right-small"
-													/>
-												</span>
-												<span class="hide" id="<portlet:namespace />downContentOptionsArrow">
-													<clay:icon
-														symbol="angle-down-small"
-													/>
-												</span>
+											<div class="hide" id="<portlet:namespace />contentOptions">
+												<ul class="lfr-tree list-unstyled">
+													<li class="tree-item">
+														<aui:input label="comments" name="<%= PortletDataHandlerKeys.COMMENTS %>" type="checkbox" value="<%= true %>" />
 
-												<div class="hide" id="<portlet:namespace />contentOptions">
-													<ul class="lfr-tree list-unstyled">
-														<li class="tree-item">
-															<aui:input label="comments" name="<%= PortletDataHandlerKeys.COMMENTS %>" type="checkbox" value="<%= true %>" />
-
-															<aui:input label="ratings" name="<%= PortletDataHandlerKeys.RATINGS %>" type="checkbox" value="<%= true %>" />
-														</li>
-													</ul>
-												</div>
-											</aui:fieldset>
-										</c:if>
+														<aui:input label="ratings" name="<%= PortletDataHandlerKeys.RATINGS %>" type="checkbox" value="<%= true %>" />
+													</li>
+												</ul>
+											</div>
+										</aui:fieldset>
 									</li>
 								</ul>
 							</li>
