@@ -974,6 +974,12 @@ public class ActionUtil {
 			objectEntryFolderExternalReferenceCode);
 	}
 
+	public static String getTeamsURL(ThemeDisplay themeDisplay) {
+		return StringBundler.concat(
+			themeDisplay.getPathFriendlyURLPublic(),
+			GroupConstants.CMS_FRIENDLY_URL, "/objects-list");
+	}
+
 	public static String getTranslateURL(
 		FormManager formManager,
 		FragmentEntryLinkListenerRegistry fragmentEntryLinkListenerRegistry,
