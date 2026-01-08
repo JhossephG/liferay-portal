@@ -19,7 +19,7 @@ public class ObjectEntryComment implements Serializable {
 		_externalReferenceCode = externalReferenceCode;
 		_parentCommentExternalReferenceCode =
 			parentCommentExternalReferenceCode;
-		_text = text;
+		_text = "<p>" + text + "</p>";
 	}
 
 	public String getExternalReferenceCode() {
