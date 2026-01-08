@@ -184,6 +184,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -521,8 +522,8 @@ public class ObjectEntryLocalServiceImpl
 			_startWorkflowInstance(userId, objectEntry, serviceContext, false);
 		}
 
-		_addComments(
-			groupId, userId, objectDefinition, objectEntry,
+		_addOrUpdateComments(
+			objectDefinition, objectEntry,
 			(List<ObjectEntryComment>)serviceContext.getAttribute(
 				"objectEntryComments"));
 
@@ -2536,8 +2537,8 @@ public class ObjectEntryLocalServiceImpl
 	protected ConfigurationProvider configurationProvider;
 
 	private void _addComments(
-			long groupId, long userId, ObjectDefinition objectDefinition,
-			ObjectEntry objectEntry,
+			long groupId, long userId, Set<String> commentsERC,
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
 			List<ObjectEntryComment> objectEntryComments)
 		throws PortalException {
 
@@ -2547,16 +2548,14 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		if (groupId == 0) {
-			groupId = objectEntry.getNonzeroGroupId();
-		}
-
 		_discussionPermission.checkAddPermission(
 			PermissionThreadLocal.getPermissionChecker(),
 			objectDefinition.getCompanyId(), groupId,
 			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
 
 		User user = _userLocalService.getUser(userId);
+
+		long commentId = 0;
 
 		for (ObjectEntryComment objectEntryComment : objectEntryComments) {
 			if (Validator.isNotNull(
@@ -2575,34 +2574,48 @@ public class ObjectEntryLocalServiceImpl
 						objectEntry.getObjectEntryId());
 				}
 
-				_commentManager.addComment(
+				commentsERC.add(parentComment.getExternalReferenceCode());
+
+				commentId = _commentManager.addComment(
 					objectEntryComment.getExternalReferenceCode(), userId,
 					objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(),
 					parentComment.getCommentId(), null,
 					objectEntryComment.getText(),
 					_createServiceContextFunction());
+
+				Comment comment = _commentManager.fetchComment(commentId);
+
+				commentsERC.add(comment.getExternalReferenceCode());
 			}
 			else {
 				Comment comment = _commentManager.fetchComment(
 					groupId, objectEntryComment.getExternalReferenceCode());
 
-				if (comment != null) {
+				if ((comment != null) &&
+					LazyReferencingThreadLocal.isEnabled()) {
+
 					_commentManager.updateComment(
 						userId, objectDefinition.getClassName(),
 						objectEntry.getObjectEntryId(), comment.getCommentId(),
 						StringPool.BLANK, objectEntryComment.getText(),
 						_createServiceContextFunction());
 
+					commentsERC.add(comment.getExternalReferenceCode());
+
 					continue;
 				}
 
-				_commentManager.addComment(
+				commentId = _commentManager.addComment(
 					objectEntryComment.getExternalReferenceCode(), userId,
 					groupId, objectDefinition.getClassName(),
 					objectEntry.getObjectEntryId(), user.getFullName(), null,
 					objectEntryComment.getText(),
 					_createServiceContextFunction());
+
+				comment = _commentManager.fetchComment(commentId);
+
+				commentsERC.add(comment.getExternalReferenceCode());
 			}
 		}
 	}
@@ -2980,7 +2993,8 @@ public class ObjectEntryLocalServiceImpl
 			(objectEntry.getGroupId() == 0) ? objectEntry.getNonzeroGroupId() :
 				objectEntry.getGroupId();
 
-		Set<String> externalReferenceCodes = new HashSet<>();
+		List<ObjectEntryComment> commentsToAdd = new ArrayList<>();
+		Set<String> commentsERC = new HashSet<>();
 
 		for (ObjectEntryComment objectEntryComment : objectEntryComments) {
 			Comment serviceBuilderComment = _commentManager.fetchComment(
@@ -3000,14 +3014,15 @@ public class ObjectEntryLocalServiceImpl
 					_createServiceContextFunction());
 			}
 			else {
-				_addComments(
-					groupId, objectEntry.getUserId(), objectDefinition,
-					objectEntry, ListUtil.toList(objectEntryComment));
+				commentsToAdd.add(objectEntryComment);
 			}
 
-			externalReferenceCodes.add(
-				objectEntryComment.getExternalReferenceCode());
+			commentsERC.add(objectEntryComment.getExternalReferenceCode());
 		}
+
+		_addComments(
+			groupId, objectEntry.getUserId(), commentsERC, objectDefinition,
+			objectEntry, commentsToAdd);
 
 		for (Comment comment :
 				_commentManager.getComments(
@@ -3017,8 +3032,7 @@ public class ObjectEntryLocalServiceImpl
 					QueryUtil.ALL_POS)) {
 
 			if (!comment.isRoot() &&
-				!externalReferenceCodes.contains(
-					comment.getExternalReferenceCode())) {
+				!commentsERC.contains(comment.getExternalReferenceCode())) {
 
 				_commentManager.deleteComment(comment.getCommentId());
 			}
