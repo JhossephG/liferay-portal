@@ -522,7 +522,9 @@ public class ObjectEntryLocalServiceImpl
 		}
 
 		_addComments(
-			groupId, userId, objectDefinition, objectEntry, serviceContext);
+			groupId, userId, objectDefinition, objectEntry,
+			(List<ObjectEntryComment>)serviceContext.getAttribute(
+				"objectEntryComments"));
 
 		ObjectDefinitionResourcePermissionUtil.updateResourcePermissions(
 			objectDefinition.getCompanyId(), objectEntry.getGroupId(),
@@ -2535,12 +2537,9 @@ public class ObjectEntryLocalServiceImpl
 
 	private void _addComments(
 			long groupId, long userId, ObjectDefinition objectDefinition,
-			ObjectEntry objectEntry, ServiceContext serviceContext)
+			ObjectEntry objectEntry,
+			List<ObjectEntryComment> objectEntryComments)
 		throws PortalException {
-
-		List<ObjectEntryComment> objectEntryComments =
-			(List<ObjectEntryComment>)serviceContext.getAttribute(
-				"objectEntryComments");
 
 		if (!objectDefinition.isEnableComments() ||
 			ListUtil.isEmpty(objectEntryComments)) {
@@ -2963,6 +2962,66 @@ public class ObjectEntryLocalServiceImpl
 
 			values.put(
 				objectRelationshipERCObjectFieldName, externalReferenceCode);
+		}
+	}
+
+	private void _addOrUpdateComments(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			List<ObjectEntryComment> objectEntryComments)
+		throws PortalException {
+
+		if (!objectDefinition.isEnableComments() ||
+			ListUtil.isEmpty(objectEntryComments)) {
+
+			return;
+		}
+
+		long groupId =
+			(objectEntry.getGroupId() == 0) ? objectEntry.getNonzeroGroupId() :
+				objectEntry.getGroupId();
+
+		Set<String> externalReferenceCodes = new HashSet<>();
+
+		for (ObjectEntryComment objectEntryComment : objectEntryComments) {
+			Comment serviceBuilderComment = _commentManager.fetchComment(
+				groupId, objectEntryComment.getExternalReferenceCode());
+
+			if (serviceBuilderComment != null) {
+				_discussionPermission.checkUpdatePermission(
+					PermissionThreadLocal.getPermissionChecker(),
+					serviceBuilderComment.getCommentId());
+
+				_commentManager.updateComment(
+					objectEntry.getUserId(),
+					serviceBuilderComment.getClassName(),
+					serviceBuilderComment.getClassPK(),
+					serviceBuilderComment.getCommentId(), StringPool.BLANK,
+					objectEntryComment.getText(),
+					_createServiceContextFunction());
+			}
+			else {
+				_addComments(
+					groupId, objectEntry.getUserId(), objectDefinition,
+					objectEntry, ListUtil.toList(objectEntryComment));
+			}
+
+			externalReferenceCodes.add(
+				objectEntryComment.getExternalReferenceCode());
+		}
+
+		for (Comment comment :
+				_commentManager.getComments(
+					objectDefinition.getClassName(),
+					objectEntry.getObjectEntryId(),
+					WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS)) {
+
+			if (!comment.isRoot() &&
+				!externalReferenceCodes.contains(
+					comment.getExternalReferenceCode())) {
+
+				_commentManager.deleteComment(comment.getCommentId());
+			}
 		}
 	}
 
@@ -6555,6 +6614,11 @@ public class ObjectEntryLocalServiceImpl
 			objectDefinition, objectEntry, serviceContext, values);
 
 		_startWorkflowInstance(userId, objectEntry, serviceContext, true);
+
+		_addOrUpdateComments(
+			objectDefinition, objectEntry,
+			(List<ObjectEntryComment>)serviceContext.getAttribute(
+				"objectEntryComments"));
 
 		ObjectDefinitionResourcePermissionUtil.updateResourcePermissions(
 			objectDefinition.getCompanyId(), objectEntry.getGroupId(),
