@@ -2989,52 +2989,64 @@ public class ObjectEntryLocalServiceImpl
 			return;
 		}
 
-		long groupId =
-			(objectEntry.getGroupId() == 0) ? objectEntry.getNonzeroGroupId() :
-				objectEntry.getGroupId();
+		List<Comment> serviceBuilderComments = _commentManager.getComments(
+			objectDefinition.getClassName(), objectEntry.getObjectEntryId(),
+			WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
-		List<ObjectEntryComment> commentsToAdd = new ArrayList<>();
-		Set<String> commentsERC = new HashSet<>();
+		Map<String, Comment> serviceBuilderCommentsByERC = new HashMap<>();
 
-		for (ObjectEntryComment objectEntryComment : objectEntryComments) {
-			Comment serviceBuilderComment = _commentManager.fetchComment(
-				groupId, objectEntryComment.getExternalReferenceCode());
-
-			if (serviceBuilderComment != null) {
-				_discussionPermission.checkUpdatePermission(
-					PermissionThreadLocal.getPermissionChecker(),
-					serviceBuilderComment.getCommentId());
-
-				_commentManager.updateComment(
-					objectEntry.getUserId(),
-					serviceBuilderComment.getClassName(),
-					serviceBuilderComment.getClassPK(),
-					serviceBuilderComment.getCommentId(), StringPool.BLANK,
-					objectEntryComment.getText(),
-					_createServiceContextFunction());
-			}
-			else {
-				commentsToAdd.add(objectEntryComment);
-			}
-
-			commentsERC.add(objectEntryComment.getExternalReferenceCode());
+		for (Comment serviceBuilderComment : serviceBuilderComments) {
+			serviceBuilderCommentsByERC.put(
+				serviceBuilderComment.getExternalReferenceCode(),
+				serviceBuilderComment);
 		}
 
-		_addComments(
-			groupId, objectEntry.getUserId(), commentsERC, objectDefinition,
-			objectEntry, commentsToAdd);
+		List<ObjectEntryComment> commentsToAdd = new ArrayList<>();
+		Set<String> objectEntryCommentsERC = new HashSet<>();
 
-		for (Comment comment :
-				_commentManager.getComments(
-					objectDefinition.getClassName(),
-					objectEntry.getObjectEntryId(),
-					WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS)) {
+		for (ObjectEntryComment objectEntryComment : objectEntryComments) {
+			String externalReferenceCode =
+				objectEntryComment.getExternalReferenceCode();
 
-			if (!comment.isRoot() &&
-				!commentsERC.contains(comment.getExternalReferenceCode())) {
+			objectEntryCommentsERC.add(externalReferenceCode);
 
-				_commentManager.deleteComment(comment.getCommentId());
+			Comment serviceBuilderComment = serviceBuilderCommentsByERC.get(
+				externalReferenceCode);
+
+			if (serviceBuilderComment == null) {
+				commentsToAdd.add(objectEntryComment);
+
+				continue;
+			}
+
+			_discussionPermission.checkUpdatePermission(
+				PermissionThreadLocal.getPermissionChecker(),
+				serviceBuilderComment.getCommentId());
+
+			_commentManager.updateComment(
+				objectEntry.getUserId(), serviceBuilderComment.getClassName(),
+				serviceBuilderComment.getClassPK(),
+				serviceBuilderComment.getCommentId(), StringPool.BLANK,
+				objectEntryComment.getText(), _createServiceContextFunction());
+		}
+
+		if (!commentsToAdd.isEmpty()) {
+			long groupId =
+				(objectEntry.getGroupId() == 0) ?
+					objectEntry.getNonzeroGroupId() : objectEntry.getGroupId();
+
+			_addComments(
+				groupId, objectEntry.getUserId(), objectEntryCommentsERC,
+				objectDefinition, objectEntry, commentsToAdd);
+		}
+
+		for (Comment serviceBuilderComment : serviceBuilderComments) {
+			if (!serviceBuilderComment.isRoot() &&
+				!objectEntryCommentsERC.contains(
+					serviceBuilderComment.getExternalReferenceCode())) {
+
+				_commentManager.deleteComment(
+					serviceBuilderComment.getCommentId());
 			}
 		}
 	}
