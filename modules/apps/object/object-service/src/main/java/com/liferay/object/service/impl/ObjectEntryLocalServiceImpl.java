@@ -826,6 +826,9 @@ public class ObjectEntryLocalServiceImpl
 				objectEntry.getObjectEntryId());
 		}
 
+		_commentManager.deleteDiscussion(
+			objectDefinition.getClassName(), objectEntry.getObjectEntryId());
+
 		_dlFileEntryLocalService.deleteFileEntries(
 			objectDefinition.getCompanyId(),
 			_classNameLocalService.getClassNameId(
