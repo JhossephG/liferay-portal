@@ -5,6 +5,7 @@
 
 package com.liferay.object.web.internal.info.item.provider;
 
+import com.liferay.headless.delivery.dto.v1_0.Creator;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
@@ -23,12 +24,14 @@ import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,7 +81,8 @@ public class ObjectEntryInfoItemObjectProviderTest {
 			ObjectEntryManagerRegistry.class);
 
 		Mockito.when(
-			_objectEntryManagerRegistry.getObjectEntryManager(0, null)
+			_objectEntryManagerRegistry.getObjectEntryManager(
+				Mockito.anyLong(), Mockito.nullable(String.class))
 		).thenReturn(
 			_objectEntryManager
 		);
@@ -126,17 +130,84 @@ public class ObjectEntryInfoItemObjectProviderTest {
 	@Test
 	public void testGetInfoItemProxyObjectEntry() throws Exception {
 		String externalReferenceCode = RandomTestUtil.randomString();
-		ObjectEntry objectEntry = Mockito.mock(ObjectEntry.class);
 
-		_setUpProxyObjectEntry(externalReferenceCode, objectEntry);
+		long userId = RandomTestUtil.randomLong();
+		String userName = RandomTestUtil.randomString();
 
+		Date createDate = new Date();
+		Date modifiedDate = new Date(createDate.getTime() + 1000);
+
+		String defaultLanguageId = LocaleUtil.toLanguageId(LocaleUtil.US);
+
+		long objectEntryId = RandomTestUtil.randomLong();
+		long scopeId = RandomTestUtil.randomLong();
+
+		Creator creator = new Creator();
+
+		creator.setId(userId);
+		creator.setName(userName);
+
+		com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry =
+			new com.liferay.object.rest.dto.v1_0.ObjectEntry();
+
+		dtoObjectEntry.setCreator(creator);
+		dtoObjectEntry.setDateCreated(createDate);
+		dtoObjectEntry.setDateModified(modifiedDate);
+		dtoObjectEntry.setDefaultLanguageId(defaultLanguageId);
+		dtoObjectEntry.setExternalReferenceCode(externalReferenceCode);
+		dtoObjectEntry.setId(objectEntryId);
+		dtoObjectEntry.setScopeId(scopeId);
+
+		Mockito.when(
+			_objectDefinition.getObjectDefinitionId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		_setUpProxyDTOObjectEntry(externalReferenceCode, dtoObjectEntry);
+
+		ObjectEntry objectEntry = _assertGetInfoItem(
+			new ERCInfoItemIdentifier(externalReferenceCode));
+
+		Assert.assertEquals(userId, objectEntry.getUserId());
+		Assert.assertEquals(userName, objectEntry.getUserName());
+		Assert.assertEquals(createDate, objectEntry.getCreateDate());
+		Assert.assertEquals(modifiedDate, objectEntry.getModifiedDate());
 		Assert.assertEquals(
-			objectEntry,
-			_assertGetInfoItem(
-				new ERCInfoItemIdentifier(externalReferenceCode)));
+			defaultLanguageId, objectEntry.getDefaultLanguageId());
+		Assert.assertEquals(
+			externalReferenceCode, objectEntry.getExternalReferenceCode());
+		Assert.assertEquals(objectEntryId, objectEntry.getObjectEntryId());
+		Assert.assertEquals(scopeId, objectEntry.getGroupId());
 
 		Mockito.verifyNoInteractions(_objectEntryLocalService);
+		_objectEntryUtilMockedStatic.verify(
+			() -> ObjectEntryUtil.toObjectEntry(
+				_objectDefinition, dtoObjectEntry));
 	}
+
+	private void _setUpProxyDTOObjectEntry(
+		String externalReferenceCode,
+		com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry)
+		throws Exception {
+
+		Mockito.when(
+			_objectEntryManager.getObjectEntry(
+				Mockito.eq(0L), Mockito.any(DefaultDTOConverterContext.class),
+				Mockito.eq(externalReferenceCode),
+				Mockito.eq(_objectDefinition),
+				Mockito.nullable(String.class))
+		).thenReturn(
+			dtoObjectEntry
+		);
+
+		_objectEntryUtilMockedStatic.when(
+			() -> ObjectEntryUtil.toObjectEntry(
+				_objectDefinition, dtoObjectEntry)
+		).thenCallRealMethod();
+	}
+
+
 
 	@Test
 	public void testGetInfoItemProxyObjectEntryInfoItemIdentifierCachedInObjectEntriesAttribute()
