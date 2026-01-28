@@ -16,7 +16,6 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.service.ObjectEntryLocalService;
-import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -165,43 +164,85 @@ public class ObjectEntryInfoItemObjectProviderTest {
 			RandomTestUtil.randomLong()
 		);
 
-		try (MockedStatic<ObjectEntryLocalServiceUtil>
-				objectEntryLocalServiceUtilMockedStatic =
-					Mockito.mockStatic(ObjectEntryLocalServiceUtil.class)) {
-			ObjectEntry objectEntryMock = _createObjectEntryMock();
+		ObjectEntry objectEntry = Mockito.mock(ObjectEntry.class);
 
-			objectEntryLocalServiceUtilMockedStatic.when(
-				() -> ObjectEntryLocalServiceUtil.createObjectEntry(0L)
-			).thenReturn(
-				objectEntryMock
-			);
+		Mockito.when(
+			objectEntry.getUserId()
+		).thenReturn(
+			userId
+		);
 
-			_setUpProxyDTOObjectEntry(externalReferenceCode, dtoObjectEntry);
+		Mockito.when(
+			objectEntry.getUserName()
+		).thenReturn(
+			userName
+		);
 
-			ObjectEntry objectEntry = _assertGetInfoItem(
-				new ERCInfoItemIdentifier(externalReferenceCode));
+		Mockito.when(
+			objectEntry.getCreateDate()
+		).thenReturn(
+			createDate
+		);
 
-			Assert.assertEquals(userId, objectEntry.getUserId());
-			Assert.assertEquals(userName, objectEntry.getUserName());
-			Assert.assertEquals(createDate, objectEntry.getCreateDate());
-			Assert.assertEquals(modifiedDate, objectEntry.getModifiedDate());
-			Assert.assertEquals(
-				defaultLanguageId, objectEntry.getDefaultLanguageId());
-			Assert.assertEquals(
-				externalReferenceCode, objectEntry.getExternalReferenceCode());
-			Assert.assertEquals(objectEntryId, objectEntry.getObjectEntryId());
-			Assert.assertEquals(scopeId, objectEntry.getGroupId());
+		Mockito.when(
+			objectEntry.getModifiedDate()
+		).thenReturn(
+			modifiedDate
+		);
 
-			Mockito.verifyNoInteractions(_objectEntryLocalService);
-			_objectEntryUtilMockedStatic.verify(
-				() -> ObjectEntryUtil.toObjectEntry(
-					_objectDefinition, dtoObjectEntry));
-		}
+		Mockito.when(
+			objectEntry.getDefaultLanguageId()
+		).thenReturn(
+			defaultLanguageId
+		);
+
+		Mockito.when(
+			objectEntry.getExternalReferenceCode()
+		).thenReturn(
+			externalReferenceCode
+		);
+
+		Mockito.when(
+			objectEntry.getObjectEntryId()
+		).thenReturn(
+			objectEntryId
+		);
+
+		Mockito.when(
+			objectEntry.getGroupId()
+		).thenReturn(
+			scopeId
+		);
+
+		_setUpProxyDTOObjectEntry(
+			externalReferenceCode, dtoObjectEntry, objectEntry);
+
+		ObjectEntry returnedObjectEntry = _assertGetInfoItem(
+			new ERCInfoItemIdentifier(externalReferenceCode));
+
+		Assert.assertEquals(userId, returnedObjectEntry.getUserId());
+		Assert.assertEquals(userName, returnedObjectEntry.getUserName());
+		Assert.assertEquals(createDate, returnedObjectEntry.getCreateDate());
+		Assert.assertEquals(modifiedDate, returnedObjectEntry.getModifiedDate());
+		Assert.assertEquals(
+			defaultLanguageId, returnedObjectEntry.getDefaultLanguageId());
+		Assert.assertEquals(
+			externalReferenceCode,
+			returnedObjectEntry.getExternalReferenceCode());
+		Assert.assertEquals(
+			objectEntryId, returnedObjectEntry.getObjectEntryId());
+		Assert.assertEquals(scopeId, returnedObjectEntry.getGroupId());
+
+		Mockito.verifyNoInteractions(_objectEntryLocalService);
+		_objectEntryUtilMockedStatic.verify(
+			() -> ObjectEntryUtil.toObjectEntry(
+				_objectDefinition, dtoObjectEntry));
 	}
 
 	private void _setUpProxyDTOObjectEntry(
 		String externalReferenceCode,
-		com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry)
+		com.liferay.object.rest.dto.v1_0.ObjectEntry dtoObjectEntry,
+		ObjectEntry objectEntry)
 		throws Exception {
 
 		Mockito.when(
@@ -217,91 +258,7 @@ public class ObjectEntryInfoItemObjectProviderTest {
 		_objectEntryUtilMockedStatic.when(
 			() -> ObjectEntryUtil.toObjectEntry(
 				_objectDefinition, dtoObjectEntry)
-		).thenCallRealMethod();
-	}
-
-	private ObjectEntry _createObjectEntryMock() {
-		Map<String, Object> objectEntryValues = new HashMap<>();
-
-		ObjectEntry objectEntry = Mockito.mock(ObjectEntry.class);
-
-		Mockito.doAnswer(
-			invocation -> {
-				objectEntryValues.put(
-					"createDate", invocation.getArgument(0, Date.class));
-
-				return null;
-			}
-		).when(
-			objectEntry
-		).setCreateDate(
-			Mockito.any(Date.class)
-		);
-
-		Mockito.doAnswer(
-			invocation -> {
-				objectEntryValues.put(
-					"modifiedDate", invocation.getArgument(0, Date.class));
-
-				return null;
-			}
-		).when(
-			objectEntry
-		).setModifiedDate(
-			Mockito.any(Date.class)
-		);
-
-		Mockito.doAnswer(
-			invocation -> {
-				objectEntryValues.put(
-					"userId", invocation.getArgument(0, Long.class));
-
-				return null;
-			}
-		).when(
-			objectEntry
-		).setUserId(
-			Mockito.anyLong()
-		);
-
-		Mockito.doAnswer(
-			invocation -> {
-				objectEntryValues.put(
-					"userName", invocation.getArgument(0, String.class));
-
-				return null;
-			}
-		).when(
-			objectEntry
-		).setUserName(
-			Mockito.anyString()
-		);
-
-		Mockito.when(
-			objectEntry.getCreateDate()
-		).thenAnswer(
-			invocation -> (Date)objectEntryValues.get("createDate")
-		);
-
-		Mockito.when(
-			objectEntry.getModifiedDate()
-		).thenAnswer(
-			invocation -> (Date)objectEntryValues.get("modifiedDate")
-		);
-
-		Mockito.when(
-			objectEntry.getUserId()
-		).thenAnswer(
-			invocation -> (Long)objectEntryValues.get("userId")
-		);
-
-		Mockito.when(
-			objectEntry.getUserName()
-		).thenAnswer(
-			invocation -> (String)objectEntryValues.get("userName")
-		);
-
-		return objectEntry;
+		).thenReturn(objectEntry);
 	}
 
 
