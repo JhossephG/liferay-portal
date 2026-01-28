@@ -168,11 +168,12 @@ public class ObjectEntryInfoItemObjectProviderTest {
 		try (MockedStatic<ObjectEntryLocalServiceUtil>
 				objectEntryLocalServiceUtilMockedStatic =
 					Mockito.mockStatic(ObjectEntryLocalServiceUtil.class)) {
+			ObjectEntry objectEntryMock = _createObjectEntryMock();
 
 			objectEntryLocalServiceUtilMockedStatic.when(
 				() -> ObjectEntryLocalServiceUtil.createObjectEntry(0L)
 			).thenReturn(
-				_createObjectEntryMock()
+				objectEntryMock
 			);
 
 			_setUpProxyDTOObjectEntry(externalReferenceCode, dtoObjectEntry);
