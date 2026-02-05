@@ -64,12 +64,9 @@ public abstract class BaseModelListener<T extends BaseModel<T>>
 		String objectDefinitionSettingValue) {
 
 		ObjectDefinitionSetting objectDefinitionSetting =
-			objectDefinitionSetting =
-				objectDefinitionSettingLocalService.
-					fetchObjectDefinitionSetting(
-						CompanyThreadLocal.getCompanyId(),
-						objectDefinitionSettingName,
-						objectDefinitionSettingValue);
+			objectDefinitionSettingLocalService.fetchObjectDefinitionSetting(
+				CompanyThreadLocal.getCompanyId(), objectDefinitionSettingName,
+				objectDefinitionSettingValue);
 
 		if (objectDefinitionSetting == null) {
 			return null;
