@@ -23,7 +23,6 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectDefinitionSetting;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectDefinitionSettingLocalServiceUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -113,34 +112,19 @@ public class CollectionUtil {
 		}
 
 		if (ExportImportThreadLocal.isImportInProcess()) {
-			Matcher providerMatcher =
-				_oneToManyObjectRelationshipRelatedInfoCollectionProviderPattern.
-					matcher(className);
+			Matcher matcher = _objectDefinitionClassNamePattern.matcher(
+				className);
 
-			if (providerMatcher.matches()) {
-				String oldClassName = providerMatcher.group(2);
+			if (matcher.find()) {
+				String oldClassName = matcher.group(1) + matcher.group(2);
 
 				ObjectDefinition objectDefinition = _getObjectDefinition(
 					oldClassName);
 
 				if (objectDefinition != null) {
-					className =
-						providerMatcher.group(1) +
-							objectDefinition.getClassName() +
-								providerMatcher.group(3);
-				}
-			}
-			else {
-				Matcher matcher = _objectDefinitionClassNamePattern.matcher(
-					className);
-
-				if (matcher.matches()) {
-					ObjectDefinition objectDefinition = _getObjectDefinition(
-						className);
-
-					if (objectDefinition != null) {
-						className = objectDefinition.getClassName();
-					}
+					className = matcher.replaceFirst(
+						Matcher.quoteReplacement(
+							objectDefinition.getClassName()));
 				}
 			}
 		}
@@ -335,13 +319,5 @@ public class CollectionUtil {
 		Pattern.compile(
 			"(com\\.liferay\\.object\\.model\\.ObjectDefinition#)" +
 				"([a-zA-Z]\\d[a-zA-Z]\\d)");
-	private static final Pattern
-		_oneToManyObjectRelationshipRelatedInfoCollectionProviderPattern =
-			Pattern.compile(
-				StringBundler.concat(
-					"^(com\\.liferay\\.object\\.internal\\.info\\.",
-					"collection\\.provider\\.OneToManyObjectRelationship",
-					"RelatedInfoCollectionProvider_)(com\\.liferay\\.object\\.",
-					"model\\.ObjectDefinition#[a-zA-Z]\\d[a-zA-Z]\\d)(.+)$"));
 
 }
