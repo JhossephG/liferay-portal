@@ -128,13 +128,7 @@ public class CollectionUtil {
 		}
 
 		InfoCollectionProvider infoCollectionProvider =
-			infoItemServiceRegistry.getInfoItemService(
-				InfoCollectionProvider.class, className);
-
-		if (infoCollectionProvider == null) {
-			infoCollectionProvider = infoItemServiceRegistry.getInfoItemService(
-				RelatedInfoItemCollectionProvider.class, className);
-		}
+			_getInfoCollectionProvider(className, infoItemServiceRegistry);
 
 		if (infoCollectionProvider == null) {
 			LogUtil.logOptionalReference(
@@ -147,13 +141,10 @@ public class CollectionUtil {
 			);
 		}
 
-		InfoCollectionProvider finalInfoCollectionProvider =
-			infoCollectionProvider;
-
 		return JSONUtil.put(
 			"itemSubtype",
 			() -> {
-				if (!(finalInfoCollectionProvider instanceof
+				if (!(infoCollectionProvider instanceof
 						SingleFormVariationInfoCollectionProvider)) {
 
 					return null;
@@ -162,7 +153,7 @@ public class CollectionUtil {
 				SingleFormVariationInfoCollectionProvider<?>
 					singleFormVariationInfoCollectionProvider =
 						(SingleFormVariationInfoCollectionProvider<?>)
-							finalInfoCollectionProvider;
+							infoCollectionProvider;
 
 				return singleFormVariationInfoCollectionProvider.
 					getFormVariationKey();
@@ -173,7 +164,7 @@ public class CollectionUtil {
 			"key", infoCollectionProvider.getKey()
 		).put(
 			"title",
-			() -> finalInfoCollectionProvider.getLabel(LocaleUtil.getDefault())
+			() -> infoCollectionProvider.getLabel(LocaleUtil.getDefault())
 		).put(
 			"type", InfoListProviderItemSelectorReturnType.class.getName()
 		);
@@ -254,6 +245,21 @@ public class CollectionUtil {
 		).put(
 			"type", InfoListItemSelectorReturnType.class.getName()
 		);
+	}
+
+	private static InfoCollectionProvider _getInfoCollectionProvider(
+		String className, InfoItemServiceRegistry infoItemServiceRegistry) {
+
+		InfoCollectionProvider infoCollectionProvider =
+			infoItemServiceRegistry.getInfoItemService(
+				InfoCollectionProvider.class, className);
+
+		if (infoCollectionProvider == null) {
+			infoCollectionProvider = infoItemServiceRegistry.getInfoItemService(
+				RelatedInfoItemCollectionProvider.class, className);
+		}
+
+		return infoCollectionProvider;
 	}
 
 	private static ObjectDefinition _getObjectDefinition(
