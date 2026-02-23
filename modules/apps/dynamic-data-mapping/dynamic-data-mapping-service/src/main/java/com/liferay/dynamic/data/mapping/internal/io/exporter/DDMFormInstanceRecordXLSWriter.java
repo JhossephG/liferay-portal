@@ -33,6 +33,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import com.liferay.portal.kernel.util.Validator;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -212,7 +213,7 @@ public class DDMFormInstanceRecordXLSWriter
 			}
 			else if (Objects.equals(
 						ddmFormField.getType(),
-						DDMFormFieldTypeConstants.NUMERIC)) {
+						DDMFormFieldTypeConstants.NUMERIC) || Validator.isNumber(value)) {
 
 				DecimalFormat decimalFormat =
 					NumericDDMFormFieldUtil.getDecimalFormat(locale);
