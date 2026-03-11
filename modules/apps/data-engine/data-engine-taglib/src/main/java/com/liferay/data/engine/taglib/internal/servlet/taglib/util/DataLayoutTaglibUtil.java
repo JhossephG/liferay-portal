@@ -21,8 +21,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Gabriel Albuquerque
@@ -34,10 +37,32 @@ public class DataLayoutTaglibUtil {
 			long dataDefinitionId, HttpServletRequest httpServletRequest)
 		throws Exception {
 
+		Map<Long, DataDefinition> dataDefinitions =
+			(Map<Long, DataDefinition>)httpServletRequest.getAttribute(
+				_REQUEST_ATTRIBUTE_DATA_DEFINITIONS);
+
+		if (dataDefinitions == null) {
+			dataDefinitions = new HashMap<>();
+
+			httpServletRequest.setAttribute(
+				_REQUEST_ATTRIBUTE_DATA_DEFINITIONS, dataDefinitions);
+		}
+
+		DataDefinition dataDefinition = dataDefinitions.get(dataDefinitionId);
+
+		if (dataDefinition != null) {
+			return dataDefinition;
+		}
+
 		DataDefinitionResource dataDefinitionResource =
 			_getDataDefinitionResource(httpServletRequest);
 
-		return dataDefinitionResource.getDataDefinition(dataDefinitionId);
+		dataDefinition = dataDefinitionResource.getDataDefinition(
+			dataDefinitionId);
+
+		dataDefinitions.put(dataDefinitionId, dataDefinition);
+
+		return dataDefinition;
 	}
 
 	public static JSONArray getFieldTypesJSONArray(
@@ -45,36 +70,50 @@ public class DataLayoutTaglibUtil {
 			boolean searchableFieldsDisabled)
 		throws Exception {
 
-		JSONArray fieldTypesJSONArray = JSONFactoryUtil.createJSONArray();
+		Map<String, String> fieldTypesJSONArrayMap = _getFieldTypesJSONArrayMap(
+			httpServletRequest);
 
-		DataDefinitionResource dataDefinitionResource =
-			_getDataDefinitionResource(httpServletRequest);
+		String cacheKey = _getFieldTypesJSONArrayCacheKey(
+			scopes, searchableFieldsDisabled);
+
+		String fieldTypesJSONArrayString = fieldTypesJSONArrayMap.get(cacheKey);
+
+		if (fieldTypesJSONArrayString != null) {
+			return JSONFactoryUtil.createJSONArray(fieldTypesJSONArrayString);
+		}
+
+		JSONArray fieldTypesJSONArray = JSONFactoryUtil.createJSONArray();
 
 		try {
 			JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
-				dataDefinitionResource.
-					getDataDefinitionDataDefinitionFieldFieldTypes());
+				_getDataDefinitionFieldTypes(httpServletRequest));
 
 			if (SetUtil.isEmpty(scopes)) {
-				return jsonArray;
+				fieldTypesJSONArray = jsonArray;
 			}
+			else {
+				for (JSONObject jsonObject : (Iterable<JSONObject>)jsonArray) {
+					if (ListUtil.exists(
+							Arrays.asList(
+								StringUtil.split(
+									jsonObject.getString("scope"))),
+							scopes::contains)) {
 
-			for (JSONObject jsonObject : (Iterable<JSONObject>)jsonArray) {
-				if (ListUtil.exists(
-						Arrays.asList(
-							StringUtil.split(jsonObject.getString("scope"))),
-						scopes::contains)) {
+						fieldTypesJSONArray.put(jsonObject);
 
-					fieldTypesJSONArray.put(jsonObject);
-
-					if (searchableFieldsDisabled) {
-						_setFieldIndexTypeNone(
-							jsonObject.getJSONObject("settingsContext"));
+						if (searchableFieldsDisabled) {
+							_setFieldIndexTypeNone(
+								jsonObject.getJSONObject("settingsContext"));
+						}
 					}
 				}
 			}
 
-			return fieldTypesJSONArray;
+			fieldTypesJSONArrayString = fieldTypesJSONArray.toString();
+
+			fieldTypesJSONArrayMap.put(cacheKey, fieldTypesJSONArrayString);
+
+			return JSONFactoryUtil.createJSONArray(fieldTypesJSONArrayString);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -83,6 +122,32 @@ public class DataLayoutTaglibUtil {
 
 			return fieldTypesJSONArray;
 		}
+	}
+
+	private static String _getDataDefinitionFieldTypes(
+			HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		String dataDefinitionFieldTypes =
+			(String)httpServletRequest.getAttribute(
+				_REQUEST_ATTRIBUTE_DATA_DEFINITION_FIELD_TYPES);
+
+		if (dataDefinitionFieldTypes != null) {
+			return dataDefinitionFieldTypes;
+		}
+
+		DataDefinitionResource dataDefinitionResource =
+			_getDataDefinitionResource(httpServletRequest);
+
+		dataDefinitionFieldTypes =
+			dataDefinitionResource.
+				getDataDefinitionDataDefinitionFieldFieldTypes();
+
+		httpServletRequest.setAttribute(
+			_REQUEST_ATTRIBUTE_DATA_DEFINITION_FIELD_TYPES,
+			dataDefinitionFieldTypes);
+
+		return dataDefinitionFieldTypes;
 	}
 
 	private static DataDefinitionResource _getDataDefinitionResource(
@@ -102,6 +167,36 @@ public class DataLayoutTaglibUtil {
 		).user(
 			PortalUtil.getUser(httpServletRequest)
 		).build();
+	}
+
+	private static String _getFieldTypesJSONArrayCacheKey(
+		Set<String> scopes, boolean searchableFieldsDisabled) {
+
+		if (SetUtil.isEmpty(scopes)) {
+			return "*";
+		}
+
+		return searchableFieldsDisabled + "#" +
+			StringUtil.merge(new TreeSet<>(scopes));
+	}
+
+	private static Map<String, String> _getFieldTypesJSONArrayMap(
+		HttpServletRequest httpServletRequest) {
+
+		Map<String, String> fieldTypesJSONArrayMap =
+			(Map<String, String>)httpServletRequest.getAttribute(
+				_REQUEST_ATTRIBUTE_FIELD_TYPES_JSON_ARRAYS);
+
+		if (fieldTypesJSONArrayMap != null) {
+			return fieldTypesJSONArrayMap;
+		}
+
+		fieldTypesJSONArrayMap = new HashMap<>();
+
+		httpServletRequest.setAttribute(
+			_REQUEST_ATTRIBUTE_FIELD_TYPES_JSON_ARRAYS, fieldTypesJSONArrayMap);
+
+		return fieldTypesJSONArrayMap;
 	}
 
 	private static void _setFieldIndexTypeNone(JSONObject jsonObject) {
@@ -132,6 +227,15 @@ public class DataLayoutTaglibUtil {
 			}
 		}
 	}
+
+	private static final String _REQUEST_ATTRIBUTE_DATA_DEFINITION_FIELD_TYPES =
+		DataLayoutTaglibUtil.class.getName() + "#DATA_DEFINITION_FIELD_TYPES";
+
+	private static final String _REQUEST_ATTRIBUTE_DATA_DEFINITIONS =
+		DataLayoutTaglibUtil.class.getName() + "#DATA_DEFINITIONS";
+
+	private static final String _REQUEST_ATTRIBUTE_FIELD_TYPES_JSON_ARRAYS =
+		DataLayoutTaglibUtil.class.getName() + "#FIELD_TYPES_JSON_ARRAYS";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataLayoutTaglibUtil.class);
