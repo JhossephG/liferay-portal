@@ -80,7 +80,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.jsp.JspException;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -137,38 +138,61 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		super.setAttributes(httpServletRequest);
 
-		Set<Locale> availableLocales = _getAvailableLocales(
-			getDataDefinitionId(), getDataLayoutId(), httpServletRequest);
+		if (!_setAttributesCacheInitialized) {
+			_cachedAvailableLocales = _getAvailableLocales(
+				getDataDefinitionId(), getDataLayoutId(), httpServletRequest);
+			_cachedAvailableLanguageIds = TransformUtil.transformToArray(
+				_cachedAvailableLocales, LanguageUtil::getLanguageId,
+				String.class);
+
+			HttpServletRequest tagHttpServletRequest = getRequest();
+
+			_cachedConfigJSONObject = _getDataLayoutConfigJSONObject(
+				getContentType(), tagHttpServletRequest.getLocale());
+			_cachedContentTypeConfigJSONObject = _getContentTypeConfigJSONObject(
+				getContentType());
+			_cachedDataLayoutJSONObject = _getDataLayoutJSONObject(
+				_cachedAvailableLocales, getContentType(), getDataDefinitionId(),
+				getDataLayoutId(), httpServletRequest,
+				(HttpServletResponse)pageContext.getResponse());
+			_cachedDefaultLanguageId = _getDefaultLanguageId();
+			_cachedModuleServletContext = _getModuleServletContext();
+
+			_setAttributesCacheInitialized = true;
+		}
 
 		setNamespacedAttribute(
 			httpServletRequest, "availableLanguageIds",
-			TransformUtil.transformToArray(
-				availableLocales, LanguageUtil::getLanguageId, String.class));
+			_cachedAvailableLanguageIds);
 		setNamespacedAttribute(
 			httpServletRequest, "availableLocales",
-			availableLocales.toArray(new Locale[0]));
-
-		HttpServletRequest tagHttpServletRequest = getRequest();
-
+			_cachedAvailableLocales.toArray(new Locale[0]));
 		setNamespacedAttribute(
-			httpServletRequest, "config",
-			_getDataLayoutConfigJSONObject(
-				getContentType(), tagHttpServletRequest.getLocale()));
-
+			httpServletRequest, "config", _cachedConfigJSONObject);
 		setNamespacedAttribute(
 			httpServletRequest, "contentTypeConfig",
-			_getContentTypeConfigJSONObject(getContentType()));
+			_cachedContentTypeConfigJSONObject);
 		setNamespacedAttribute(
-			httpServletRequest, "dataLayout",
-			_getDataLayoutJSONObject(
-				availableLocales, getContentType(), getDataDefinitionId(),
-				getDataLayoutId(), httpServletRequest,
-				(HttpServletResponse)pageContext.getResponse()));
+			httpServletRequest, "dataLayout", _cachedDataLayoutJSONObject);
 		setNamespacedAttribute(
-			httpServletRequest, "defaultLanguageId", _getDefaultLanguageId());
+			httpServletRequest, "defaultLanguageId", _cachedDefaultLanguageId);
 		setNamespacedAttribute(
 			httpServletRequest, "moduleServletContext",
-			_getModuleServletContext());
+			_cachedModuleServletContext);
+	}
+
+	@Override
+	protected void cleanUp() {
+		super.cleanUp();
+
+		_cachedAvailableLanguageIds = null;
+		_cachedAvailableLocales = null;
+		_cachedConfigJSONObject = null;
+		_cachedContentTypeConfigJSONObject = null;
+		_cachedDataLayoutJSONObject = null;
+		_cachedDefaultLanguageId = null;
+		_cachedModuleServletContext = null;
+		_setAttributesCacheInitialized = false;
 	}
 
 	protected class DataLayoutDDMFormAdapter {
@@ -506,27 +530,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			return _deserializeDDMFormLayout(jsonObject.toString());
 		}
 
-		private List<Map<String, Object>> _getNestedFields(
-			Map<String, Object> field) {
-
-			List<Map<String, Object>> nestedFields = new ArrayList<>();
-
-			List<Map<String, Object>> fieldNestedFields =
-				(List<Map<String, Object>>)field.get("nestedFields");
-
-			if (fieldNestedFields == null) {
-				return nestedFields;
-			}
-
-			for (Map<String, Object> nestedField : fieldNestedFields) {
-				nestedFields.add(nestedField);
-
-				nestedFields.addAll(_getNestedFields(nestedField));
-			}
-
-			return nestedFields;
-		}
-
 		private boolean _isFieldSet(Map<String, Object> field) {
 			return Objects.equals(field.get("type"), "fieldset");
 		}
@@ -568,19 +571,30 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 							(List<Map<String, Object>>)column.get("fields");
 
 						for (Map<String, Object> field : fields) {
-							unsafeConsumer.accept(field);
-
-							List<Map<String, Object>> nestedFields =
-								_getNestedFields(field);
-
-							for (Map<String, Object> nestedField :
-									nestedFields) {
-
-								unsafeConsumer.accept(nestedField);
-							}
+							_populateDDMFormFieldSettingsContext(
+								field, unsafeConsumer);
 						}
 					}
 				}
+			}
+		}
+
+		private void _populateDDMFormFieldSettingsContext(
+			Map<String, Object> field,
+			UnsafeConsumer<Map<String, Object>, Exception> unsafeConsumer)
+			throws Exception {
+
+			unsafeConsumer.accept(field);
+
+			List<Map<String, Object>> nestedFields =
+				(List<Map<String, Object>>)field.get("nestedFields");
+
+			if (nestedFields == null) {
+				return;
+			}
+
+			for (Map<String, Object> nestedField : nestedFields) {
+				_populateDDMFormFieldSettingsContext(nestedField, unsafeConsumer);
 			}
 		}
 
@@ -643,7 +657,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		}
 
 		try {
-			Set<Locale> availableLocales = new HashSet<>();
+			Set<Locale> availableLocales = new LinkedHashSet<>();
 
 			DataDefinition dataDefinition = null;
 
@@ -659,7 +673,13 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 					dataLayout.getDataDefinitionId(), httpServletRequest);
 			}
 
-			for (String languageId : dataDefinition.getAvailableLanguageIds()) {
+			String[] availableLanguageIds = ArrayUtil.clone(
+				dataDefinition.getAvailableLanguageIds());
+
+			Arrays.sort(availableLanguageIds);
+
+			for (String languageId : availableLanguageIds) {
+
 				availableLocales.add(LocaleUtil.fromLanguageId(languageId));
 			}
 
@@ -697,6 +717,15 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			Long dataLayoutId, HttpServletRequest httpServletRequest)
 		throws Exception {
 
+		Map<Long, DataLayout> dataLayouts =
+			_getDataLayoutsMap(httpServletRequest);
+
+		DataLayout dataLayout = dataLayouts.get(dataLayoutId);
+
+		if (dataLayout != null) {
+			return dataLayout;
+		}
+
 		DataLayoutResource.Factory dataLayoutResourceFactory =
 			_dataLayoutResourceFactorySnapshot.get();
 
@@ -710,7 +739,11 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				PortalUtil.getUser(httpServletRequest)
 			).build();
 
-		return dataLayoutResource.getDataLayout(dataLayoutId);
+		dataLayout = dataLayoutResource.getDataLayout(dataLayoutId);
+
+		dataLayouts.put(dataLayoutId, dataLayout);
+
+		return dataLayout;
 	}
 
 	private DataLayoutBuilderDefinition _getDataLayoutBuilderDefinition(
@@ -819,23 +852,28 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		Long dataLayoutId, HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
+		String dataLayoutString = ParamUtil.getString(
+			httpServletRequest, "dataLayout");
+
+		Map<String, String> dataLayoutJSONObjects =
+			_getDataLayoutJSONObjectsMap(httpServletRequest);
+
+		String cacheKey = _getDataLayoutJSONObjectCacheKey(
+			contentType, dataDefinitionId, dataLayoutId, dataLayoutString);
+
+		String dataLayoutJSONObjectString = dataLayoutJSONObjects.get(cacheKey);
+
+		if (dataLayoutJSONObjectString != null) {
+			return JSONFactoryUtil.createJSONObject(dataLayoutJSONObjectString);
+		}
+
 		try {
-			String dataLayoutString = ParamUtil.getString(
-				httpServletRequest, "dataLayout");
-
-			if (Validator.isNotNull(dataLayoutString)) {
-				DataLayoutDDMFormAdapter dataLayoutDDMFormAdapter =
-					new DataLayoutDDMFormAdapter(
-						availableLocales, contentType,
-						DataLayout.toDTO(dataLayoutString), httpServletRequest,
-						httpServletResponse);
-
-				return dataLayoutDDMFormAdapter.toJSONObject();
-			}
-
 			DataLayout dataLayout = null;
 
-			if (Validator.isNotNull(dataLayoutId)) {
+			if (Validator.isNotNull(dataLayoutString)) {
+				dataLayout = DataLayout.toDTO(dataLayoutString);
+			}
+			else if (Validator.isNotNull(dataLayoutId)) {
 				dataLayout = _getDataLayout(dataLayoutId, httpServletRequest);
 			}
 			else {
@@ -851,7 +889,14 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 					availableLocales, contentType, dataLayout,
 					httpServletRequest, httpServletResponse);
 
-			return dataLayoutDDMFormAdapter.toJSONObject();
+			JSONObject dataLayoutJSONObject =
+				dataLayoutDDMFormAdapter.toJSONObject();
+
+			dataLayoutJSONObjectString = dataLayoutJSONObject.toString();
+
+			dataLayoutJSONObjects.put(cacheKey, dataLayoutJSONObjectString);
+
+			return JSONFactoryUtil.createJSONObject(dataLayoutJSONObjectString);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -860,6 +905,55 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 			return JSONFactoryUtil.createJSONObject();
 		}
+	}
+
+	private Map<String, String> _getDataLayoutJSONObjectsMap(
+		HttpServletRequest httpServletRequest) {
+
+		Map<String, String> dataLayoutJSONObjects =
+			(Map<String, String>)httpServletRequest.getAttribute(
+				_REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS);
+
+		if (dataLayoutJSONObjects != null) {
+			return dataLayoutJSONObjects;
+		}
+
+		dataLayoutJSONObjects = new HashMap<>();
+
+		httpServletRequest.setAttribute(
+			_REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS, dataLayoutJSONObjects);
+
+		return dataLayoutJSONObjects;
+	}
+
+	private String _getDataLayoutJSONObjectCacheKey(
+		String contentType, Long dataDefinitionId, Long dataLayoutId,
+		String dataLayoutString) {
+
+		return StringBundler.concat(
+			contentType, StringPool.POUND,
+			String.valueOf(dataDefinitionId), StringPool.POUND,
+			String.valueOf(dataLayoutId), StringPool.POUND,
+			Integer.toHexString(String.valueOf(dataLayoutString).hashCode()));
+	}
+
+	private Map<Long, DataLayout> _getDataLayoutsMap(
+		HttpServletRequest httpServletRequest) {
+
+		Map<Long, DataLayout> dataLayouts =
+			(Map<Long, DataLayout>)httpServletRequest.getAttribute(
+				_REQUEST_ATTRIBUTE_DATA_LAYOUTS);
+
+		if (dataLayouts != null) {
+			return dataLayouts;
+		}
+
+		dataLayouts = new HashMap<>();
+
+		httpServletRequest.setAttribute(
+			_REQUEST_ATTRIBUTE_DATA_LAYOUTS, dataLayouts);
+
+		return dataLayouts;
 	}
 
 	private Long _getDefaultDataLayoutId(
@@ -1022,6 +1116,21 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataLayoutBuilderTag.class);
+
+	private static final String _REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS =
+		DataLayoutBuilderTag.class.getName() + "#DATA_LAYOUT_JSON_OBJECTS";
+
+	private static final String _REQUEST_ATTRIBUTE_DATA_LAYOUTS =
+		DataLayoutBuilderTag.class.getName() + "#DATA_LAYOUTS";
+
+	private String[] _cachedAvailableLanguageIds;
+	private Set<Locale> _cachedAvailableLocales;
+	private JSONObject _cachedConfigJSONObject;
+	private JSONObject _cachedContentTypeConfigJSONObject;
+	private JSONObject _cachedDataLayoutJSONObject;
+	private String _cachedDefaultLanguageId;
+	private ServletContext _cachedModuleServletContext;
+	private boolean _setAttributesCacheInitialized;
 
 	private static final Snapshot<AbsolutePortalURLBuilderFactory>
 		_absolutePortalURLBuilderFactorySnapshot = new Snapshot<>(
