@@ -855,18 +855,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		String dataLayoutString = ParamUtil.getString(
 			httpServletRequest, "dataLayout");
 
-		Map<String, String> dataLayoutJSONObjects =
-			_getDataLayoutJSONObjectsMap(httpServletRequest);
-
-		String cacheKey = _getDataLayoutJSONObjectCacheKey(
-			contentType, dataDefinitionId, dataLayoutId, dataLayoutString);
-
-		String dataLayoutJSONObjectString = dataLayoutJSONObjects.get(cacheKey);
-
-		if (dataLayoutJSONObjectString != null) {
-			return JSONFactoryUtil.createJSONObject(dataLayoutJSONObjectString);
-		}
-
 		try {
 			DataLayout dataLayout = null;
 
@@ -892,11 +880,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			JSONObject dataLayoutJSONObject =
 				dataLayoutDDMFormAdapter.toJSONObject();
 
-			dataLayoutJSONObjectString = dataLayoutJSONObject.toString();
-
-			dataLayoutJSONObjects.put(cacheKey, dataLayoutJSONObjectString);
-
-			return JSONFactoryUtil.createJSONObject(dataLayoutJSONObjectString);
+			return dataLayoutJSONObject;
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -905,36 +889,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 			return JSONFactoryUtil.createJSONObject();
 		}
-	}
-
-	private Map<String, String> _getDataLayoutJSONObjectsMap(
-		HttpServletRequest httpServletRequest) {
-
-		Map<String, String> dataLayoutJSONObjects =
-			(Map<String, String>)httpServletRequest.getAttribute(
-				_REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS);
-
-		if (dataLayoutJSONObjects != null) {
-			return dataLayoutJSONObjects;
-		}
-
-		dataLayoutJSONObjects = new HashMap<>();
-
-		httpServletRequest.setAttribute(
-			_REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS, dataLayoutJSONObjects);
-
-		return dataLayoutJSONObjects;
-	}
-
-	private String _getDataLayoutJSONObjectCacheKey(
-		String contentType, Long dataDefinitionId, Long dataLayoutId,
-		String dataLayoutString) {
-
-		return StringBundler.concat(
-			contentType, StringPool.POUND,
-			String.valueOf(dataDefinitionId), StringPool.POUND,
-			String.valueOf(dataLayoutId), StringPool.POUND,
-			Integer.toHexString(String.valueOf(dataLayoutString).hashCode()));
 	}
 
 	private Map<Long, DataLayout> _getDataLayoutsMap(
@@ -1116,9 +1070,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataLayoutBuilderTag.class);
-
-	private static final String _REQUEST_ATTRIBUTE_DATA_LAYOUT_JSON_OBJECTS =
-		DataLayoutBuilderTag.class.getName() + "#DATA_LAYOUT_JSON_OBJECTS";
 
 	private static final String _REQUEST_ATTRIBUTE_DATA_LAYOUTS =
 		DataLayoutBuilderTag.class.getName() + "#DATA_LAYOUTS";
