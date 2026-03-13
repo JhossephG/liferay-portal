@@ -625,6 +625,16 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 							unsafeConsumer.accept(field);
 
 							if (_isNormalizedStructure(field)) {
+								for (Map<String, Object> nestedField :
+										_getNestedFields(field)) {
+
+									nestedField.putIfAbsent(
+										"settingsContext",
+										HashMapBuilder.<String, Object>put(
+											"pages", new ArrayList<>()
+										).build());
+								}
+
 								continue;
 							}
 
