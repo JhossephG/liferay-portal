@@ -60,6 +60,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.servlet.taglib.aui.ESImport;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -158,12 +159,32 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		setNamespacedAttribute(
 			httpServletRequest, "contentTypeConfig",
 			_getContentTypeConfigJSONObject(getContentType()));
+
+		long before2 =
+			Runtime.getRuntime(
+			).totalMemory() -
+				Runtime.getRuntime(
+				).freeMemory();
+
+		System.out.println(
+			"Before _getDataLayoutJSONObject used memory: " + before2);
+
 		setNamespacedAttribute(
 			httpServletRequest, "dataLayout",
 			_getDataLayoutJSONObject(
 				availableLocales, getContentType(), getDataDefinitionId(),
 				getDataLayoutId(), httpServletRequest,
 				(HttpServletResponse)pageContext.getResponse()));
+
+		long after =
+			Runtime.getRuntime(
+			).totalMemory() -
+				Runtime.getRuntime(
+				).freeMemory();
+
+		System.out.println(
+			"After _getDataLayoutJSONObject used memory: " + after);
+
 		setNamespacedAttribute(
 			httpServletRequest, "defaultLanguageId", _getDefaultLanguageId());
 		setNamespacedAttribute(
@@ -217,9 +238,29 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 						}
 					});
 
+			long beforeUsedMemory =
+				Runtime.getRuntime(
+				).totalMemory() -
+					Runtime.getRuntime(
+					).freeMemory();
+
+			System.out.println(
+				"Before _populateDDMFormFieldSettingsContext used memory: " +
+					beforeUsedMemory);
+
 			_populateDDMFormFieldSettingsContext(
 				ddmForm.getDDMFormFieldsMap(true), ddmFormTemplateContext,
 				defaultLocale);
+
+			long afterUsedMemory =
+				Runtime.getRuntime(
+				).totalMemory() -
+					Runtime.getRuntime(
+					).freeMemory();
+
+			System.out.println(
+				"After _populateDDMFormFieldSettingsContext used memory: " +
+					afterUsedMemory);
 
 			ddmFormTemplateContext.put(
 				"rules",
@@ -255,6 +296,15 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 						"name",
 						LocalizedValueUtil.toJSONObject(dataRule.getName())
 					)));
+
+			long before2 =
+				Runtime.getRuntime(
+				).totalMemory() -
+					Runtime.getRuntime(
+					).freeMemory();
+
+			System.out.println(
+				"Before looseSerializeDeep used memory: " + before2);
 
 			return JSONFactoryUtil.createJSONObject(
 				JSONFactoryUtil.looseSerializeDeep(ddmFormTemplateContext));
@@ -531,6 +581,10 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			return Objects.equals(field.get("type"), "fieldset");
 		}
 
+		private boolean _isNormalizedStructure(Map<String, Object> field) {
+			return GetterUtil.getBoolean(field.get("normalizedStructure"));
+		}
+
 		private void _populateDDMFormFieldSettingsContext(
 				Map<String, DDMFormField> ddmFormFieldsMap,
 				Map<String, Object> ddmFormTemplateContext,
@@ -569,6 +623,10 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 						for (Map<String, Object> field : fields) {
 							unsafeConsumer.accept(field);
+
+							if (_isNormalizedStructure(field)) {
+								continue;
+							}
 
 							List<Map<String, Object>> nestedFields =
 								_getNestedFields(field);
