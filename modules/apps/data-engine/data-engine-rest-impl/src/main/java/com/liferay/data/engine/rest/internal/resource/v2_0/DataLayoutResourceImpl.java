@@ -150,7 +150,7 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 			PermissionThreadLocal.getPermissionChecker(),
 			ddmStructureLayout.getDDMStructure(), ActionKeys.VIEW);
 
-		return _toDataLayout(ddmStructureLayout);
+		return _getDataLayout(dataLayoutId);
 	}
 
 	@Override
@@ -176,7 +176,9 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 			PermissionThreadLocal.getPermissionChecker(),
 			ddmStructureLayout.getDDMStructure(), ActionKeys.VIEW);
 
-		return _toDataLayout(ddmStructureLayout);
+		return _getDataLayout(
+			DataDefinitionContentTypeRegistryUtil.getClassNameId(contentType),
+			dataLayoutKey, siteId);
 	}
 
 	@Override
@@ -387,8 +389,10 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 	}
 
 	private DataLayout _getDataLayout(long dataLayoutId) throws Exception {
-		return _toDataLayout(
-			_ddmStructureLayoutLocalService.getDDMStructureLayout(dataLayoutId));
+		return DataLayoutUtil.toDataLayout(
+			_ddmFormFieldTypeServicesRegistry,
+			_ddmStructureLayoutLocalService.getDDMStructureLayout(dataLayoutId),
+			_spiDDMFormRuleConverter);
 	}
 
 	private DataLayout _getDataLayout(
@@ -400,14 +404,6 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 				siteId, classNameId, dataLayoutKey);
 
 		return _getDataLayout(ddmStructureLayout.getStructureLayoutId());
-	}
-
-	private DataLayout _toDataLayout(DDMStructureLayout ddmStructureLayout)
-		throws Exception {
-
-		return DataLayoutUtil.toDataLayout(
-			_ddmFormFieldTypeServicesRegistry, ddmStructureLayout,
-			_spiDDMFormRuleConverter);
 	}
 
 	private Page<DataLayout> _getDataLayouts(
