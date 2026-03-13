@@ -220,7 +220,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 			_populateDDMFormFieldSettingsContext(
 				ddmForm.getDDMFormFieldsMap(true), ddmFormTemplateContext,
-				defaultLocale, 0);
+				defaultLocale);
 
 			ddmFormTemplateContext.put(
 				"rules",
@@ -525,17 +525,11 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		private void _populateDDMFormFieldSettingsContext(
 				Map<String, DDMFormField> ddmFormFieldsMap,
 				Map<String, Object> ddmFormTemplateContext,
-				Locale defaultLocale, int depth)
+				Locale defaultLocale)
 			throws Exception {
 
 			UnsafeConsumer<Map<String, Object>, Exception> unsafeConsumer =
 				field -> {
-					if (_isFieldSet(field) &&
-						ListUtil.isNotEmpty(
-							(List<Map<String, Object>>)field.get("nestedFields"))) {
-
-						return;
-					}
 
 					DDMFormField ddmFormField = ddmFormFieldsMap.get(
 						MapUtil.getString(field, "fieldName"));
@@ -570,9 +564,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 							(List<Map<String, Object>>)column.get("fields");
 
 						for (Map<String, Object> field : fields) {
-							if (depth == 0) {
-								unsafeConsumer.accept(field);
-							}
+							unsafeConsumer.accept(field);
 						}
 					}
 				}
@@ -822,7 +814,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			String dataLayoutString = ParamUtil.getString(
 				httpServletRequest, "dataLayout");
 
-			if (Validator.isNotNull(dataLayoutString)) {
+			if (Validator.isNotNull(StringUtil.trim(dataLayoutString))) {
 				DataLayoutDDMFormAdapter dataLayoutDDMFormAdapter =
 					new DataLayoutDDMFormAdapter(
 						availableLocales, contentType,

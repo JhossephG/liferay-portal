@@ -15,7 +15,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import java.lang.reflect.Method;
+
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -64,6 +69,53 @@ public class DataLayoutBuilderTagTest {
 		_dataLayoutDDMFormAdapter =
 			dataLayoutBuilderTag.new DataLayoutDDMFormAdapter(
 				Collections.singleton(LocaleUtil.US), null, null, null, null);
+	}
+
+	@Test
+	public void testDataLayoutDDMFormAdapterPopulateDDMFormFieldSettingsContextDoesNotProcessNestedFields()
+		throws Exception {
+
+		Map<String, DDMFormField> ddmFormFieldsMap = new HashMap<>();
+
+		ddmFormFieldsMap.put("nested", new DDMFormField("nested", "text"));
+
+		Map<String, Object> nestedField = new HashMap<>();
+
+		nestedField.put("fieldName", "nested");
+
+		Map<String, Object> field = new HashMap<>();
+
+		field.put("fieldName", "top");
+		field.put("nestedFields", Collections.singletonList(nestedField));
+
+		Map<String, Object> column = new HashMap<>();
+
+		column.put("fields", Collections.singletonList(field));
+
+		Map<String, Object> row = new HashMap<>();
+
+		row.put("columns", Collections.singletonList(column));
+
+		Map<String, Object> page = new HashMap<>();
+
+		page.put("rows", Collections.singletonList(row));
+
+		Map<String, Object> ddmFormTemplateContext = new HashMap<>();
+
+		ddmFormTemplateContext.put("pages", Collections.singletonList(page));
+
+		Method method = DataLayoutDDMFormAdapter.class.getDeclaredMethod(
+			"_populateDDMFormFieldSettingsContext", Map.class, Map.class,
+			Locale.class);
+
+		method.setAccessible(true);
+
+		method.invoke(
+			_dataLayoutDDMFormAdapter, ddmFormFieldsMap, ddmFormTemplateContext,
+			LocaleUtil.US);
+
+		Assert.assertFalse(field.containsKey("settingsContext"));
+		Assert.assertFalse(nestedField.containsKey("settingsContext"));
 	}
 
 	@Test
