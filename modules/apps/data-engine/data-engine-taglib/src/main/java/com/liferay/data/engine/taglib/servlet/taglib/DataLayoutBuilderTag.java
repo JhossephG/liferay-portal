@@ -37,7 +37,6 @@ import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.spi.form.builder.settings.DDMFormBuilderSettingsRetrieverHelper;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -155,7 +154,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				_cachedAvailableLocales, getContentType(), getDataDefinitionId(),
 				getDataLayoutId(), httpServletRequest,
 				(HttpServletResponse)pageContext.getResponse());
-			_cachedDefaultLanguageId = _getDefaultLanguageId();
+			_cachedDefaultLanguageId = _getDefaultLanguageId(httpServletRequest);
 			_cachedModuleServletContext = _getModuleServletContext();
 
 			_setAttributesCacheInitialized = true;
@@ -930,7 +929,8 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		return dataLayout.getId();
 	}
 
-	private String _getDefaultLanguageId() {
+	private String _getDefaultLanguageId(
+		HttpServletRequest httpServletRequest) {
 		Long dataDefinitionId = getDataDefinitionId();
 
 		String languageId = LocaleUtil.toLanguageId(
@@ -940,14 +940,21 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			return languageId;
 		}
 
-		DDMStructure ddmStructure =
-			DDMStructureLocalServiceUtil.fetchDDMStructure(dataDefinitionId);
+		try {
+			DataDefinition dataDefinition = DataLayoutTaglibUtil.getDataDefinition(
+				dataDefinitionId, httpServletRequest);
 
-		if (ddmStructure == null) {
-			return languageId;
+			if (Validator.isNotNull(dataDefinition.getDefaultLanguageId())) {
+				return dataDefinition.getDefaultLanguageId();
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
-		return ddmStructure.getDefaultLanguageId();
+		return languageId;
 	}
 
 	private String _getESModule(
@@ -999,8 +1006,12 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				"rules",
 				() -> {
 					JSONObject dataLayoutConfigJSONObject =
-						_getDataLayoutConfigJSONObject(
+						_cachedConfigJSONObject;
+
+					if (dataLayoutConfigJSONObject == null) {
+						dataLayoutConfigJSONObject = _getDataLayoutConfigJSONObject(
 							getContentType(), httpServletRequest.getLocale());
+					}
 
 					if (!dataLayoutConfigJSONObject.getBoolean("allowRules")) {
 						return null;
