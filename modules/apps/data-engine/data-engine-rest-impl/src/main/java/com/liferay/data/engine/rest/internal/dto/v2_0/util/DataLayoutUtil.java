@@ -204,20 +204,19 @@ public class DataLayoutUtil {
 		DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry) {
 
 		Map<String, Object> dataLayoutFields = new HashMap<>();
+		Map<String, List<DDMFormField>> visualPropertiesDDMFormFieldsMapByType =
+			new HashMap<>();
 
 		ddmFormFields.forEach(
 			ddmFormField -> {
-				Map<String, Object> properties = new HashMap<>();
-
-				Map<String, DDMFormField> settingsDDMFormFieldsMap =
-					SettingsDDMFormFieldsUtil.getSettingsDDMFormFields(
-						ddmFormFieldTypeServicesRegistry,
-						ddmFormField.getType());
-
 				List<DDMFormField> visualPropertiesDDMFormFields =
-					ListUtil.filter(
-						new ArrayList<>(settingsDDMFormFieldsMap.values()),
-						DDMFormField::isVisualProperty);
+					visualPropertiesDDMFormFieldsMapByType.computeIfAbsent(
+						ddmFormField.getType(),
+						fieldType -> _getVisualPropertiesDDMFormFields(
+							ddmFormFieldTypeServicesRegistry, fieldType));
+
+				Map<String, Object> properties = new HashMap<>(
+					visualPropertiesDDMFormFields.size());
 
 				visualPropertiesDDMFormFields.forEach(
 					visualProperty -> {
@@ -240,6 +239,25 @@ public class DataLayoutUtil {
 			});
 
 		return dataLayoutFields;
+	}
+
+	private static List<DDMFormField> _getVisualPropertiesDDMFormFields(
+		DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry,
+		String fieldType) {
+
+		Map<String, DDMFormField> settingsDDMFormFieldsMap =
+			SettingsDDMFormFieldsUtil.getSettingsDDMFormFields(
+				ddmFormFieldTypeServicesRegistry, fieldType);
+
+		List<DDMFormField> visualPropertiesDDMFormFields = new ArrayList<>();
+
+		for (DDMFormField ddmFormField : settingsDDMFormFieldsMap.values()) {
+			if (ddmFormField.isVisualProperty()) {
+				visualPropertiesDDMFormFields.add(ddmFormField);
+			}
+		}
+
+		return visualPropertiesDDMFormFields;
 	}
 
 	private static DataLayoutPage _toDataLayoutPage(
