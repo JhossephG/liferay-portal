@@ -38,4 +38,72 @@ describe('dataConverter', () => {
 			nestedDataDefinitionFields: [],
 		});
 	});
+	it('is getting data definition field when settingsContext is not provided', () => {
+		expect(
+			fieldToDataDefinition({
+				fieldName: 'myField',
+				indexable: true,
+				nestedFields: [
+					{
+						fieldName: 'nestedField',
+						type: 'text',
+					},
+				],
+				required: true,
+				type: 'text',
+			})
+		).toMatchObject({
+			customProperties: {},
+			fieldType: 'text',
+			indexable: true,
+			name: 'myField',
+			nestedDataDefinitionFields: [
+				{
+					customProperties: {},
+					fieldType: 'text',
+					name: 'nestedField',
+					nestedDataDefinitionFields: [],
+				},
+			],
+			required: true,
+		});
+	});
+
+	it('is getting data definition field when settingsContext does not include pages', () => {
+		expect(
+			fieldToDataDefinition({
+				fieldName: 'myField',
+				nestedFields: null,
+				required: false,
+				settingsContext: {},
+				type: 'text',
+			})
+		).toMatchObject({
+			customProperties: {},
+			fieldType: 'text',
+			name: 'myField',
+			nestedDataDefinitionFields: [],
+			required: false,
+		});
+	});
+
+	it('returns an empty data definition when field is undefined', () => {
+		expect(fieldToDataDefinition()).toMatchObject({
+			customProperties: {},
+			nestedDataDefinitionFields: [],
+		});
+	});
+
+	it('ignores invalid nested field entries', () => {
+		expect(
+			fieldToDataDefinition({
+				nestedFields: [undefined, null],
+				settingsContext: {pages: []},
+			})
+		).toMatchObject({
+			customProperties: {},
+			nestedDataDefinitionFields: [],
+		});
+	});
+
 });

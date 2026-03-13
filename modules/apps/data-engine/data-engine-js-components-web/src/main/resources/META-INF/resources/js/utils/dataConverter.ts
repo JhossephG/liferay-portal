@@ -30,17 +30,53 @@ const DEFAULT_DDM_FIELD_PROPERTIES = new Set([
  * 										  It may be undefined
  * @param {object} field.settingsContext - The settings context of a field
  */
-export function fieldToDataDefinition({
-	nestedFields = [],
-	settingsContext,
-}: Field) {
+export function fieldToDataDefinition(field: Partial<Field> = {}) {
+	const {
+		nestedFields = [],
+		settingsContext,
+		...fieldProperties
+	} = field;
+
 	const dataDefinition: DataDefinition = {
 		customProperties: {},
-		nestedDataDefinitionFields: nestedFields.map((field) =>
-			fieldToDataDefinition(field)
-		),
+		nestedDataDefinitionFields: (Array.isArray(nestedFields)
+			? nestedFields
+			: []
+		)
+			.filter(Boolean)
+			.map((nestedField) => fieldToDataDefinition(nestedField)),
 	};
-	const settingsContextVisitor = new PagesVisitor(settingsContext.pages);
+
+	const settingsContextPages = Array.isArray(settingsContext?.pages)
+		? settingsContext.pages
+		: null;
+
+	if (!settingsContextPages) {
+		for (const [propertyName, propertyValue] of Object.entries(
+			fieldProperties
+		)) {
+			if (
+				propertyValue === undefined ||
+				propertyName === 'nestedFields' ||
+				propertyName === 'settingsContext'
+			) {
+				continue;
+			}
+
+			const ddmPropertyName =
+				_fromDDMFormToDataDefinitionPropertyName(propertyName);
+			const properties = DEFAULT_DDM_FIELD_PROPERTIES.has(ddmPropertyName)
+				? dataDefinition
+				: dataDefinition.customProperties;
+
+			// @ts-ignore
+			properties[ddmPropertyName] = propertyValue;
+		}
+
+		return dataDefinition;
+	}
+
+	const settingsContextVisitor = new PagesVisitor(settingsContextPages);
 
 	settingsContextVisitor.mapFields(
 		({fieldName, localizable, localizedValue = {}, value}: Field) => {
@@ -181,7 +217,7 @@ export interface Field<T = unknown> {
 	multiple?: unknown;
 	nestedFields?: Field[];
 	options?: unknown;
-	settingsContext: {pages: unknown[]};
+	settingsContext?: {pages: unknown[]};
 	type: FieldTypeName;
 	value: T;
 }
