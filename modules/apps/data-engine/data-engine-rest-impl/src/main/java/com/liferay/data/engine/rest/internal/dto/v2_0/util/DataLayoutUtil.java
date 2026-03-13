@@ -176,12 +176,13 @@ public class DataLayoutUtil {
 	private static DataLayoutColumn _toDataLayoutColumn(
 		DDMFormLayoutColumn ddmFormLayoutColumn) {
 
+		String[] fieldNames = ArrayUtil.toStringArray(
+			ddmFormLayoutColumn.getDDMFormFieldNames());
+
 		return new DataLayoutColumn() {
 			{
 				setColumnSize(ddmFormLayoutColumn::getSize);
-				setFieldNames(
-					() -> ArrayUtil.toStringArray(
-						ddmFormLayoutColumn.getDDMFormFieldNames()));
+				setFieldNames(() -> fieldNames);
 			}
 		};
 	}
@@ -193,10 +194,15 @@ public class DataLayoutUtil {
 			return new DataLayoutColumn[0];
 		}
 
-		return TransformUtil.transformToArray(
-			ddmFormLayoutColumns,
-			ddmFormLayoutColumn -> _toDataLayoutColumn(ddmFormLayoutColumn),
-			DataLayoutColumn.class);
+		DataLayoutColumn[] dataLayoutColumns =
+			new DataLayoutColumn[ddmFormLayoutColumns.size()];
+
+		for (int i = 0; i < ddmFormLayoutColumns.size(); i++) {
+			dataLayoutColumns[i] = _toDataLayoutColumn(
+				ddmFormLayoutColumns.get(i));
+		}
+
+		return dataLayoutColumns;
 	}
 
 	private static Map<String, Object> _toDataLayoutFields(
@@ -272,17 +278,19 @@ public class DataLayoutUtil {
 	private static DataLayoutPage _toDataLayoutPage(
 		DDMFormLayoutPage ddmFormLayoutPage) {
 
+		DataLayoutRow[] dataLayoutRows = _toDataLayoutRows(
+			ddmFormLayoutPage.getDDMFormLayoutRows());
+		Map<Locale, String> description =
+			LocalizedValueUtil.toLocalizedValuesMap(
+				ddmFormLayoutPage.getDescription());
+		Map<Locale, String> title = LocalizedValueUtil.toLocalizedValuesMap(
+			ddmFormLayoutPage.getTitle());
+
 		return new DataLayoutPage() {
 			{
-				setDataLayoutRows(
-					() -> _toDataLayoutRows(
-						ddmFormLayoutPage.getDDMFormLayoutRows()));
-				setDescription(
-					() -> LocalizedValueUtil.toLocalizedValuesMap(
-						ddmFormLayoutPage.getDescription()));
-				setTitle(
-					() -> LocalizedValueUtil.toLocalizedValuesMap(
-						ddmFormLayoutPage.getTitle()));
+				setDataLayoutRows(() -> dataLayoutRows);
+				setDescription(() -> description);
+				setTitle(() -> title);
 			}
 		};
 	}
@@ -294,31 +302,43 @@ public class DataLayoutUtil {
 			return new DataLayoutPage[0];
 		}
 
-		return TransformUtil.transformToArray(
-			ddmFormLayoutPages,
-			ddmFormLayoutPage -> _toDataLayoutPage(ddmFormLayoutPage),
-			DataLayoutPage.class);
+		DataLayoutPage[] dataLayoutPages =
+			new DataLayoutPage[ddmFormLayoutPages.size()];
+
+		for (int i = 0; i < ddmFormLayoutPages.size(); i++) {
+			dataLayoutPages[i] = _toDataLayoutPage(ddmFormLayoutPages.get(i));
+		}
+
+		return dataLayoutPages;
 	}
 
 	private static DataLayoutRow _toDataLayoutRow(
 		DDMFormLayoutRow ddmFormLayoutRow) {
 
+		DataLayoutColumn[] dataLayoutColumns = _toDataLayoutColumns(
+			ddmFormLayoutRow.getDDMFormLayoutColumns());
+
 		return new DataLayoutRow() {
 			{
-				setDataLayoutColumns(
-					() -> _toDataLayoutColumns(
-						ddmFormLayoutRow.getDDMFormLayoutColumns()));
+				setDataLayoutColumns(() -> dataLayoutColumns);
 			}
 		};
 	}
 
 	private static DataLayoutRow[] _toDataLayoutRows(
 		List<DDMFormLayoutRow> ddmFormLayoutRows) {
+		if (ListUtil.isEmpty(ddmFormLayoutRows)) {
+			return new DataLayoutRow[0];
+		}
 
-		return TransformUtil.transformToArray(
-			ddmFormLayoutRows,
-			ddmFormLayoutRow -> _toDataLayoutRow(ddmFormLayoutRow),
-			DataLayoutRow.class);
+		DataLayoutRow[] dataLayoutRows =
+			new DataLayoutRow[ddmFormLayoutRows.size()];
+
+		for (int i = 0; i < ddmFormLayoutRows.size(); i++) {
+			dataLayoutRows[i] = _toDataLayoutRow(ddmFormLayoutRows.get(i));
+		}
+
+		return dataLayoutRows;
 	}
 
 	private static DataRule[] _toDataRules(
