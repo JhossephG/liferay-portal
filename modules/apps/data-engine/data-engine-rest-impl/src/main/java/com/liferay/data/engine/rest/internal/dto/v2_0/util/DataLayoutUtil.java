@@ -203,40 +203,49 @@ public class DataLayoutUtil {
 		List<DDMFormField> ddmFormFields,
 		DDMFormFieldTypeServicesRegistry ddmFormFieldTypeServicesRegistry) {
 
-		Map<String, Object> dataLayoutFields = new HashMap<>();
+		Map<String, Object> dataLayoutFields = new HashMap<>(
+			ddmFormFields.size());
 		Map<String, List<DDMFormField>> visualPropertiesDDMFormFieldsMapByType =
 			new HashMap<>();
 
-		ddmFormFields.forEach(
-			ddmFormField -> {
-				List<DDMFormField> visualPropertiesDDMFormFields =
-					visualPropertiesDDMFormFieldsMapByType.computeIfAbsent(
-						ddmFormField.getType(),
-						fieldType -> _getVisualPropertiesDDMFormFields(
-							ddmFormFieldTypeServicesRegistry, fieldType));
+		for (DDMFormField ddmFormField : ddmFormFields) {
+			List<DDMFormField> visualPropertiesDDMFormFields =
+				visualPropertiesDDMFormFieldsMapByType.computeIfAbsent(
+					ddmFormField.getType(),
+					fieldType -> _getVisualPropertiesDDMFormFields(
+						ddmFormFieldTypeServicesRegistry, fieldType));
 
-				Map<String, Object> properties = new HashMap<>(
-					visualPropertiesDDMFormFields.size());
+			Map<String, Object> properties = new HashMap<>(
+				visualPropertiesDDMFormFields.size());
 
-				visualPropertiesDDMFormFields.forEach(
-					visualProperty -> {
-						if (visualProperty.isLocalizable()) {
-							properties.put(
-								visualProperty.getName(),
-								LocalizedValueUtil.toLocalizedValuesMap(
-									(LocalizedValue)ddmFormField.getProperty(
-										visualProperty.getName())));
-						}
-						else {
-							properties.put(
-								visualProperty.getName(),
-								ddmFormField.getProperty(
-									visualProperty.getName()));
-						}
-					});
+			for (DDMFormField visualProperty : visualPropertiesDDMFormFields) {
+				Object propertyValue = ddmFormField.getProperty(
+					visualProperty.getName());
 
+				if (propertyValue == null) {
+					continue;
+				}
+
+				if (visualProperty.isLocalizable()) {
+					Map<Locale, String> localizedValues =
+						LocalizedValueUtil.toLocalizedValuesMap(
+							(LocalizedValue)propertyValue);
+
+					if (MapUtil.isEmpty(localizedValues)) {
+						continue;
+					}
+
+					properties.put(visualProperty.getName(), localizedValues);
+				}
+				else {
+					properties.put(visualProperty.getName(), propertyValue);
+				}
+			}
+
+			if (!properties.isEmpty()) {
 				dataLayoutFields.put(ddmFormField.getName(), properties);
-			});
+			}
+		}
 
 		return dataLayoutFields;
 	}
