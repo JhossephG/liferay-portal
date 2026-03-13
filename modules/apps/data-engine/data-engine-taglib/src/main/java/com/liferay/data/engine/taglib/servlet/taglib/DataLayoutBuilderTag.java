@@ -80,6 +80,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.jsp.JspException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -219,7 +220,7 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 
 			_populateDDMFormFieldSettingsContext(
 				ddmForm.getDDMFormFieldsMap(true), ddmFormTemplateContext,
-				defaultLocale);
+				defaultLocale, 0);
 
 			ddmFormTemplateContext.put(
 				"rules",
@@ -309,13 +310,24 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				ddmFormFieldTypeServicesRegistry.getDDMFormFieldType(
 					ddmFormField.getType());
 
-			DDMForm ddmForm = DDMFormFactory.create(
-				ddmFormFieldType.getDDMFormFieldTypeSettings());
+			DDMForm ddmForm = _settingsDDMForms.get(ddmFormField.getType());
 
-			DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
-				ddmFormFieldType.getDDMFormFieldTypeSettings());
+			DDMFormLayout ddmFormLayout = _settingsDDMFormLayouts.get(
+				ddmFormField.getType());
 
-			_removeDisabledProperties(ddmForm, ddmFormLayout);
+			if ((ddmForm == null) || (ddmFormLayout == null)) {
+				ddmForm = DDMFormFactory.create(
+					ddmFormFieldType.getDDMFormFieldTypeSettings());
+
+				ddmFormLayout = DDMFormLayoutFactory.create(
+					ddmFormFieldType.getDDMFormFieldTypeSettings());
+
+				_removeDisabledProperties(ddmForm, ddmFormLayout);
+
+				_settingsDDMForms.put(ddmFormField.getType(), ddmForm);
+				_settingsDDMFormLayouts.put(
+					ddmFormField.getType(), ddmFormLayout);
+			}
 
 			DDMFormTemplateContextFactory ddmFormTemplateContextFactory =
 				_ddmFormTemplateContextFactorySnapshot.get();
@@ -506,27 +518,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			return _deserializeDDMFormLayout(jsonObject.toString());
 		}
 
-		private List<Map<String, Object>> _getNestedFields(
-			Map<String, Object> field) {
-
-			List<Map<String, Object>> nestedFields = new ArrayList<>();
-
-			List<Map<String, Object>> fieldNestedFields =
-				(List<Map<String, Object>>)field.get("nestedFields");
-
-			if (fieldNestedFields == null) {
-				return nestedFields;
-			}
-
-			for (Map<String, Object> nestedField : fieldNestedFields) {
-				nestedFields.add(nestedField);
-
-				nestedFields.addAll(_getNestedFields(nestedField));
-			}
-
-			return nestedFields;
-		}
-
 		private boolean _isFieldSet(Map<String, Object> field) {
 			return Objects.equals(field.get("type"), "fieldset");
 		}
@@ -534,13 +525,24 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		private void _populateDDMFormFieldSettingsContext(
 				Map<String, DDMFormField> ddmFormFieldsMap,
 				Map<String, Object> ddmFormTemplateContext,
-				Locale defaultLocale)
+				Locale defaultLocale, int depth)
 			throws Exception {
 
 			UnsafeConsumer<Map<String, Object>, Exception> unsafeConsumer =
 				field -> {
+					if (_isFieldSet(field) &&
+						ListUtil.isNotEmpty(
+							(List<Map<String, Object>>)field.get("nestedFields"))) {
+
+						return;
+					}
+
 					DDMFormField ddmFormField = ddmFormFieldsMap.get(
 						MapUtil.getString(field, "fieldName"));
+
+					if (ddmFormField == null) {
+						return;
+					}
 
 					if (_isFieldSet(field)) {
 						ddmFormField.setProperty("rows", field.get("rows"));
@@ -568,15 +570,8 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 							(List<Map<String, Object>>)column.get("fields");
 
 						for (Map<String, Object> field : fields) {
-							unsafeConsumer.accept(field);
-
-							List<Map<String, Object>> nestedFields =
-								_getNestedFields(field);
-
-							for (Map<String, Object> nestedField :
-									nestedFields) {
-
-								unsafeConsumer.accept(nestedField);
+							if (depth == 0) {
+								unsafeConsumer.accept(field);
 							}
 						}
 					}
@@ -629,6 +624,10 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		private final DataLayout _dataLayout;
 		private final HttpServletRequest _httpServletRequest;
 		private final HttpServletResponse _httpServletResponse;
+		private final Map<String, DDMForm> _settingsDDMForms =
+			new HashMap<>();
+		private final Map<String, DDMFormLayout> _settingsDDMFormLayouts =
+			new HashMap<>();
 
 	}
 
