@@ -80,7 +80,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.jsp.JspException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -310,24 +309,13 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				ddmFormFieldTypeServicesRegistry.getDDMFormFieldType(
 					ddmFormField.getType());
 
-			DDMForm ddmForm = _settingsDDMForms.get(ddmFormField.getType());
+			DDMForm ddmForm = DDMFormFactory.create(
+				ddmFormFieldType.getDDMFormFieldTypeSettings());
 
-			DDMFormLayout ddmFormLayout = _settingsDDMFormLayouts.get(
-				ddmFormField.getType());
+			DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
+				ddmFormFieldType.getDDMFormFieldTypeSettings());
 
-			if ((ddmForm == null) || (ddmFormLayout == null)) {
-				ddmForm = DDMFormFactory.create(
-					ddmFormFieldType.getDDMFormFieldTypeSettings());
-
-				ddmFormLayout = DDMFormLayoutFactory.create(
-					ddmFormFieldType.getDDMFormFieldTypeSettings());
-
-				_removeDisabledProperties(ddmForm, ddmFormLayout);
-
-				_settingsDDMForms.put(ddmFormField.getType(), ddmForm);
-				_settingsDDMFormLayouts.put(
-					ddmFormField.getType(), ddmFormLayout);
-			}
+			_removeDisabledProperties(ddmForm, ddmFormLayout);
 
 			DDMFormTemplateContextFactory ddmFormTemplateContextFactory =
 				_ddmFormTemplateContextFactorySnapshot.get();
@@ -559,6 +547,13 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 						return;
 					}
 
+					if (_isFieldSet(field) &&
+						ListUtil.isNotEmpty(
+							(List<Map<String, Object>>)field.get("nestedFields"))) {
+
+						return;
+					}
+
 					if (_isFieldSet(field)) {
 						ddmFormField.setProperty("rows", field.get("rows"));
 					}
@@ -638,10 +633,6 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		private final DataLayout _dataLayout;
 		private final HttpServletRequest _httpServletRequest;
 		private final HttpServletResponse _httpServletResponse;
-		private final Map<String, DDMForm> _settingsDDMForms =
-			new HashMap<>();
-		private final Map<String, DDMFormLayout> _settingsDDMFormLayouts =
-			new HashMap<>();
 
 	}
 
