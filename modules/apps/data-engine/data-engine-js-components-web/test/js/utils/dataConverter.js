@@ -87,6 +87,24 @@ describe('dataConverter', () => {
 		});
 	});
 
+
+	it('uses direct field properties when settingsContext pages is empty', () => {
+		expect(
+			fieldToDataDefinition({
+				fieldName: 'normalizedNestedField',
+				indexable: true,
+				settingsContext: {pages: []},
+				type: 'text',
+			})
+		).toMatchObject({
+			customProperties: {},
+			fieldType: 'text',
+			indexable: true,
+			name: 'normalizedNestedField',
+			nestedDataDefinitionFields: [],
+		});
+	});
+
 	it('returns an empty data definition when field is undefined', () => {
 		expect(fieldToDataDefinition()).toMatchObject({
 			customProperties: {},

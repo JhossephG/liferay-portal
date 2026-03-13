@@ -51,7 +51,7 @@ export function fieldToDataDefinition(field: Partial<Field> = {}) {
 		? settingsContext.pages
 		: null;
 
-	if (!settingsContextPages) {
+	if (!settingsContextPages || settingsContextPages.length === 0) {
 		for (const [propertyName, propertyValue] of Object.entries(
 			fieldProperties
 		)) {
