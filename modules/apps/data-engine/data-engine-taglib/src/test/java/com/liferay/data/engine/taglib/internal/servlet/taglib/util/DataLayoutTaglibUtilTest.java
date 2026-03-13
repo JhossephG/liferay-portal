@@ -8,6 +8,7 @@ package com.liferay.data.engine.taglib.internal.servlet.taglib.util;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.model.User;
@@ -21,6 +22,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -62,6 +65,7 @@ public class DataLayoutTaglibUtilTest {
 			Mockito.mock(User.class)
 		);
 
+		_setUpHttpServletRequestAttributes();
 		_setUpDataDefinitionResourceFactory(bundleContext);
 	}
 
@@ -107,6 +111,16 @@ public class DataLayoutTaglibUtilTest {
 			_objectMapper.readTree(actualResultJSONArray.toString()));
 	}
 
+	@Test
+	public void testGetDataDefinitionCachesResultPerRequest() throws Exception {
+		DataLayoutTaglibUtil.getDataDefinition(1L, _httpServletRequest);
+		DataLayoutTaglibUtil.getDataDefinition(1L, _httpServletRequest);
+
+		Mockito.verify(
+			_dataDefinitionResource, Mockito.times(1)
+		).getDataDefinition(1L);
+	}
+
 	private static String _read(String fileName) throws Exception {
 		InputStream inputStream =
 			DataLayoutTaglibUtilTest.class.getResourceAsStream(
@@ -115,15 +129,44 @@ public class DataLayoutTaglibUtilTest {
 		return StringUtil.read(inputStream);
 	}
 
+	private static void _setUpHttpServletRequestAttributes() {
+		Map<String, Object> attributes = new HashMap<>();
+
+		Mockito.when(
+			_httpServletRequest.getAttribute(Mockito.anyString())
+		).thenAnswer(
+			invocation -> attributes.get(invocation.getArgument(0))
+		);
+
+		Mockito.doAnswer(
+			invocation -> {
+				attributes.put(
+					invocation.getArgument(0), invocation.getArgument(1));
+
+				return null;
+			}
+		).when(
+			_httpServletRequest
+		).setAttribute(
+			Mockito.anyString(), Mockito.any()
+		);
+	}
+
 	private static void _setUpDataDefinitionResourceFactory(
 			BundleContext bundleContext)
 		throws Exception {
 
-		DataDefinitionResource dataDefinitionResource = Mockito.mock(
+		_dataDefinitionResource = Mockito.mock(
 			DataDefinitionResource.class);
 
 		Mockito.when(
-			dataDefinitionResource.
+			_dataDefinitionResource.getDataDefinition(Mockito.anyLong())
+		).thenReturn(
+			new DataDefinition()
+		);
+
+		Mockito.when(
+			_dataDefinitionResource.
 				getDataDefinitionDataDefinitionFieldFieldTypes()
 		).thenReturn(
 			_read("data-definition-field-types.json")
@@ -135,7 +178,7 @@ public class DataLayoutTaglibUtilTest {
 		Mockito.when(
 			dataDefinitionResourceBuilder.build()
 		).thenReturn(
-			dataDefinitionResource
+			_dataDefinitionResource
 		);
 
 		Mockito.when(
@@ -172,6 +215,7 @@ public class DataLayoutTaglibUtilTest {
 				dataDefinitionResourceFactory, null);
 	}
 
+	private static DataDefinitionResource _dataDefinitionResource;
 	private static ServiceRegistration<DataDefinitionResource.Factory>
 		_dataDefinitionResourceFactoryServiceRegistration;
 	private static final MockedStatic<FrameworkUtil>
