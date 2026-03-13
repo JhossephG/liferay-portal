@@ -518,6 +518,27 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 			return _deserializeDDMFormLayout(jsonObject.toString());
 		}
 
+		private void _populateDDMFormFieldSettingsContext(
+				Map<String, DDMFormField> ddmFormFieldsMap,
+				Map<String, Object> field,
+				UnsafeConsumer<Map<String, Object>, Exception> unsafeConsumer)
+			throws Exception {
+
+			unsafeConsumer.accept(field);
+
+			List<Map<String, Object>> nestedFields =
+				(List<Map<String, Object>>)field.get("nestedFields");
+
+			if (ListUtil.isEmpty(nestedFields)) {
+				return;
+			}
+
+			for (Map<String, Object> nestedField : nestedFields) {
+				_populateDDMFormFieldSettingsContext(
+					ddmFormFieldsMap, nestedField, unsafeConsumer);
+			}
+		}
+
 		private boolean _isFieldSet(Map<String, Object> field) {
 			return Objects.equals(field.get("type"), "fieldset");
 		}
@@ -564,7 +585,8 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 							(List<Map<String, Object>>)column.get("fields");
 
 						for (Map<String, Object> field : fields) {
-							unsafeConsumer.accept(field);
+							_populateDDMFormFieldSettingsContext(
+								ddmFormFieldsMap, field, unsafeConsumer);
 						}
 					}
 				}

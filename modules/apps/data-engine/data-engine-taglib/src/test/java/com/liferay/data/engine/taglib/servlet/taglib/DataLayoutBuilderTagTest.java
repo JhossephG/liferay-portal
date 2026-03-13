@@ -9,6 +9,7 @@ import com.liferay.data.engine.taglib.servlet.taglib.DataLayoutBuilderTag.DataLa
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -19,7 +20,6 @@ import java.lang.reflect.Method;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import org.junit.AfterClass;
@@ -72,12 +72,14 @@ public class DataLayoutBuilderTagTest {
 	}
 
 	@Test
-	public void testDataLayoutDDMFormAdapterPopulateDDMFormFieldSettingsContextDoesNotProcessNestedFields()
+	public void testDataLayoutDDMFormAdapterPopulateDDMFormFieldSettingsContextRecursesNestedFields()
 		throws Exception {
 
-		Map<String, DDMFormField> ddmFormFieldsMap = new HashMap<>();
+		Method method = DataLayoutDDMFormAdapter.class.getDeclaredMethod(
+			"_populateDDMFormFieldSettingsContext", Map.class, Map.class,
+			UnsafeConsumer.class);
 
-		ddmFormFieldsMap.put("nested", new DDMFormField("nested", "text"));
+		method.setAccessible(true);
 
 		Map<String, Object> nestedField = new HashMap<>();
 
@@ -88,34 +90,15 @@ public class DataLayoutBuilderTagTest {
 		field.put("fieldName", "top");
 		field.put("nestedFields", Collections.singletonList(nestedField));
 
-		Map<String, Object> column = new HashMap<>();
-
-		column.put("fields", Collections.singletonList(field));
-
-		Map<String, Object> row = new HashMap<>();
-
-		row.put("columns", Collections.singletonList(column));
-
-		Map<String, Object> page = new HashMap<>();
-
-		page.put("rows", Collections.singletonList(row));
-
-		Map<String, Object> ddmFormTemplateContext = new HashMap<>();
-
-		ddmFormTemplateContext.put("pages", Collections.singletonList(page));
-
-		Method method = DataLayoutDDMFormAdapter.class.getDeclaredMethod(
-			"_populateDDMFormFieldSettingsContext", Map.class, Map.class,
-			Locale.class);
-
-		method.setAccessible(true);
+		int[] processedFieldsCount = {0};
 
 		method.invoke(
-			_dataLayoutDDMFormAdapter, ddmFormFieldsMap, ddmFormTemplateContext,
-			LocaleUtil.US);
+			_dataLayoutDDMFormAdapter, Collections.emptyMap(), field,
+			(UnsafeConsumer<Map<String, Object>, Exception>)map -> {
+				processedFieldsCount[0]++;
+			});
 
-		Assert.assertFalse(field.containsKey("settingsContext"));
-		Assert.assertFalse(nestedField.containsKey("settingsContext"));
+		Assert.assertEquals(2, processedFieldsCount[0]);
 	}
 
 	@Test
