@@ -3124,6 +3124,211 @@ test.describe('Manage object entries through View Object Entries', () => {
 		);
 	});
 
+	test('keeps related entry permissions after linking it through parent relationship tab', async ({
+		apiHelpers,
+		objectLayoutsPage,
+		page,
+		viewObjectEntriesPage,
+	}) => {
+		const childObjectField = 'childText';
+		const parentObjectField = 'parentText';
+
+		const childObjectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFields: [
+					{
+						businessType: 'Text',
+						indexed: true,
+						indexedAsKeyword: false,
+						label: {en_US: 'Child Text'},
+						listTypeDefinitionId: 0,
+						localized: true,
+						name: childObjectField,
+						required: false,
+						state: false,
+					},
+				],
+				scope: 'company',
+				status: {code: 0},
+				titleObjectFieldName: childObjectField,
+			});
+
+		apiHelpers.data.push({
+			id: childObjectDefinition.id,
+			type: 'objectDefinition',
+		});
+
+		const parentObjectDefinition =
+			await apiHelpers.objectAdmin.postRandomObjectDefinition({
+				objectFields: [
+					{
+						businessType: 'Text',
+						indexed: true,
+						indexedAsKeyword: false,
+						label: {en_US: 'Parent Text'},
+						listTypeDefinitionId: 0,
+						localized: true,
+						name: parentObjectField,
+						required: false,
+						state: false,
+					},
+				],
+				scope: 'company',
+				status: {code: 0},
+				titleObjectFieldName: parentObjectField,
+			});
+
+		apiHelpers.data.push({
+			id: parentObjectDefinition.id,
+			type: 'objectDefinition',
+		});
+
+		const objectRelationshipLabel = 'Parent To Child ' + getRandomInt();
+		const objectRelationshipName = 'parentToChild' + getRandomInt();
+
+		const objectRelationshipAPIClient = await apiHelpers.buildRestClient(
+			ObjectRelationshipAPI
+		);
+
+		await objectRelationshipAPIClient.postObjectDefinitionByExternalReferenceCodeObjectRelationship(
+			parentObjectDefinition.externalReferenceCode,
+			{
+				label: {
+					en_US: objectRelationshipLabel,
+				},
+				name: objectRelationshipName,
+				objectDefinitionExternalReferenceCode1:
+					parentObjectDefinition.externalReferenceCode,
+				objectDefinitionExternalReferenceCode2:
+					childObjectDefinition.externalReferenceCode,
+				objectDefinitionId1: parentObjectDefinition.id,
+				objectDefinitionId2: childObjectDefinition.id,
+				objectDefinitionName2: childObjectDefinition.name,
+				type: 'oneToMany',
+			}
+		);
+
+		const childEntry = await apiHelpers.objectEntry.postObjectEntry(
+			{[childObjectField]: 'Child Entry'},
+			`c/${childObjectDefinition.name.toLowerCase()}s`
+		);
+
+		const objectLayoutName = getRandomString();
+		const objectRelationshipTabName = getRandomString();
+		const objectLayoutTabName = getRandomString();
+		const objectLayoutBlockName = getRandomString();
+
+		await objectLayoutsPage.goto(parentObjectDefinition.name);
+
+		await objectLayoutsPage.createObjectLayout(objectLayoutName);
+
+		await page.getByRole('link', {name: objectLayoutName}).click();
+
+		await objectLayoutsPage.markAsDefaultButton.check();
+
+		await objectLayoutsPage.layoutTab.click();
+
+		await objectLayoutsPage.createObjectLayoutTab(objectLayoutTabName);
+
+		await objectLayoutsPage.createObjectLayoutBlock({
+			objectLayoutRegularBlockName: objectLayoutBlockName,
+		});
+
+		await objectLayoutsPage.openObjectLayoutObjectField();
+
+		await objectLayoutsPage.iframeLocator
+			.getByRole('option', {name: 'Parent Text'})
+			.click();
+
+		await objectLayoutsPage.saveAddFieldButton.click();
+
+		await objectLayoutsPage.createObjectRelationshipTab(
+			objectLayoutName,
+			objectRelationshipTabName,
+			objectRelationshipLabel
+		);
+
+		let checkedPermissionId: string;
+
+		await test.step('edit child entry permissions', async () => {
+			await viewObjectEntriesPage.goto(childObjectDefinition.className);
+
+			await viewObjectEntriesPage.frontendDatasetActions.click();
+
+			await viewObjectEntriesPage.frontendDatasetPermissionsAction.click();
+
+			const permissionsFrame = page.frameLocator(
+				'iframe[title="Permissions"]'
+			);
+
+			const uncheckedPermissionCheckbox = permissionsFrame
+				.locator('input[type="checkbox"]:not(:checked)')
+				.first();
+
+			checkedPermissionId =
+				(await uncheckedPermissionCheckbox.getAttribute('id')) || '';
+
+			expect(checkedPermissionId).not.toEqual('');
+
+			await uncheckedPermissionCheckbox.check();
+
+			await permissionsFrame.getByRole('button', {name: 'Save'}).click();
+
+			await expect(
+				permissionsFrame.getByText('Success:Your request')
+			).toBeVisible();
+		});
+
+		await test.step('link child entry from parent relationship tab', async () => {
+			await viewObjectEntriesPage.goto(parentObjectDefinition.className);
+
+			await viewObjectEntriesPage.clickAddObjectEntry(
+				parentObjectDefinition.label['en_US']
+			);
+
+			await viewObjectEntriesPage.fillObjectEntry({
+				objectFieldBusinessType: 'Text',
+				objectFieldLabel: 'Parent Text',
+				objectFieldValue: 'Parent Entry',
+			});
+
+			await page.getByRole('link', {name: objectRelationshipTabName}).click();
+
+			await page
+				.getByRole('button', {name: 'Select Existing One'})
+				.first()
+				.click();
+
+			await expect(viewObjectEntriesPage.searchButton).toBeEnabled();
+
+			await viewObjectEntriesPage.frameSelect
+				.getByRole('link', {name: childEntry.id.toString()})
+				.click();
+
+			await page.getByRole('link', {name: objectLayoutTabName}).click();
+
+			await viewObjectEntriesPage.saveObjectEntryButton.click();
+
+			await waitForAlert(page);
+		});
+
+		await test.step('verify child entry permissions remain unchanged', async () => {
+			await viewObjectEntriesPage.goto(childObjectDefinition.className);
+
+			await viewObjectEntriesPage.frontendDatasetActions.click();
+
+			await viewObjectEntriesPage.frontendDatasetPermissionsAction.click();
+
+			const permissionsFrame = page.frameLocator(
+				'iframe[title="Permissions"]'
+			);
+
+			await expect(
+				permissionsFrame.locator(`#${checkedPermissionId}`)
+			).toBeChecked();
+		});
+	});
+
 	test('can edit object entry relationship', async ({
 		apiHelpers,
 		page,

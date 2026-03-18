@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -79,6 +80,101 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 
 	@Test
 	public void testDoProcessAction() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			_TestInfo testInfo = _getTestInfo();
+
+			Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				TestPropsValues.getCompanyId(),
+				testInfo.objectDefinition2.getClassName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
+				new String[] {ActionKeys.VIEW});
+
+			User user = UserTestUtil.addUser();
+
+			_userLocalService.addRoleUser(role.getRoleId(), user);
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+
+			PrincipalThreadLocal.setName(user.getUserId());
+
+			testInfo.mockLiferayPortletActionRequest.setAttribute(
+				WebKeys.USER_ID, user.getUserId());
+
+			_invokeMVCActionCommand(testInfo);
+
+			Assert.assertTrue(
+				SessionErrors.contains(
+					testInfo.mockLiferayPortletActionRequest,
+					PrincipalException.MustHavePermission.class.getName()));
+			Assert.assertNotNull(
+				SessionMessages.get(
+					testInfo.mockLiferayPortletActionRequest,
+					_portal.getPortletId(
+						testInfo.mockLiferayPortletActionRequest) +
+							SessionMessages.
+								KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE));
+		}
+		finally {
+			PrincipalThreadLocal.setName(originalName);
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
+	}
+
+	@Test
+	public void testDoProcessActionPreservesRelatedObjectEntryPermissions()
+		throws Exception {
+
+		_TestInfo testInfo = _getTestInfo();
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(),
+			testInfo.objectDefinition2.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(testInfo.objectEntry2.getObjectEntryId()),
+			role.getRoleId(),
+			new String[] {ActionKeys.VIEW});
+
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(),
+				testInfo.objectDefinition2.getClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(testInfo.objectEntry2.getObjectEntryId()),
+				role.getRoleId(),
+				ActionKeys.VIEW));
+
+		testInfo.mockLiferayPortletActionRequest.setAttribute(
+			WebKeys.USER_ID, TestPropsValues.getUserId());
+
+		_invokeMVCActionCommand(testInfo);
+
+		Assert.assertFalse(
+			SessionErrors.contains(
+				testInfo.mockLiferayPortletActionRequest,
+				PrincipalException.MustHavePermission.class.getName()));
+
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(),
+				testInfo.objectDefinition2.getClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(testInfo.objectEntry2.getObjectEntryId()),
+				role.getRoleId(),
+				ActionKeys.VIEW));
+	}
+
+	private _TestInfo _getTestInfo() throws Exception {
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			new MockLiferayPortletActionRequest();
 
@@ -133,26 +229,11 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 		mockLiferayPortletActionRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);
 
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		return new _TestInfo(
+			mockLiferayPortletActionRequest, objectDefinition2, objectEntry2);
+	}
 
-		_resourcePermissionLocalService.setResourcePermissions(
-			TestPropsValues.getCompanyId(), objectDefinition2.getClassName(),
-			ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(TestPropsValues.getCompanyId()), role.getRoleId(),
-			new String[] {ActionKeys.VIEW});
-
-		User user = UserTestUtil.addUser();
-
-		_userLocalService.addRoleUser(role.getRoleId(), user);
-
-		PermissionThreadLocal.setPermissionChecker(
-			PermissionCheckerFactoryUtil.create(user));
-
-		PrincipalThreadLocal.setName(user.getUserId());
-
-		mockLiferayPortletActionRequest.setAttribute(
-			WebKeys.USER_ID, user.getUserId());
-
+	private void _invokeMVCActionCommand(_TestInfo testInfo) throws Exception {
 		Bundle bundle = FrameworkUtil.getBundle(
 			EditObjectEntryRelatedModelMVCActionCommandTest.class);
 
@@ -164,7 +245,7 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 					MVCActionCommand.class,
 					StringBundler.concat(
 						"(&(jakarta.portlet.name=",
-						objectDefinition2.getPortletId(),
+						testInfo.objectDefinition2.getPortletId(),
 						")(mvc.command.name=/object_entries",
 						"/edit_object_entry_related_model))")));
 
@@ -175,18 +256,27 @@ public class EditObjectEntryRelatedModelMVCActionCommandTest {
 			bundleContext.getService(serviceReferences.get(0)),
 			"doProcessAction",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
-			mockLiferayPortletActionRequest,
+			testInfo.mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
+	}
 
-		Assert.assertTrue(
-			SessionErrors.contains(
-				mockLiferayPortletActionRequest,
-				PrincipalException.MustHavePermission.class.getName()));
-		Assert.assertNotNull(
-			SessionMessages.get(
-				mockLiferayPortletActionRequest,
-				_portal.getPortletId(mockLiferayPortletActionRequest) +
-					SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE));
+	private static class _TestInfo {
+
+		public _TestInfo(
+			MockLiferayPortletActionRequest mockLiferayPortletActionRequest,
+			ObjectDefinition objectDefinition2, ObjectEntry objectEntry2) {
+
+			this.mockLiferayPortletActionRequest =
+				mockLiferayPortletActionRequest;
+			this.objectDefinition2 = objectDefinition2;
+			this.objectEntry2 = objectEntry2;
+		}
+
+		public final MockLiferayPortletActionRequest
+			mockLiferayPortletActionRequest;
+		public final ObjectDefinition objectDefinition2;
+		public final ObjectEntry objectEntry2;
+
 	}
 
 	@Inject
