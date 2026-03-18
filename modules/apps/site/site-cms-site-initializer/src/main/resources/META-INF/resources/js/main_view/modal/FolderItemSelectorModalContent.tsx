@@ -274,6 +274,8 @@ function FolderItemSelectorModalContent({
 
 	const {observer, onOpenChange, open} = useModal();
 
+	const getFolderTitle = (item: any) => item.embedded?.title ?? item.title;
+
 	function handleSpaceClick(space: Space) {
 		setCurrentSpace(space);
 		setSchemaKey((prev) => prev + 1);
@@ -429,7 +431,7 @@ function FolderItemSelectorModalContent({
 									selectedItemType === 'folder'
 										? {
 												description: 'description',
-												title: 'title',
+												title: 'embedded.title',
 											}
 										: {
 												description: 'description',
@@ -446,7 +448,7 @@ function FolderItemSelectorModalContent({
 									fields: [
 										selectedItemType === 'folder'
 											? {
-													fieldName: 'title',
+													fieldName: 'embedded.title',
 													label: Liferay.Language.get(
 														'title'
 													),
@@ -479,7 +481,7 @@ function FolderItemSelectorModalContent({
 						selectedItemType === 'folder'
 							? {
 									id: 'embedded.id',
-									label: 'title',
+									label: 'embedded.title',
 									value: 'embedded.id',
 								}
 							: {
@@ -509,7 +511,7 @@ function FolderItemSelectorModalContent({
 							const item = items[0];
 							const isFolder = selectedItemType === 'folder';
 
-							let name = item.title;
+							let name = getFolderTitle(item);
 
 							if (isFolder) {
 								const isRootFolder =
@@ -518,7 +520,9 @@ function FolderItemSelectorModalContent({
 										null;
 
 								if (isRootFolder) {
-									name = currentSpace?.name || item.title;
+									name =
+										currentSpace?.name ||
+										getFolderTitle(item);
 								}
 							}
 
