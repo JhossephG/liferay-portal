@@ -16577,7 +16577,9 @@ public class ObjectEntryResourceTest {
 						"&objectDefinitionExternalReferenceCode=",
 						objectDefinition.getExternalReferenceCode(),
 						"&objectEntryExternalReferenceCode=",
-						objectEntry.getExternalReferenceCode()));
+						objectEntry.getExternalReferenceCode(),
+						"&objectFieldExternalReferenceCode=",
+						objectField.getExternalReferenceCode()));
 
 				link.setLabel(fileEntry.getName());
 
