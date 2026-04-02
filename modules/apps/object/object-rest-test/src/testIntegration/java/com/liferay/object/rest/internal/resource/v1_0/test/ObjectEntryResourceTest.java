@@ -19777,6 +19777,18 @@ public class ObjectEntryResourceTest {
 				customFileEntry1.getMimeType()),
 			null, objectDefinition,
 			_OBJECT_FIELD_NAME_ATTACHMENT_USER_COMPUTER_TO_DOCS_AND_MEDIA_SOURCE_2);
+		_testPostCustomObjectEntryWithAttachmentObjectField(
+			fileEntry -> JSONUtil.put(
+				"status", "BAD_REQUEST"
+			).put(
+				"title", "The file content cannot be empty"
+			),
+			_toFileEntry(
+				String::new, new byte[0],
+				RandomTestUtil.randomString() + ".txt", null, null,
+				customFileEntry1.getMimeType()),
+			null, objectDefinition,
+			_OBJECT_FIELD_NAME_ATTACHMENT_USER_COMPUTER_TO_DOCS_AND_MEDIA_SOURCE_2);
 
 		_testPostCustomObjectEntryWithAttachmentObjectField(
 			fileEntry -> JSONUtil.put(
