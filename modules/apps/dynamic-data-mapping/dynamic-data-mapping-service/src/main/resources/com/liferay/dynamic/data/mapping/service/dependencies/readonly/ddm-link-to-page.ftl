@@ -30,6 +30,22 @@
 
 		<#assign fieldLayout = layoutLocalService.fetchLayout(fieldLayoutGroupId, fieldLayoutJSONObject.getBoolean("privateLayout"), fieldLayoutJSONObject.getLong("layoutId"))!"" />
 
+		<#if !fieldLayout?has_content && validator.isNotNull(fieldLayoutJSONObject.getString("groupExternalReferenceCode"))>
+			<#assign
+				groupLocalService = serviceLocator.findService("com.liferay.portal.kernel.service.GroupLocalService")
+				fieldLayoutGroup = groupLocalService.fetchGroupByExternalReferenceCode(fieldLayoutJSONObject.getString("groupExternalReferenceCode"), themeDisplay.getCompanyId())!""
+			/>
+
+			<#if validator.isNotNull(fieldLayoutGroup)>
+				<#assign fieldLayout = layoutLocalService.fetchLayoutByExternalReferenceCode(fieldLayoutJSONObject.getString("externalReferenceCode"), fieldLayoutGroup.getGroupId())!"" />
+			</#if>
+		</#if>
+
+		<#if !fieldLayout?has_content && validator.isNotNull(fieldLayoutJSONObject.getString("externalReferenceCode"))>
+			<#assign fieldLayout = layoutLocalService.fetchLayoutByExternalReferenceCode(fieldLayoutJSONObject.getString("externalReferenceCode"), scopeGroupId)!""
+			/>
+		</#if>
+
 		<#if validator.isNotNull(fieldLayout)>
 			<a href="${fieldLayout.getRegularURL(request)}">${escape(fieldLayout.getName(requestedLocale))}</a>
 		</#if>

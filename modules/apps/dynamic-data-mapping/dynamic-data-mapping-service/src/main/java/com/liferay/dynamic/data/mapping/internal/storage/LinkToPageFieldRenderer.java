@@ -5,6 +5,7 @@
 
 package com.liferay.dynamic.data.mapping.internal.storage;
 
+import com.liferay.dynamic.data.mapping.internal.util.LinkToPageUtil;
 import com.liferay.dynamic.data.mapping.storage.BaseFieldRenderer;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -17,6 +18,8 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.util.Validator;
@@ -81,14 +84,18 @@ public class LinkToPageFieldRenderer extends BaseFieldRenderer {
 			return StringPool.BLANK;
 		}
 
-		long groupId = jsonObject.getLong("groupId");
-		boolean privateLayout = jsonObject.getBoolean("privateLayout");
-		long layoutId = jsonObject.getLong("layoutId");
+		Layout layout = LinkToPageUtil.fetchLayout(
+			CompanyThreadLocal.getCompanyId(), 0, jsonObject);
 
 		try {
+			if (layout == null) {
+				return _language.format(
+					locale, "is-temporarily-unavailable", "content");
+			}
+
 			return _layoutService.getLayoutName(
-				groupId, privateLayout, layoutId,
-				_language.getLanguageId(locale));
+				layout.getGroupId(), layout.isPrivateLayout(),
+				layout.getLayoutId(), _language.getLanguageId(locale));
 		}
 		catch (Exception exception) {
 			if (exception instanceof NoSuchLayoutException ||

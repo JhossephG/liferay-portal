@@ -10,6 +10,7 @@ import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.info.field.converter.DDMFormFieldInfoFieldConverter;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMFormValuesInfoFieldValuesProvider;
+import com.liferay.dynamic.data.mapping.internal.util.LinkToPageUtil;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
@@ -36,7 +37,6 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.sanitizer.Sanitizer;
 import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
-import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -316,15 +316,6 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 				JSONObject jsonObject = _jsonFactory.createJSONObject(
 					valueString);
 
-				Layout layout = _layoutLocalService.fetchLayout(
-					jsonObject.getLong("groupId"),
-					jsonObject.getBoolean("privateLayout"),
-					jsonObject.getLong("layoutId"));
-
-				if (layout == null) {
-					return StringPool.BLANK;
-				}
-
 				ServiceContext serviceContext =
 					ServiceContextThreadLocal.getServiceContext();
 
@@ -335,6 +326,15 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 				ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
 
 				if (themeDisplay == null) {
+					return StringPool.BLANK;
+				}
+
+				Layout layout = LinkToPageUtil.fetchLayout(
+					themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
+					jsonObject
+				);
+
+				if (layout == null) {
 					return StringPool.BLANK;
 				}
 
@@ -409,9 +409,6 @@ public class DDMFormValuesInfoFieldValuesProviderImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;
