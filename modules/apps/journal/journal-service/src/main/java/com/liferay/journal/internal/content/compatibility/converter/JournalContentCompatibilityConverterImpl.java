@@ -239,6 +239,11 @@ public class JournalContentCompatibilityConverterImpl
 
 			if (layout != null) {
 				jsonObject.put(
+					"externalReferenceCode", layout.getExternalReferenceCode()
+				).put(
+					"groupExternalReferenceCode",
+					layout.getGroup().getExternalReferenceCode()
+				).put(
 					"id", layout.getUuid()
 				).put(
 					"name", layout.getName(defaultLocale)

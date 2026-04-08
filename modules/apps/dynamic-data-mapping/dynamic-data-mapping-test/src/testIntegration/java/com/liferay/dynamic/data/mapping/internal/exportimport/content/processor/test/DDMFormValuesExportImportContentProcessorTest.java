@@ -41,6 +41,7 @@ import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -48,6 +49,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.capabilities.ThumbnailCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
@@ -312,6 +314,88 @@ public class DDMFormValuesExportImportContentProcessorTest {
 		_dlFileEntryLocalService.deleteFileEntry(dlFileEntry);
 
 		_dlFileEntryTypeLocalService.deleteFileEntryType(dlFileEntryType);
+	}
+
+	@Test
+	public void testReplaceLayoutExportImportContentReferencesUsesLazyERCReference()
+		throws Exception {
+
+		_journalArticle = JournalTestUtil.addArticle(
+			TestPropsValues.getUserId(), _stagingGroup.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		Layout stagingLayout = LayoutTestUtil.addTypePortletLayout(
+			_stagingGroup);
+
+		DDMForm ddmForm = new DDMForm();
+
+		Set<Locale> availableLocales = new LinkedHashSet<>();
+
+		availableLocales.add(LocaleUtil.US);
+
+		ddmForm.setAvailableLocales(availableLocales);
+		ddmForm.setDefaultLocale(LocaleUtil.US);
+
+		DDMFormField ddmFormField = new DDMFormField(
+			"LinkToPage", "link_to_layout");
+
+		ddmFormField.setDDMForm(ddmForm);
+		ddmFormField.setLocalizable(true);
+
+		ddmForm.getDDMFormFields().add(ddmFormField);
+
+		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
+
+		ddmFormValues.addDDMFormFieldValue(
+			DDMFormValuesTestUtil.createLocalizedDDMFormFieldValue(
+				ddmFormField.getName(),
+				JSONUtil.put(
+					"groupId", stagingLayout.getGroupId()
+				).put(
+					"id", stagingLayout.getUuid()
+				).put(
+					"layoutId", stagingLayout.getLayoutId()
+				).put(
+					"name", stagingLayout.getName(LocaleUtil.US)
+				).put(
+					"privateLayout", stagingLayout.isPrivateLayout()
+				).put(
+					"value", stagingLayout.getFriendlyURL(LocaleUtil.US)
+				).toString()));
+
+		DDMFormValues exportDDMFormValues =
+			_exportImportContentProcessor.replaceExportContentReferences(
+				_portletDataContextExport, _journalArticle, ddmFormValues, true,
+				true);
+
+		List<Element> missingReferenceElements =
+			_portletDataContextExport.getMissingReferencesElement().elements();
+
+		Assert.assertEquals(
+			missingReferenceElements.toString(), 1,
+			missingReferenceElements.size());
+
+		Element missingReferenceElement = missingReferenceElements.get(0);
+
+		Assert.assertEquals(
+			PortletDataContext.REFERENCE_TYPE_LAZY,
+			missingReferenceElement.attributeValue("type"));
+
+		_exportImportContentProcessor.replaceImportContentReferences(
+			_portletDataContextImport, _journalArticle, exportDDMFormValues);
+
+		DDMFormFieldValue ddmFormFieldValue =
+			exportDDMFormValues.getDDMFormFieldValues().get(0);
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+			ddmFormFieldValue.getValue().getString(LocaleUtil.US));
+
+		Assert.assertEquals(
+			stagingLayout.getExternalReferenceCode(),
+			jsonObject.getString("externalReferenceCode"));
+		Assert.assertEquals(
+			_stagingGroup.getExternalReferenceCode(),
+			jsonObject.getString("groupExternalReferenceCode"));
 	}
 
 	private DDMForm _createDDMFormWithJournalField(
