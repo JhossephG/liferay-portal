@@ -8,6 +8,7 @@ package com.liferay.dynamic.data.mapping.internal.exportimport.content.processor
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.internal.util.LinkToPageUtil;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -207,7 +208,14 @@ public class DDMFormValuesExportImportContentProcessor
 		protected String toJSON(Layout layout, Locale locale, String name)
 			throws PortalException {
 
+			Group group = layout.getGroup();
+
 			return JSONUtil.put(
+				"externalReferenceCode", layout.getExternalReferenceCode()
+			).put(
+				"groupExternalReferenceCode",
+				group.getExternalReferenceCode()
+			).put(
 				"groupId", layout.getGroupId()
 			).put(
 				"id", layout.getUuid()
@@ -234,7 +242,19 @@ public class DDMFormValuesExportImportContentProcessor
 			Layout layout = layouts.get(layoutId);
 
 			if (layout == null) {
-				if (_log.isWarnEnabled()) {
+				layout = LinkToPageUtil.fetchLayout(
+					portletDataContext.getCompanyId(),
+					portletDataContext.getScopeGroupId(), jsonObject
+				);
+			}
+
+			if ((layout == null) && _log.isWarnEnabled()) {
+				if (jsonObject.has("externalReferenceCode")) {
+					_log.warn(
+						"Unable to find layout with external reference code " +
+							jsonObject.getString("externalReferenceCode"));
+				}
+				else {
 					_log.warn("Unable to find layout with ID " + layoutId);
 				}
 			}
@@ -740,25 +760,66 @@ public class DDMFormValuesExportImportContentProcessor
 					continue;
 				}
 
-				long groupId = GetterUtil.getLong(jsonObject.get("groupId"));
-				long layoutId = GetterUtil.getLong(
-					jsonObject.getLong("layoutId"));
-				boolean privateLayout = jsonObject.getBoolean("privateLayout");
-
-				Layout layout = _layoutLocalService.fetchLayout(
-					groupId, privateLayout, layoutId);
+				Layout layout = LinkToPageUtil.fetchLayout(
+					_portletDataContext.getCompanyId(),
+					_portletDataContext.getScopeGroupId(), jsonObject
+				);
 
 				if (layout == null) {
 					continue;
 				}
+
+				value.addString(
+					locale,
+					_toJSON(layout, locale, jsonObject.getString("name")));
 
 				Element entityElement =
 					_portletDataContext.getExportDataElement(_stagedModel);
 
 				_portletDataContext.addReferenceElement(
 					_stagedModel, entityElement, layout,
-					PortletDataContext.REFERENCE_TYPE_DEPENDENCY, true);
+					PortletDataContext.REFERENCE_TYPE_LAZY, true);
 			}
+		}
+
+		private String _getName(Layout layout, Locale locale, String name)
+			throws PortalException {
+
+			try {
+				return layout.getBreadcrumb(locale);
+			}
+			catch (NoSuchLayoutException noSuchLayoutException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(noSuchLayoutException);
+				}
+			}
+
+			return name;
+		}
+
+		private String _toJSON(Layout layout, Locale locale, String name)
+			throws PortalException {
+
+			Group group = layout.getGroup();
+
+			return JSONUtil.put(
+				"externalReferenceCode", layout.getExternalReferenceCode()
+			).put(
+				"groupExternalReferenceCode",
+				group.getExternalReferenceCode()
+			).put(
+				"groupId", layout.getGroupId()
+			).put(
+				"id", layout.getUuid()
+			).put(
+				"layoutId", layout.getLayoutId()
+			).put(
+				"name", _getName(layout, locale, name)
+			).put(
+				"privateLayout", layout.isPrivateLayout()
+			).put(
+				"value", layout.getFriendlyURL(locale)
+			).toString();
 		}
 
 		private final PortletDataContext _portletDataContext;
