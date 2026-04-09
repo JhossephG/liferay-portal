@@ -55,9 +55,9 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Image;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ImageLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadRequest;
@@ -331,16 +331,13 @@ public class DDMImpl implements DDM {
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(valueString);
 
-			Layout layout = LinkToPageUtil.fetchLayout(
-				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
-				jsonObject
-			);
+			long groupId = jsonObject.getLong("groupId");
+			boolean privateLayout = jsonObject.getBoolean("privateLayout");
+			long layoutId = jsonObject.getLong("layoutId");
 
-			if (layout == null) {
-				return StringPool.BLANK;
-			}
-
-			fieldValue = _portal.getLayoutFriendlyURL(layout, themeDisplay);
+			fieldValue = _portal.getLayoutFriendlyURL(
+				_layoutLocalService.getLayout(groupId, privateLayout, layoutId),
+				themeDisplay);
 		}
 		else if (type.equals(DDMFormFieldType.SELECT)) {
 			String valueString = String.valueOf(fieldValue);
@@ -1344,6 +1341,9 @@ public class DDMImpl implements DDM {
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private Portal _portal;

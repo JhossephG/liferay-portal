@@ -5,7 +5,6 @@
 
 package com.liferay.dynamic.data.mapping.internal.render;
 
-import com.liferay.dynamic.data.mapping.internal.util.LinkToPageUtil;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.render.BaseDDMFormFieldValueRenderer;
@@ -20,8 +19,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutServiceUtil;
 
 import java.util.Locale;
@@ -48,17 +45,18 @@ public class LinkToPageDDMFormFieldValueRenderer
 				JSONObject jsonObject = createJSONObject(
 					value.getString(locale));
 
-				Layout layout = LinkToPageUtil.fetchLayout(
-					CompanyThreadLocal.getCompanyId(), 0, jsonObject);
+				long groupId = jsonObject.getLong("groupId");
+				long layoutId = jsonObject.getLong("layoutId");
 
-				if (layout == null) {
+				if ((groupId == 0) && (layoutId == 0)) {
 					return StringPool.BLANK;
 				}
 
+				boolean privateLayout = jsonObject.getBoolean("privateLayout");
+
 				try {
 					return LayoutServiceUtil.getLayoutName(
-						layout.getGroupId(), layout.isPrivateLayout(),
-						layout.getLayoutId(),
+						groupId, privateLayout, layoutId,
 						LanguageUtil.getLanguageId(locale));
 				}
 				catch (PortalException portalException) {

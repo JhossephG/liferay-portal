@@ -32,22 +32,6 @@
 			selectedLayout = layoutLocalService.fetchLayout(selectedLayoutGroupId, fieldLayoutJSONObject.getBoolean("privateLayout"), selectedLayoutLayoutId)!""
 		/>
 
-		<#if !selectedLayout?has_content && validator.isNotNull(fieldLayoutJSONObject.getString("groupExternalReferenceCode"))>
-			<#assign
-				groupLocalService = serviceLocator.findService("com.liferay.portal.kernel.service.GroupLocalService")
-				selectedLayoutGroup = groupLocalService.fetchGroupByExternalReferenceCode(fieldLayoutJSONObject.getString("groupExternalReferenceCode"), themeDisplay.getCompanyId())!""
-			/>
-
-			<#if validator.isNotNull(selectedLayoutGroup)>
-				<#assign selectedLayout = layoutLocalService.fetchLayoutByExternalReferenceCode(fieldLayoutJSONObject.getString("externalReferenceCode"), selectedLayoutGroup.getGroupId())!"" />
-			</#if>
-		</#if>
-
-		<#if !selectedLayout?has_content && validator.isNotNull(fieldLayoutJSONObject.getString("externalReferenceCode"))>
-			<#assign selectedLayout = layoutLocalService.fetchLayoutByExternalReferenceCode(fieldLayoutJSONObject.getString("externalReferenceCode"), scopeGroupId)!""
-			/>
-		</#if>
-
 		<#if validator.isNotNull(selectedLayout)>
 			<#assign selectedLayoutName = selectedLayout.getName(requestedLocale) />
 		</#if>
