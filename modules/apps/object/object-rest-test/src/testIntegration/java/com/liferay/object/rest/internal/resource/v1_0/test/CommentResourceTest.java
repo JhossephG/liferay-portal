@@ -18,14 +18,17 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -46,7 +49,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Guilherme Camacho
  */
-@FeatureFlag("LPD-43996")
 @RunWith(Arquillian.class)
 public class CommentResourceTest {
 
@@ -110,6 +112,8 @@ public class CommentResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_testDeleteByExternalReferenceCodeComment(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
 	}
@@ -124,6 +128,8 @@ public class CommentResourceTest {
 			0, _objectDefinition, _objectEntry);
 
 		// Site scope
+
+		_disableCommentsFeatureFlag();
 
 		_testGetByExternalReferenceCodeComment(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
@@ -141,6 +147,8 @@ public class CommentResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_testGetByExternalReferenceCodeCommentChildCommentsPage(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
 	}
@@ -156,6 +164,8 @@ public class CommentResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_testGetByExternalReferenceCodeCommentsPage(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
 	}
@@ -170,6 +180,8 @@ public class CommentResourceTest {
 			0, _objectDefinition, _objectEntry);
 
 		// Site scope
+
+		_disableCommentsFeatureFlag();
 
 		_testPostByExternalReferenceCodeComment(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
@@ -187,6 +199,8 @@ public class CommentResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_testPostByExternalReferenceCodeCommentReplyComment(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
 	}
@@ -201,6 +215,8 @@ public class CommentResourceTest {
 			0, _objectDefinition, _objectEntry);
 
 		// Site scope
+
+		_disableCommentsFeatureFlag();
 
 		_testPutByExternalReferenceCodeComment(
 			_testGroupId, _siteScopedObjectDefinition, _siteObjectEntry);
@@ -283,6 +299,17 @@ public class CommentResourceTest {
 		JSONArray jsonArray = jsonObject.getJSONArray("items");
 
 		Assert.assertEquals(expectedSize, jsonArray.length());
+	}
+
+	private void _disableCommentsFeatureFlag() throws Exception {
+		PropsUtil.set("feature.flag.LPD-43996", Boolean.FALSE.toString());
+
+		FeatureFlagTestUtil.invokeFeatureFlagListeners(
+			TestPropsValues.getCompanyId(), false, "LPD-43996");
+
+		Assert.assertFalse(
+			FeatureFlagManagerUtil.isEnabled(
+				TestPropsValues.getCompanyId(), "LPD-43996"));
 	}
 
 	private void _enableComments(ObjectDefinition objectDefinition) {

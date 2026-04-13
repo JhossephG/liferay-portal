@@ -162,6 +162,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -188,6 +189,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -1350,6 +1352,8 @@ public class ObjectEntryResourceTest {
 		_testDeleteObjectEntryWithComments(0, _objectDefinition1);
 
 		// Site scope
+
+		_disableCommentsFeatureFlag();
 
 		_testDeleteObjectEntryWithComments(
 			_testGroupId, _siteScopedObjectDefinition1);
@@ -6154,6 +6158,8 @@ public class ObjectEntryResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_testGetObjectEntriesPageWithComments(
 			_testGroupId, _siteScopedObjectDefinition1);
 	}
@@ -9504,6 +9510,8 @@ public class ObjectEntryResourceTest {
 
 		// Site scope
 
+		_disableCommentsFeatureFlag();
+
 		_enableComments(_siteScopedObjectDefinition1);
 
 		_testPatchPutObjectEntryWithComments(
@@ -11043,6 +11051,8 @@ public class ObjectEntryResourceTest {
 		_testPostObjectEntriesWithComments(0, _objectDefinition1);
 
 		// Site scope
+
+		_disableCommentsFeatureFlag();
 
 		_testPostObjectEntriesWithComments(
 			_testGroupId, _siteScopedObjectDefinition1);
@@ -16186,6 +16196,17 @@ public class ObjectEntryResourceTest {
 		}
 
 		return jsonArray;
+	}
+
+	private void _disableCommentsFeatureFlag() throws Exception {
+		PropsUtil.set("feature.flag.LPD-43996", Boolean.FALSE.toString());
+
+		FeatureFlagTestUtil.invokeFeatureFlagListeners(
+			TestPropsValues.getCompanyId(), false, "LPD-43996");
+
+		Assert.assertFalse(
+			FeatureFlagManagerUtil.isEnabled(
+				TestPropsValues.getCompanyId(), "LPD-43996"));
 	}
 
 	private void _enableComments(ObjectDefinition objectDefinition) {
