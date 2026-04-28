@@ -130,210 +130,6 @@ definition {
 			locator1 = "CreateObject#OBJECT_NAME");
 	}
 
-	@description = "LPS-135400 - Verify it is possible to add a relation with an entry through the Relationship field"
-	@priority = 5
-	test CanAddRelationOnRelationshipField {
-		property portal.acceptance = "true";
-
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 141652",
-			objectName = "CustomObject141652",
-			pluralLabelName = "Custom Objects 141652");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Custom Field",
-			fieldName = "customObjectField1",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject141652");
-
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 141653",
-			objectName = "CustomObject141653",
-			pluralLabelName = "Custom Objects 141653");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Custom Field",
-			fieldName = "customObjectField2",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject141653");
-
-		ObjectAdmin.addObjectRelationshipViaAPI(
-			objectName_1 = "CustomObject141652",
-			objectName_2 = "CustomObject141653",
-			relationshipLabel = "Relationship",
-			relationshipName = "relationship",
-			relationshipType = "oneToMany");
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject141652");
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject141653");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "customObjectField1",
-			objectName = "CustomObject141652",
-			value = "Entry A");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "customObjectField2",
-			objectName = "CustomObject141653",
-			value = "Entry B");
-
-		ObjectAdmin.addObjectLayoutViaAPI(
-			layoutName = "Layout Name",
-			objectName = "CustomObject141652");
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 141652");
-
-		CreateObject.selectTitleField(fieldLabel = "Custom Field");
-
-		CreateObject.saveObject();
-
-		ObjectAdmin.goToLayoutsTab();
-
-		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
-
-		ObjectAdmin.markLayoutAsDefault();
-
-		Click(locator1 = "ObjectAdmin#LAYOUT_LAYOUT_TAB");
-
-		ObjectAdmin.addTabFieldsOnLayout(
-			blockName = "Block 1",
-			columnsNumber = 1,
-			fieldList = "Custom Field",
-			tabName = "Field Tab");
-
-		ObjectAdmin.addTabRelationshipsOnLayout(
-			relationshipsLabelName = "Relationship",
-			tabName = "Relationship Tab");
-
-		CreateObject.saveObject();
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 141653");
-
-		CreateObject.selectTitleField(fieldLabel = "Custom Field");
-
-		CreateObject.saveObject();
-
-		Navigator.openURL();
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject141653");
-
-		ObjectPortlet.viewEntryDetails(entry = "Entry B");
-
-		ObjectPortlet.selectRelationshipFieldEntry(
-			entry = "",
-			newEntry = "Entry A");
-
-		Navigator.openURL();
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject141652");
-
-		ObjectPortlet.viewEntryDetails(entry = "Entry A");
-
-		ObjectPortlet.gotoRelationshipTab();
-
-		ObjectPortlet.viewEntry(entry = "Entry B");
-	}
-
-	@description = "LPS-135400 - Verify it is possible to add many relations through the Relationship tab"
-	@priority = 5
-	test CanAddRelationOnRelationshipTab {
-		property portal.acceptance = "true";
-
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 10",
-			objectName = "CustomObject10",
-			pluralLabelName = "Custom Objects 10");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Custom Field",
-			fieldName = "customObjectField",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject10");
-
-		ObjectAdmin.addObjectRelationshipViaAPI(
-			objectName_1 = "CustomObject10",
-			objectName_2 = "CustomObject10",
-			relationshipLabel = "Relationship",
-			relationshipName = "relationship",
-			relationshipType = "oneToMany");
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject10");
-
-		for (var fieldEntry : list "A,B") {
-			ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-				fieldName = "customObjectField",
-				objectName = "CustomObject10",
-				value = "Entry ${fieldEntry}");
-		}
-
-		ObjectAdmin.addObjectLayoutViaAPI(
-			layoutName = "Layout Name",
-			objectName = "CustomObject10");
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 10");
-
-		CreateObject.selectTitleField(fieldLabel = "Custom Field");
-
-		CreateObject.saveObject();
-
-		ObjectAdmin.goToLayoutsTab();
-
-		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
-
-		ObjectAdmin.markLayoutAsDefault();
-
-		Click(locator1 = "ObjectAdmin#LAYOUT_LAYOUT_TAB");
-
-		ObjectAdmin.addTabFieldsOnLayout(
-			blockName = "Block 1",
-			columnsNumber = 1,
-			fieldList = "Custom Field,Relationship",
-			tabName = "Field Tab");
-
-		ObjectAdmin.addTabRelationshipsOnLayout(
-			relationshipsLabelName = "Relationship",
-			tabName = "Relationship Tab");
-
-		CreateObject.saveObject();
-
-		Navigator.openURL();
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject10");
-
-		ObjectPortlet.viewEntryDetails(entry = "Entry A");
-
-		ObjectAdmin.gotoRelationshipsTab();
-
-		CreateObject.addRelationshipAndSelectEntry(titleFieldName = "Entry B");
-
-		Navigator.openURL();
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject10");
-
-		ObjectPortlet.viewEntryDetails(entry = "Entry B");
-
-		AssertElementPresent(
-			key_entry = "Entry A",
-			locator1 = "CreateObject#VIEW_ENTRY_SELECTED_ON_RELATIONSHIP_FIELD");
-
-		var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "CustomObject10");
-
-		ObjectDefinitionAPI.deleteRelationship(objectDefinitionId = ${objectDefinitionId});
-	}
-
 	@description = "LPS-135549 - Verify it is possible to cancel the creation of a Custom Object"
 	@priority = 4
 	test CanCancelCreationCustomObject {
@@ -351,39 +147,180 @@ definition {
 			locator1 = "ObjectAdmin#VIEW_OBJECT");
 	}
 
-	@description = "LPS-135400 - Verify it is possible to cancel the creation of a Relationship"
+	@description = "LPS-135397 - Verify it is possible to Cancel the update of a Layout"
 	@priority = 4
-	test CanCancelRelationshipCreation {
+	test CanCancelUpdateLayout {
 		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 13",
-			objectName = "CustomObject13",
-			pluralLabelName = "Custom Objects 13");
+			labelName = "Custom Object 14",
+			objectName = "CustomObject14",
+			pluralLabelName = "Custom Objects 14");
+
+		ObjectAdmin.addObjectLayoutViaAPI(
+			layoutName = "Layout",
+			objectName = "CustomObject14");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject14");
 
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectPortlet.selectCustomObject(label = "Custom Object 13");
+		ObjectPortlet.selectCustomObject(label = "Custom Object 14");
 
-		ObjectAdmin.gotoRelationshipsTab();
+		ObjectAdmin.goToLayoutsTab();
 
-		LexiconEntry.gotoAdd();
+		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+
+		SelectFrame(locator1 = "IFrame#IFRAME");
+
+		Click(locator1 = "ObjectAdmin#LAYOUT_LAYOUT_TAB");
+
+		ObjectAdmin.addTabFieldsOnLayout(
+			blockName = "Block 1",
+			columnsNumber = 2,
+			fieldLabelName = "Custom Field",
+			tabName = "Field Tab");
+
+		Click(locator1 = "ObjectAdmin#LAYOUT_INFO_TAB");
 
 		Type(
-			locator1 = "ObjectAdmin#LABEL_OBJECT_RELATIONSHIP",
-			value1 = "Custom Relationship");
-
-		ObjectAdmin.selectDropdownItem(
-			labelName = "Type",
-			optionName = "One to Many");
-
-		ObjectAdmin.selectDropdownItem(
-			labelName = "Many Records Of",
-			optionName = "Custom Object 13");
+			locator1 = "ObjectAdmin#LAYOUT_BASIC_INFO_NAME_FIELD",
+			value1 = "Layout Updated");
 
 		Button.clickCancel();
 
-		AssertTextEquals(
-			locator1 = "Message#EMPTY_STATE_INFO",
-			value1 = "No Results Found");
+		Refresh();
+
+		AssertTextNotEquals(
+			key_name = "Layout",
+			locator1 = "ObjectAdmin#TABLE_LIST_TITLE",
+			value1 = "Layout Updated");
+	}
+
+	@description = "LPS-135397 - Verify it is possible to collapse and expand a block of fields"
+	@priority = 4
+	test CanCollapseAndExpandBlock {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 16",
+			objectName = "CustomObject16",
+			pluralLabelName = "Custom Objects 16");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject16");
+
+		ObjectAdmin.addObjectLayoutViaAPI(
+			layoutName = "Layout",
+			objectName = "CustomObject16");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object 16");
+
+		ObjectAdmin.goToLayoutsTab();
+
+		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+
+		ObjectAdmin.markLayoutAsDefault();
+
+		Click(locator1 = "ObjectAdmin#LAYOUT_LAYOUT_TAB");
+
+		ObjectAdmin.addTabFieldsOnLayout(
+			blockName = "Block 1",
+			columnsNumber = 2,
+			fieldLabelName = "Custom Field",
+			isCollapsible = "Yes",
+			tabName = "Field Tab");
+
+		CreateObject.saveObject();
+
+		Navigator.openURL();
+
+		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject16");
+
+		ObjectAdmin.goToCustomObject(objectName = "CustomObject16");
+
+		LexiconEntry.gotoAdd();
+
+		AssertVisible(
+			key_entryLabel = "Custom Field",
+			locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_LABEL");
+	}
+
+	@description = "LPS-135397 - Verify if it's possible to create a Layout for an Object"
+	@priority = 5
+	test CanCreateLayout {
+		property portal.acceptance = "true";
+
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 23",
+			objectName = "CustomObject23",
+			pluralLabelName = "Custom Objects 23");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object 23");
+
+		ObjectAdmin.goToLayoutsTab();
+
+		ObjectAdmin.addObjectLayoutViaUI(layoutName = "Layout Name");
+
+		ObjectAdmin.assertObjectLayout(layoutLabel = "Layout Name");
+	}
+
+	@description = "LPS-135397 - Verify if it's possible to delete a Field"
+	@priority = 5
+	test CanDeleteFieldOnLayout {
+		property portal.acceptance = "true";
+
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object 33",
+			objectName = "CustomObject33",
+			pluralLabelName = "Custom Objects 33");
+
+		ObjectAdmin.addObjectFieldViaAPI(
+			fieldBusinessType = "Text",
+			fieldLabelName = "Custom Field",
+			fieldName = "customObjectField",
+			fieldType = "String",
+			isRequired = "false",
+			objectName = "CustomObject33");
+
+		ObjectAdmin.addObjectLayoutViaAPI(
+			layoutName = "Layout Name",
+			objectName = "CustomObject33");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object 33");
+
+		ObjectAdmin.goToLayoutsTab();
+
+		ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+
+		SelectFrame(locator1 = "IFrame#IFRAME");
+
+		Click(locator1 = "ObjectAdmin#LAYOUT_LAYOUT_TAB");
+
+		ObjectAdmin.addTabFieldsOnLayout(
+			blockName = "Block Name",
+			columnsNumber = 1,
+			fieldLabelName = "Custom Field",
+			tabName = "Field Tab");
+
+		CreateObject.deleteFieldOnBlock();
+
+		AssertElementNotPresent(
+			key_fieldLabelName = "Custom Field",
+			locator1 = "CreateObject#FIELD_ADDED_ON_BLOCK");
 	}
 
 	@description = "LPS-184370 - Verify the user can delete an inactive custom object"
@@ -796,50 +733,6 @@ definition {
 			fieldValue = "Entry 1");
 
 		PortletEntry.save();
-	}
-
-	@description = "LPS-135400 - Verify it is not possible to submit an entry with a invalid value on the Relationship field"
-	@priority = 4
-	test CannotSubmitEntryWithInvalidValueOnRelationshipField {
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 60",
-			objectName = "CustomObject60",
-			pluralLabelName = "Custom Objects 60");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Custom Field",
-			fieldName = "customObjectField",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject60");
-
-		ObjectAdmin.addObjectRelationshipViaAPI(
-			objectName_1 = "CustomObject60",
-			objectName_2 = "CustomObject60",
-			relationshipLabel = "Relationship",
-			relationshipName = "relationship",
-			relationshipType = "oneToMany");
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject60");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "customObjectField",
-			objectName = "CustomObject60",
-			value = "Entry A");
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject60");
-
-		ObjectPortlet.viewEntryDetails(entry = "Entry A");
-
-		ObjectPortlet.searchEntryRelationshipField(entryValue = "!@#$%");
-
-		CreateObject.saveObject();
-
-		AssertElementPresent(
-			key_className = "feedback",
-			key_errorMessage = "The field value is invalid.",
-			locator1 = "CreateObject#ERROR_MESSAGE");
 	}
 
 	@description = "LPS-135390 - Verify it is not possible to update an Object without the Update permission"
