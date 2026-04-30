@@ -5553,11 +5553,11 @@ test.describe('Manage object entries through View Object Entries', () => {
 			const userAccount =
 				await apiHelpers.headlessAdminUser.postUserAccount();
 
-			const objectRelationshipAPIClient = await apiHelpers.buildRestClient(
-				ObjectRelationshipAPI
-			);
+			const objectRelationshipAPIClient =
+				await apiHelpers.buildRestClient(ObjectRelationshipAPI);
 
-			const objectRelationshipName = 'objectRelationshipName' + Math.floor(Math.random() * 99);
+			const objectRelationshipName =
+				'objectRelationshipName' + Math.floor(Math.random() * 99);
 
 			const {body: objectRelationship} =
 				await objectRelationshipAPIClient.postObjectDefinitionByExternalReferenceCodeObjectRelationship(
@@ -5597,7 +5597,9 @@ test.describe('Manage object entries through View Object Entries', () => {
 			for (const entryLabel of ['Entry A', 'Entry B']) {
 				await viewObjectEntriesPage.goto(objectDefinition.className);
 
-				const row = page.getByRole('row', {name: new RegExp(entryLabel)});
+				const row = page.getByRole('row', {
+					name: new RegExp(entryLabel),
+				});
 
 				await expect(row).toBeVisible();
 
@@ -5626,11 +5628,15 @@ test.describe('Manage object entries through View Object Entries', () => {
 
 				await viewObjectEntriesPage.saveObjectEntryButton.click();
 
-				await expect(viewObjectEntriesPage.successMessage).toBeVisible();
+				await expect(
+					viewObjectEntriesPage.successMessage
+				).toBeVisible();
 
-				await expect(page.getByPlaceholder('Search')).toHaveValue(
-					userAccount.givenName.toLowerCase()
-				);
+				expect(
+					(
+						await page.getByPlaceholder('Search').inputValue()
+					).toLowerCase()
+				).toBe(userAccount.givenName.toLowerCase());
 			}
 		}
 	);
@@ -5768,11 +5774,11 @@ test.describe('Manage object entries through View Object Entries', () => {
 			const userAccount =
 				await apiHelpers.headlessAdminUser.postUserAccount();
 
-			const objectRelationshipAPIClient = await apiHelpers.buildRestClient(
-				ObjectRelationshipAPI
-			);
+			const objectRelationshipAPIClient =
+				await apiHelpers.buildRestClient(ObjectRelationshipAPI);
 
-			const objectRelationshipName = 'objectRelationshipName' + Math.floor(Math.random() * 99);
+			const objectRelationshipName =
+				'objectRelationshipName' + Math.floor(Math.random() * 99);
 
 			const {body: objectRelationship} =
 				await objectRelationshipAPIClient.postObjectDefinitionByExternalReferenceCodeObjectRelationship(
@@ -5811,7 +5817,9 @@ test.describe('Manage object entries through View Object Entries', () => {
 			await expect(viewObjectEntriesPage.successMessage).toBeVisible();
 
 			expect(
-				(await page.getByPlaceholder('Search').inputValue()).toLowerCase()
+				(
+					await page.getByPlaceholder('Search').inputValue()
+				).toLowerCase()
 			).toBe(userAccount.givenName.toLowerCase());
 		}
 	);
