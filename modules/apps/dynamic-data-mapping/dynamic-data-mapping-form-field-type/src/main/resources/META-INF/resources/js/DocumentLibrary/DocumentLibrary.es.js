@@ -629,7 +629,7 @@ const Main = ({
 
 	useEffect(() => {
 		window.onbeforeunload = function () {
-			if (!submitButtonClicked) {
+			if (!readOnly && !submitButtonClicked) {
 				deleteFileEntry();
 			}
 		};
@@ -637,7 +637,7 @@ const Main = ({
 		return () => {
 			window.onbeforeunload = null;
 		};
-	}, [deleteFileEntry, submitButtonClicked]);
+	}, [deleteFileEntry, readOnly, submitButtonClicked]);
 
 	useEffect(() => {
 		Liferay.on(
