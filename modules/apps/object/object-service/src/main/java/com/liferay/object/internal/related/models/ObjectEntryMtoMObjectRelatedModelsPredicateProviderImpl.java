@@ -89,7 +89,14 @@ public class ObjectEntryMtoMObjectRelatedModelsPredicateProviderImpl
 								getPrimaryKeyColumn()
 						)
 					).where(
-						predicate
+						ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
+							relatedObjectDefinition.getObjectDefinitionId()
+						).and(
+							ObjectEntryTable.INSTANCE.companyId.eq(
+								relatedObjectDefinition.getCompanyId())
+						).and(
+							predicate
+						)
 					))
 			));
 	}

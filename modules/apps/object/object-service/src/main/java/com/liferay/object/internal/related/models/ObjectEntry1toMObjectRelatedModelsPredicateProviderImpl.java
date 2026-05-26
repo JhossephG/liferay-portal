@@ -79,6 +79,7 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 					objectDefinition2, objectFieldLocalService),
 				objectDefinition2DynamicObjectDefinitionTable,
 				objectDefinition2ExtensionDynamicObjectDefinitionTable,
+				objectDefinition2,
 				DSLQueryFactoryUtil.select(objectRelationshipColumn),
 				predicate);
 		}
@@ -101,6 +102,7 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 						objectDefinition1, objectFieldLocalService),
 					objectDefinition1DynamicObjectDefinitionTable,
 					getExtensionDynamicObjectDefinitionTable(objectDefinition1),
+					objectDefinition1,
 					DSLQueryFactoryUtil.select(
 						objectDefinition1DynamicObjectDefinitionTable.
 							getPrimaryKeyColumn()),
@@ -163,7 +165,8 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 				dynamicObjectDefinitionLocalizationTable,
 			DynamicObjectDefinitionTable dynamicObjectDefinitionTable,
 			DynamicObjectDefinitionTable extensionDynamicObjectDefinitionTable,
-			FromStep fromStep, Predicate predicate)
+			ObjectDefinition objectDefinition, FromStep fromStep,
+			Predicate predicate)
 		throws PortalException {
 
 		return column.in(
@@ -185,7 +188,14 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 					dynamicObjectDefinitionLocalizationTable,
 					dynamicObjectDefinitionTable, null)
 			).where(
-				predicate
+				ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
+					objectDefinition.getObjectDefinitionId()
+				).and(
+					ObjectEntryTable.INSTANCE.companyId.eq(
+						objectDefinition.getCompanyId())
+				).and(
+					predicate
+				)
 			));
 	}
 
