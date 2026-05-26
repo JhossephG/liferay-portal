@@ -4744,6 +4744,9 @@ public class ObjectEntryLocalServiceImpl
 			ObjectEntryTable.INSTANCE.objectDefinitionId.eq(
 				objectDefinition.getObjectDefinitionId()
 			).and(
+				ObjectEntryTable.INSTANCE.companyId.eq(
+					objectDefinition.getCompanyId())
+			).and(
 				ObjectEntryTable.INSTANCE.rootObjectEntryId.eq(
 					ObjectEntryTable.INSTANCE.objectEntryId
 				).or(
