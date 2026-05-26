@@ -82,6 +82,7 @@ import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -783,9 +784,14 @@ public class DefaultObjectEntryManagerImpl
 		}
 
 		Long[] groupIds = groupIdsList.toArray(new Long[0]);
+		Predicate predicate;
 
-		Predicate predicate = _filterFactory.create(
-			filterExpression, objectDefinition);
+		try (SafeCloseable safeCloseable =
+				GroupThreadLocal.setGroupIdWithSafeCloseable(groupId)) {
+
+			predicate = _filterFactory.create(
+				filterExpression, objectDefinition);
+		}
 
 		int start = _getStartPosition(pagination);
 		int end = _getEndPosition(pagination);

@@ -5,6 +5,7 @@
 
 package com.liferay.object.internal.related.models;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.internal.entry.util.ObjectEntrySearchUtil;
 import com.liferay.object.model.ObjectDefinition;
@@ -21,6 +22,8 @@ import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.GroupThreadLocal;
+import com.liferay.portal.kernel.util.StringUtil;
 
 /**
  * @author Luis Miguel Barcos
@@ -193,6 +196,18 @@ public class ObjectEntry1toMObjectRelatedModelsPredicateProviderImpl
 				).and(
 					ObjectEntryTable.INSTANCE.companyId.eq(
 						objectDefinition.getCompanyId())
+				).and(
+					() -> {
+						if (StringUtil.equals(
+								objectDefinition.getScope(),
+								ObjectDefinitionConstants.SCOPE_COMPANY)) {
+
+							return ObjectEntryTable.INSTANCE.groupId.eq(0L);
+						}
+
+						return ObjectEntryTable.INSTANCE.groupId.eq(
+							GroupThreadLocal.getGroupId());
+					}
 				).and(
 					predicate
 				)
