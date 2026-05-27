@@ -23,6 +23,7 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
@@ -100,7 +102,7 @@ public class OneToManyObjectRelationshipInfoCollectionProviderTest {
 	}
 
 	@Test
-	public void testOneToManyObjectRelationshipRelatedInfoCollectionProvider()
+	public void testOneToManyObjectRelationshipRelatedInfoCollectionProviderWithCustomObjectDefinition()
 		throws Exception {
 
 		ObjectEntry parentObjectEntry = _objectEntryLocalService.addObjectEntry(
@@ -147,6 +149,122 @@ public class OneToManyObjectRelationshipInfoCollectionProviderTest {
 		Assert.assertEquals(2, collectionInfoPage.getTotalCount());
 	}
 
+	@Test
+	public void testOneToManyObjectRelationshipRelatedInfoCollectionProviderWithSystemObjectDefinition()
+		throws Exception {
+
+		ObjectDefinition modifiableSystemObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				TestPropsValues.getCompanyId(), "CMSBlog");
+
+		// Modifiable system object definition as child
+
+		_customObjectDefinition1 = _addAndPublishCustomObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		_objectRelationshipLocalService.addObjectRelationship(
+			null, TestPropsValues.getUserId(),
+			_customObjectDefinition1.getObjectDefinitionId(),
+			modifiableSystemObjectDefinition.getObjectDefinitionId(), 0,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			StringUtil.randomId(), false,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		RelatedInfoItemCollectionProvider relatedInfoItemCollectionProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				RelatedInfoItemCollectionProvider.class,
+				_customObjectDefinition1.getClassName());
+
+		Assert.assertNotNull(relatedInfoItemCollectionProvider);
+		Assert.assertEquals(
+			modifiableSystemObjectDefinition.getClassName(),
+			relatedInfoItemCollectionProvider.getCollectionItemClassName());
+
+		// Modifiable system object definition as parent
+
+		_customObjectDefinition2 = _addAndPublishCustomObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		_objectRelationshipLocalService.addObjectRelationship(
+			null, TestPropsValues.getUserId(),
+			modifiableSystemObjectDefinition.getObjectDefinitionId(),
+			_customObjectDefinition2.getObjectDefinitionId(), 0,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			StringUtil.randomId(), false,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		relatedInfoItemCollectionProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				RelatedInfoItemCollectionProvider.class,
+				modifiableSystemObjectDefinition.getClassName());
+
+		Assert.assertNotNull(relatedInfoItemCollectionProvider);
+		Assert.assertEquals(
+			_customObjectDefinition2.getClassName(),
+			relatedInfoItemCollectionProvider.getCollectionItemClassName());
+
+		// Unmodifiable system object definition as child
+
+		ObjectDefinition unmodifiableSystemObjectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinitionByClassName(
+				TestPropsValues.getCompanyId(), User.class.getName());
+
+		_customObjectDefinition3 = _addAndPublishCustomObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		_objectRelationshipLocalService.addObjectRelationship(
+			null, TestPropsValues.getUserId(),
+			_customObjectDefinition3.getObjectDefinitionId(),
+			unmodifiableSystemObjectDefinition.getObjectDefinitionId(), 0,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			StringUtil.randomId(), false,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		Assert.assertNull(
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				RelatedInfoItemCollectionProvider.class,
+				_customObjectDefinition3.getClassName()));
+
+		// Unmodifiable system object definition as parent
+
+		_customObjectDefinition4 = _addAndPublishCustomObjectDefinition(
+			ObjectDefinitionConstants.SCOPE_SITE);
+
+		_objectRelationshipLocalService.addObjectRelationship(
+			null, TestPropsValues.getUserId(),
+			unmodifiableSystemObjectDefinition.getObjectDefinitionId(),
+			_customObjectDefinition4.getObjectDefinitionId(), 0,
+			ObjectRelationshipConstants.DELETION_TYPE_CASCADE, false,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			StringUtil.randomId(), false,
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+
+		Assert.assertNull(
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				RelatedInfoItemCollectionProvider.class,
+				unmodifiableSystemObjectDefinition.getClassName()));
+	}
+
+	private ObjectDefinition _addAndPublishCustomObjectDefinition(String scope)
+		throws Exception {
+
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			new TextObjectFieldBuilder(
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"customTextObjectFieldName"
+			).build(),
+			scope);
+
+		return _objectDefinitionLocalService.publishCustomObjectDefinition(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId());
+	}
+
 	private ObjectEntry _addChildObjectEntry(
 			Group group, ObjectDefinition objectDefinition,
 			ObjectDefinition parentObjectDefinition,
@@ -171,20 +289,39 @@ public class OneToManyObjectRelationshipInfoCollectionProviderTest {
 	private ObjectDefinition _addObjectDefinition(ObjectField objectField)
 		throws Exception {
 
+		return _addObjectDefinition(
+			objectField, ObjectDefinitionConstants.SCOPE_SITE);
+	}
+
+	private ObjectDefinition _addObjectDefinition(
+			ObjectField objectField, String scope)
+		throws Exception {
+
 		return _objectDefinitionLocalService.addCustomObjectDefinition(
 			null, TestPropsValues.getUserId(), 0, null, true, false, true,
 			false, true, false, false, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			ObjectDefinitionTestUtil.getRandomName(), null, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			true, ObjectDefinitionConstants.SCOPE_SITE,
-			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+			true, scope, ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 			Collections.emptyList(), Arrays.asList(objectField),
 			Collections.emptyList(), new ServiceContext());
 	}
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _childObjectDefinition;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _customObjectDefinition1;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _customObjectDefinition2;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _customObjectDefinition3;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _customObjectDefinition4;
 
 	@DeleteAfterTestRun
 	private Group _group;
