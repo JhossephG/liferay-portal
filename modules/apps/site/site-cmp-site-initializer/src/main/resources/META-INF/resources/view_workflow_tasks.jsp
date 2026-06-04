@@ -11,6 +11,10 @@
 ViewWorkflowTasksSectionDisplayContext viewWorkflowTasksSectionDisplayContext = (ViewWorkflowTasksSectionDisplayContext)request.getAttribute(ViewWorkflowTasksSectionDisplayContext.class.getName());
 %>
 
+<react:component
+	module="{WorkflowTasksOverview} from site-cmp-site-initializer"
+/>
+
 <div class="cms-section custom-empty-state">
 	<frontend-data-set:headless-display
 		additionalProps="<%= viewWorkflowTasksSectionDisplayContext.getAdditionalProps() %>"
