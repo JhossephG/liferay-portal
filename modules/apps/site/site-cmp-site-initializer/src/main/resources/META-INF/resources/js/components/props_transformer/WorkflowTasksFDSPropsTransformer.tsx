@@ -16,11 +16,14 @@ import {WORKFLOW_TASK_ACTION_LINK_ID} from '../../utils/constants';
 import {openCMPModal} from '../../utils/openCMPModal';
 import {TaskAction, WorkflowTaskItemData} from '../../utils/types';
 import WORKFLOW_TASK_MODALS from '../../utils/workflowTaskModals';
+import BulkEditWorkflowAssigneeModalContent from '../modal/BulkEditWorkflowAssigneeModalContent';
+import BulkEditWorkflowDueDateModalContent from '../modal/BulkEditWorkflowDueDateModalContent';
 import ACTIONS from './actions/creationMenuActions';
 import WorkflowStateRenderer from './cell_renderers/WorkflowStateRenderer';
 import WorkflowTaskActionLinkRenderer from './cell_renderers/WorkflowTaskActionLinkRenderer';
 
 export default function WorkflowTasksFDSPropsTransformer({
+	bulkActions = [],
 	creationMenu,
 	id,
 	itemsActions = [],
@@ -28,27 +31,40 @@ export default function WorkflowTasksFDSPropsTransformer({
 	...otherProps
 }: {
 	apiURL: string;
+	bulkActions?: any[];
 	creationMenu: any;
 	id: string;
 	itemsActions?: any[];
 	otherProps: any;
 	views: IView[];
 }) {
-	const nonDefaultViews = views.map((view) => ({
-		...view,
-		default: false,
-		initialPaginationDelta: 20,
-	}));
+	const nonDefaultViews = views
+		.filter((view) => view.name !== 'kanban')
+		.map((view) => ({
+			...view,
+			default: false,
+			initialPaginationDelta: 20,
+		}));
 
 	return {
 		...otherProps,
-		creationMenu: {
-			...creationMenu,
-			primaryItems: addOnClickToCreationMenuItems(
-				creationMenu.primaryItems,
-				ACTIONS
-			),
-		},
+		bulkActions: bulkActions.map((action) => ({
+			...action,
+			isDisabled: ({
+				allItemsSelectedActive,
+			}: {
+				allItemsSelectedActive: boolean;
+			}) => allItemsSelectedActive,
+		})),
+		creationMenu: creationMenu
+			? {
+					...creationMenu,
+					primaryItems: addOnClickToCreationMenuItems(
+						creationMenu.primaryItems,
+						ACTIONS
+					),
+				}
+			: creationMenu,
 		customRenderers: {
 			tableCell: [
 				{
@@ -130,6 +146,42 @@ export default function WorkflowTasksFDSPropsTransformer({
 					}),
 				size: 'md',
 			});
+		},
+		onBulkActionItemClick: async ({
+			action,
+			selectedData,
+		}: {
+			action: any;
+			selectedData: any;
+		}) => {
+			const actionId = action?.data?.id;
+
+			let contentComponent;
+
+			if (actionId === 'assign-to') {
+				contentComponent = ({closeModal}: {closeModal: () => void}) => (
+					<BulkEditWorkflowAssigneeModalContent
+						closeModal={closeModal}
+						dataSetId={id}
+						selectedData={selectedData}
+					/>
+				);
+			}
+			else if (actionId === 'update-due-date') {
+				contentComponent = ({closeModal}: {closeModal: () => void}) => (
+					<BulkEditWorkflowDueDateModalContent
+						closeModal={closeModal}
+						dataSetId={id}
+						selectedData={selectedData}
+					/>
+				);
+			}
+
+			if (!contentComponent) {
+				return;
+			}
+
+			await openCMPModal({center: true, contentComponent, size: 'md'});
 		},
 		views: nonDefaultViews,
 	};
