@@ -1279,7 +1279,6 @@ public class ObjectEntryResourceTest {
 			new HashSet<>(nestedFieldsContext.getNestedFields()));
 	}
 
-	@FeatureFlag("LPD-34594")
 	@Test
 	public void testCustomizeNestedFieldsContextWithRootModelHierarchy()
 		throws Exception {
@@ -8567,7 +8566,6 @@ public class ObjectEntryResourceTest {
 			JSONCompareMode.LENIENT);
 	}
 
-	@FeatureFlag("LPD-34594")
 	@Test
 	public void testGetObjectEntryWithRootModelHierarchy() throws Exception {
 		try {
