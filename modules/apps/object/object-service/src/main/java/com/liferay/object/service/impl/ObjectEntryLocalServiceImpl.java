@@ -2791,6 +2791,9 @@ public class ObjectEntryLocalServiceImpl
 		_friendlyURLEntryLocalService.addFriendlyURLEntry(
 			groupId, classNameId, objectEntry.getObjectEntryId(),
 			objectEntry.getDefaultLanguageId(), urlTitleMap, serviceContext);
+
+		_syncAttachmentFileEntryFriendlyURLEntries(
+			objectDefinition, objectEntry, serviceContext, urlTitleMap, values);
 	}
 
 	private JoinStep _addInnerJoinON(
@@ -6956,6 +6959,90 @@ public class ObjectEntryLocalServiceImpl
 		WorkflowHandlerRegistryUtil.startWorkflowInstance(
 			objectEntry.getCompanyId(), objectEntry.getNonzeroGroupId(), userId,
 			className, objectEntry.getObjectEntryId(), objectEntry,
+			serviceContext);
+	}
+
+	private void _syncAttachmentFileEntryFriendlyURLEntries(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			ServiceContext serviceContext, Map<String, String> urlTitleMap,
+			Map<String, Serializable> values)
+		throws PortalException {
+
+		if (urlTitleMap.isEmpty()) {
+			return;
+		}
+
+		long fileEntryClassNameId = _classNameLocalService.getClassNameId(
+			FileEntry.class);
+
+		for (ObjectField objectField :
+				_objectFieldPersistence.findByObjectDefinitionId(
+					objectDefinition.getObjectDefinitionId())) {
+
+			if (!objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) ||
+				!Objects.equals(
+					ObjectFieldSettingUtil.getValue(
+						ObjectFieldSettingConstants.NAME_FILE_SOURCE,
+						objectField),
+					ObjectFieldSettingConstants.
+						VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA)) {
+
+				continue;
+			}
+
+			if (objectField.isLocalized()) {
+				Map<String, Serializable> localizedValues =
+					(Map<String, Serializable>)values.get(
+						objectField.getI18nObjectFieldName());
+
+				if (localizedValues == null) {
+					continue;
+				}
+
+				for (Map.Entry<String, String> entry : urlTitleMap.entrySet()) {
+					String languageId = entry.getKey();
+
+					_syncFileEntryFriendlyURLEntry(
+						GetterUtil.getLong(localizedValues.get(languageId)),
+						fileEntryClassNameId, languageId, serviceContext,
+						Collections.singletonMap(languageId, entry.getValue()));
+				}
+			}
+			else {
+				_syncFileEntryFriendlyURLEntry(
+					GetterUtil.getLong(values.get(objectField.getName())),
+					fileEntryClassNameId, objectEntry.getDefaultLanguageId(),
+					serviceContext, urlTitleMap);
+			}
+		}
+	}
+
+	private void _syncFileEntryFriendlyURLEntry(
+			long dlFileEntryId, long fileEntryClassNameId, String languageId,
+			ServiceContext serviceContext, Map<String, String> urlTitleMap)
+		throws PortalException {
+
+		if (dlFileEntryId <= 0) {
+			return;
+		}
+
+		FileEntry fileEntry;
+
+		try {
+			fileEntry = _dlAppLocalService.getFileEntry(dlFileEntryId);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			return;
+		}
+
+		_friendlyURLEntryLocalService.addFriendlyURLEntry(
+			fileEntry.getGroupId(), fileEntryClassNameId,
+			fileEntry.getFileEntryId(), languageId, urlTitleMap,
 			serviceContext);
 	}
 
