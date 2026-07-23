@@ -86,6 +86,7 @@ import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.internal.entry.util.ObjectEntrySearchUtil;
+import com.liferay.object.internal.field.attachment.AttachmentObjectFieldUtil;
 import com.liferay.object.internal.filter.parser.CurrentUserObjectFilterParser;
 import com.liferay.object.internal.filter.parser.DateRangeObjectFilterParser;
 import com.liferay.object.internal.filter.parser.EqualityOperatorsObjectFilterParser;
@@ -2763,6 +2764,9 @@ public class ObjectEntryLocalServiceImpl
 					groupId, classNameId, objectEntry.getObjectEntryId(),
 					friendlyURL, entry.getKey()));
 		}
+
+		_syncAttachmentFileEntryFriendlyURLEntries(
+			objectDefinition, objectEntry, serviceContext, urlTitleMap);
 
 		urlTitleMap.computeIfAbsent(
 			objectEntry.getDefaultLanguageId(),
@@ -6934,6 +6938,95 @@ public class ObjectEntryLocalServiceImpl
 		WorkflowHandlerRegistryUtil.startWorkflowInstance(
 			objectEntry.getCompanyId(), objectEntry.getNonzeroGroupId(), userId,
 			className, objectEntry.getObjectEntryId(), objectEntry,
+			serviceContext);
+	}
+
+	private void _syncAttachmentFileEntryFriendlyURLEntries(
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			ServiceContext serviceContext, Map<String, String> urlTitleMap)
+		throws PortalException {
+
+		if (!Objects.equals(
+				objectDefinition.getExternalReferenceCode(),
+				"L_CMS_BASIC_DOCUMENT") ||
+			urlTitleMap.isEmpty()) {
+
+			return;
+		}
+
+		Map<String, Serializable> values = objectEntry.getValues();
+
+		long fileEntryClassNameId = _classNameLocalService.getClassNameId(
+			FileEntry.class);
+
+		for (ObjectField objectField :
+				_objectFieldPersistence.findByObjectDefinitionId(
+					objectDefinition.getObjectDefinitionId())) {
+
+			if (!AttachmentObjectFieldUtil.isUserComputerAttachmentObjectField(
+					objectField)) {
+
+				continue;
+			}
+
+			if (objectField.isLocalized()) {
+				Map<String, Serializable> localizedValues =
+					(Map<String, Serializable>)values.get(
+						objectField.getI18nObjectFieldName());
+
+				if (localizedValues == null) {
+					continue;
+				}
+
+				for (Map.Entry<String, String> entry : urlTitleMap.entrySet()) {
+					String languageId = entry.getKey();
+
+					_syncFileEntryFriendlyURLEntry(
+						languageId,
+						GetterUtil.getLong(localizedValues.get(languageId)),
+						fileEntryClassNameId, serviceContext,
+						Collections.singletonMap(languageId, entry.getValue()));
+				}
+			}
+			else {
+				_syncFileEntryFriendlyURLEntry(
+					objectEntry.getDefaultLanguageId(),
+					GetterUtil.getLong(values.get(objectField.getName())),
+					fileEntryClassNameId, serviceContext, urlTitleMap);
+			}
+		}
+	}
+
+	private void _syncFileEntryFriendlyURLEntry(
+			String defaultLanguageId, long dlFileEntryId,
+			long fileEntryClassNameId, ServiceContext serviceContext,
+			Map<String, String> urlTitleMap)
+		throws PortalException {
+
+		if (dlFileEntryId <= 0) {
+			return;
+		}
+
+		FileEntry fileEntry = _dlAppLocalService.fetchFileEntry(dlFileEntryId);
+
+		if (fileEntry == null) {
+			return;
+		}
+
+		Map<String, String> fileEntryURLTitleMap = new HashMap<>();
+
+		for (Map.Entry<String, String> entry : urlTitleMap.entrySet()) {
+			fileEntryURLTitleMap.put(
+				entry.getKey(),
+				_friendlyURLEntryLocalService.getUniqueUrlTitle(
+					fileEntry.getGroupId(), fileEntryClassNameId,
+					fileEntry.getFileEntryId(), entry.getValue(),
+					entry.getKey()));
+		}
+
+		_friendlyURLEntryLocalService.addFriendlyURLEntry(
+			fileEntry.getGroupId(), fileEntryClassNameId,
+			fileEntry.getFileEntryId(), defaultLanguageId, fileEntryURLTitleMap,
 			serviceContext);
 	}
 
