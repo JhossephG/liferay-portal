@@ -48,6 +48,7 @@ import com.liferay.exportimport.report.model.ExportImportReportEntry;
 import com.liferay.exportimport.report.service.ExportImportReportEntryLocalService;
 import com.liferay.exportimport.test.util.ExportImportConfigurationTemporarySwapper;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.list.type.entry.util.ListTypeEntryUtil;
 import com.liferay.list.type.model.ListTypeDefinition;
@@ -4341,6 +4342,162 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testAddOrUpdateObjectEntryWithFriendlyURLAndAttachmentObjectField()
+		throws Exception {
+
+		_objectDefinition.setFriendlyURLSeparator("test-attachment");
+
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				"attachment", () -> _addDLFileEntry().getFileEntryId()
+			).put(
+				"emailAddressRequired", "athanasius@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		long dlFileEntryId = MapUtil.getLong(
+			objectEntry.getValues(), "attachment");
+
+		_assertFileEntryFriendlyURLEntries(
+			dlFileEntryId, objectEntry.getURLTitleMap());
+
+		objectEntry = _objectEntryLocalService.updateObjectEntry(
+			TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+			objectEntry.getObjectEntryFolderId(),
+			HashMapBuilder.<String, Serializable>put(
+				"attachment", dlFileEntryId
+			).put(
+				"emailAddressRequired", "athanasius@liferay.com"
+			).put(
+				"externalReferenceCode", RandomTestUtil.randomString()
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
+
+		_assertFileEntryFriendlyURLEntries(
+			dlFileEntryId, objectEntry.getURLTitleMap());
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntry);
+
+		Assert.assertNull(
+			_friendlyURLEntryLocalService.fetchMainFriendlyURLEntry(
+				_classNameLocalService.getClassNameId(FileEntry.class),
+				dlFileEntryId));
+	}
+
+	@Test
+	public void testAddOrUpdateObjectEntryWithFriendlyURLAndLocalizedAttachmentObjectField()
+		throws Exception {
+
+		_objectDefinition.setEnableFriendlyURLCustomization(true);
+		_objectDefinition.setFriendlyURLSeparator("test-localized-attachment");
+
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
+
+		ObjectField objectField = _addAttachmentObjectField(
+			ObjectFieldSettingConstants.VALUE_USER_COMPUTER_TO_DOCS_AND_MEDIA,
+			true);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				"en_US", "url-en"
+			).put(
+				"pt_BR", "url-pt"
+			).build());
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				objectField.getI18nObjectFieldName(),
+				HashMapBuilder.put(
+					"en_US", _addDLFileEntry().getFileEntryId()
+				).put(
+					"pt_BR", _addDLFileEntry().getFileEntryId()
+				).build()
+			).put(
+				"emailAddressRequired", "athanasius@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build(),
+			serviceContext);
+
+		Map<String, Serializable> values = objectEntry.getValues();
+
+		Map<String, Serializable> localizedValues =
+			(Map<String, Serializable>)values.get(
+				objectField.getI18nObjectFieldName());
+
+		Map<String, String> urlTitleMap = objectEntry.getURLTitleMap();
+
+		// Each locale's friendly URL is written to that locale's own file
+		// entry, not blanket-written to a single file entry
+
+		_assertFileEntryFriendlyURLEntries(
+			MapUtil.getLong(localizedValues, "en_US"),
+			Collections.singletonMap("en_US", urlTitleMap.get("en_US")));
+
+		FileEntry fileEntry = _dlAppLocalService.getFileEntry(
+			MapUtil.getLong(localizedValues, "pt_BR"));
+
+		FriendlyURLEntry friendlyURLEntry =
+			_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
+				fileEntry.getGroupId(),
+				_classNameLocalService.getClassNameId(FileEntry.class),
+				urlTitleMap.get("pt_BR"));
+
+		Assert.assertNotNull(friendlyURLEntry);
+		Assert.assertEquals(
+			fileEntry.getFileEntryId(), friendlyURLEntry.getClassPK());
+	}
+
+	@Test
+	public void testAddOrUpdateObjectEntryWithFriendlyURLAndReferencedAttachmentObjectField()
+		throws Exception {
+
+		_objectDefinition.setFriendlyURLSeparator("test-referenced-attachment");
+
+		_objectDefinition =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition);
+
+		DLFileEntry dlFileEntry = _addDLFileEntry();
+
+		// A referenced file keeps its own friendly URL, assigned when the file
+		// was created, and the object entry's friendly URL is not mirrored onto
+		// it
+
+		Map<String, String> urlTitleMap = _getFileEntryURLTitleMap(
+			dlFileEntry.getFileEntryId());
+
+		_addObjectEntry(
+			HashMapBuilder.<String, Serializable>put(
+				() -> _addAttachmentObjectField(
+					ObjectFieldSettingConstants.VALUE_DOCS_AND_MEDIA
+				).getName(),
+				dlFileEntry.getFileEntryId()
+			).put(
+				"emailAddressRequired", "athanasius@liferay.com"
+			).put(
+				"listTypeEntryKeyRequired", "listTypeEntryKey1"
+			).build());
+
+		AssertUtils.assertEquals(
+			urlTitleMap,
+			_getFileEntryURLTitleMap(dlFileEntry.getFileEntryId()));
+	}
+
+	@Test
 	public void testAuditRouter() throws Exception {
 		Queue<AuditMessage> auditMessages = new LinkedList<>();
 
@@ -8533,10 +8690,19 @@ public class ObjectEntryLocalServiceTest {
 	private ObjectField _addAttachmentObjectField(String fileSource)
 		throws Exception {
 
+		return _addAttachmentObjectField(fileSource, false);
+	}
+
+	private ObjectField _addAttachmentObjectField(
+			String fileSource, boolean localized)
+		throws Exception {
+
 		return ObjectFieldUtil.addCustomObjectField(
 			new AttachmentObjectFieldBuilder(
 			).labelMap(
 				RandomTestUtil.randomLocaleStringMap()
+			).localized(
+				localized
 			).name(
 				"a" + RandomTestUtil.randomString()
 			).objectDefinitionId(
@@ -8978,6 +9144,18 @@ public class ObjectEntryLocalServiceTest {
 			objectValidationRuleResults.get(0));
 	}
 
+	private void _assertFileEntryFriendlyURLEntries(
+			long dlFileEntryId, Map<String, String> expectedURLTitleMap)
+		throws Exception {
+
+		Map<String, String> urlTitleMap = _getFileEntryURLTitleMap(
+			dlFileEntryId);
+
+		Assert.assertNotNull(urlTitleMap);
+
+		AssertUtils.assertEquals(expectedURLTitleMap, urlTitleMap);
+	}
+
 	private void _assertFriendlyURLEntries(
 			int expectedSize, ObjectDefinition objectDefinition,
 			ObjectEntry objectEntry)
@@ -9221,6 +9399,30 @@ public class ObjectEntryLocalServiceTest {
 				"com/liferay/object/service/test/dependencies/" + fileName));
 
 		return content.getBytes();
+	}
+
+	private Map<String, String> _getFileEntryURLTitleMap(long dlFileEntryId) {
+		FriendlyURLEntry friendlyURLEntry =
+			_friendlyURLEntryLocalService.fetchMainFriendlyURLEntry(
+				_classNameLocalService.getClassNameId(FileEntry.class),
+				dlFileEntryId);
+
+		if (friendlyURLEntry == null) {
+			return null;
+		}
+
+		Map<String, String> urlTitleMap = new HashMap<>();
+
+		for (FriendlyURLEntryLocalization friendlyURLEntryLocalization :
+				_friendlyURLEntryLocalService.getFriendlyURLEntryLocalizations(
+					friendlyURLEntry.getFriendlyURLEntryId())) {
+
+			urlTitleMap.put(
+				friendlyURLEntryLocalization.getLanguageId(),
+				friendlyURLEntryLocalization.getUrlTitle());
+		}
+
+		return urlTitleMap;
 	}
 
 	private String _getMultiselectPicklistObjectFieldValue(
