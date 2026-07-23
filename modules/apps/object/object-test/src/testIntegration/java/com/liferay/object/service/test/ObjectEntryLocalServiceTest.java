@@ -2014,6 +2014,49 @@ public class ObjectEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testAddObjectEntryWithDuplicateFileEntryFriendlyURL()
+		throws Exception {
+
+		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), DepotConstants.TYPE_SPACE,
+			ServiceContextTestUtil.getServiceContext());
+
+		ObjectEntry objectEntry1 = _addCMSBasicDocumentObjectEntry(
+			depotEntry.getGroupId(), _addDLFileEntry().getFileEntryId(),
+			ServiceContextTestUtil.getServiceContext());
+
+		objectEntry1 = _objectEntryLocalService.getObjectEntry(
+			objectEntry1.getObjectEntryId());
+
+		Map<String, String> fileEntryURLTitleMap = _getFileEntryURLTitleMap(
+			MapUtil.getLong(objectEntry1.getValues(), "file"));
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAttribute(
+			"friendlyUrlMap", (Serializable)fileEntryURLTitleMap);
+
+		ObjectEntry objectEntry2 = _addCMSBasicDocumentObjectEntry(
+			depotEntry.getGroupId(), _addDLFileEntry().getFileEntryId(),
+			serviceContext);
+
+		objectEntry2 = _objectEntryLocalService.getObjectEntry(
+			objectEntry2.getObjectEntryId());
+
+		long dlFileEntryId2 = MapUtil.getLong(objectEntry2.getValues(), "file");
+
+		Assert.assertEquals(
+			fileEntryURLTitleMap, objectEntry2.getURLTitleMap());
+
+		Assert.assertEquals(
+			MapUtil.getString(fileEntryURLTitleMap, "en_US") + "-1",
+			MapUtil.getString(
+				_getFileEntryURLTitleMap(dlFileEntryId2), "en_US"));
+	}
+
+	@Test
 	public void testAddObjectEntryWithEmailAddressObjectField()
 		throws Exception {
 
@@ -4314,6 +4357,87 @@ public class ObjectEntryLocalServiceTest {
 
 		_assertFriendlyURLEntries(0, siteObjectDefinition, siteObjectEntry1);
 		_assertFriendlyURLEntries(0, siteObjectDefinition, siteObjectEntry2);
+	}
+
+	@Test
+	public void testAddOrUpdateObjectEntryWithFriendlyURLAndAttachmentObjectField()
+		throws Exception {
+
+		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), DepotConstants.TYPE_SPACE,
+			ServiceContextTestUtil.getServiceContext());
+
+		DLFileEntry dlFileEntry = _addDLFileEntry();
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				"en_US", StringUtil.toLowerCase(RandomTestUtil.randomString())
+			).build());
+
+		ObjectEntry objectEntry = _addCMSBasicDocumentObjectEntry(
+			depotEntry.getGroupId(), dlFileEntry.getFileEntryId(),
+			serviceContext);
+
+		objectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntry.getObjectEntryId());
+
+		long dlFileEntryId = MapUtil.getLong(objectEntry.getValues(), "file");
+
+		_assertFileEntryFriendlyURLEntries(
+			dlFileEntryId, objectEntry.getURLTitleMap());
+
+		serviceContext = ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				"en_US", StringUtil.toLowerCase(RandomTestUtil.randomString())
+			).build());
+
+		objectEntry = _objectEntryLocalService.updateObjectEntry(
+			TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+			objectEntry.getObjectEntryFolderId(),
+			HashMapBuilder.<String, Serializable>put(
+				"file", dlFileEntryId
+			).put(
+				"title_i18n",
+				HashMapBuilder.put(
+					"en_US", RandomTestUtil.randomString()
+				).build()
+			).build(),
+			serviceContext);
+
+		objectEntry = _objectEntryLocalService.getObjectEntry(
+			objectEntry.getObjectEntryId());
+
+		dlFileEntryId = MapUtil.getLong(objectEntry.getValues(), "file");
+
+		_assertFileEntryFriendlyURLEntries(
+			dlFileEntryId, objectEntry.getURLTitleMap());
+
+		serviceContext = ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				"en_US", StringUtil.toLowerCase(RandomTestUtil.randomString())
+			).build());
+
+		objectEntry = _objectEntryLocalService.partialUpdateObjectEntry(
+			TestPropsValues.getUserId(), objectEntry.getObjectEntryId(),
+			objectEntry.getObjectEntryFolderId(),
+			HashMapBuilder.<String, Serializable>put(
+				"externalReferenceCode", RandomTestUtil.randomString()
+			).build(),
+			serviceContext);
+
+		_assertFileEntryFriendlyURLEntries(
+			dlFileEntryId, objectEntry.getURLTitleMap());
 	}
 
 	@Test
@@ -8557,6 +8681,28 @@ public class ObjectEntryLocalServiceTest {
 			).build());
 	}
 
+	private ObjectEntry _addCMSBasicDocumentObjectEntry(
+			long groupId, long dlFileEntryId, ServiceContext serviceContext)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.
+				getObjectDefinitionByExternalReferenceCode(
+					"L_CMS_BASIC_DOCUMENT", TestPropsValues.getCompanyId());
+
+		return _addObjectEntry(
+			groupId, objectDefinition,
+			HashMapBuilder.<String, Serializable>put(
+				"file", dlFileEntryId
+			).put(
+				"title_i18n",
+				HashMapBuilder.put(
+					"en_US", RandomTestUtil.randomString()
+				).build()
+			).build(),
+			serviceContext);
+	}
+
 	private void _addComment(
 			Group group, ObjectDefinition objectDefinition,
 			ObjectEntry objectEntry)
@@ -8938,6 +9084,16 @@ public class ObjectEntryLocalServiceTest {
 			objectValidationRuleResults.get(0));
 	}
 
+	private void _assertFileEntryFriendlyURLEntries(
+			long dlFileEntryId, Map<String, String> expectedURLTitleMap)
+		throws Exception {
+
+		Map<String, String> urlTitleMap = _getFileEntryURLTitleMap(
+			dlFileEntryId);
+
+		AssertUtils.assertEquals(expectedURLTitleMap, urlTitleMap);
+	}
+
 	private void _assertFriendlyURLEntries(
 			int expectedSize, ObjectDefinition objectDefinition,
 			ObjectEntry objectEntry)
@@ -9181,6 +9337,19 @@ public class ObjectEntryLocalServiceTest {
 				"com/liferay/object/service/test/dependencies/" + fileName));
 
 		return content.getBytes();
+	}
+
+	private Map<String, String> _getFileEntryURLTitleMap(long dlFileEntryId) {
+		FriendlyURLEntry friendlyURLEntry =
+			_friendlyURLEntryLocalService.fetchMainFriendlyURLEntry(
+				_classNameLocalService.getClassNameId(FileEntry.class),
+				dlFileEntryId);
+
+		if (friendlyURLEntry == null) {
+			return null;
+		}
+
+		return friendlyURLEntry.getLanguageIdToUrlTitleMap();
 	}
 
 	private String _getMultiselectPicklistObjectFieldValue(
