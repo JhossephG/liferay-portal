@@ -12,6 +12,7 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryTable;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
+import com.liferay.document.library.text.extractor.DLFileEntryTextExtractorUtil;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
@@ -31,6 +32,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.Document;
@@ -236,6 +238,8 @@ public class ObjectEntryModelDocumentContributor
 			return;
 		}
 
+		String text = null;
+
 		if (StringUtil.equals(
 				objectField.getBusinessType(),
 				ObjectFieldConstants.BUSINESS_TYPE_ASSIGNEE) &&
@@ -273,8 +277,13 @@ public class ObjectEntryModelDocumentContributor
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT)) {
 
-			fieldValue = _getFileName(
-				GetterUtil.getLong(fieldValue), objectDefinition);
+			long fileEntryId = GetterUtil.getLong(fieldValue);
+
+			if (!objectField.isIndexedAsKeyword()) {
+				text = _getExtractedText(fileEntryId);
+			}
+
+			fieldValue = _getFileName(fileEntryId, objectDefinition);
 		}
 		else if (StringUtil.equals(
 					objectField.getBusinessType(),
@@ -393,18 +402,10 @@ public class ObjectEntryModelDocumentContributor
 				locale, fieldName, textEmbeddingContentHelper, valueString);
 		}
 		else if (fieldValue instanceof String) {
-			if (Validator.isBlank(objectField.getIndexedLanguageId())) {
-				_addField(fieldArray, fieldName, "value_text", valueString);
-			}
-			else if (objectField.isLocalized()) {
-				_addField(
-					fieldArray, fieldName, "value_" + locale, valueString);
-			}
-			else {
-				_addField(
-					fieldArray, fieldName,
-					"value_" + objectEntry.getDefaultLanguageId(), valueString);
-			}
+			String valueFieldName = _getLocalizedValueFieldName(
+				locale, objectEntry, objectField);
+
+			_addField(fieldArray, fieldName, valueFieldName, valueString);
 
 			_addField(
 				fieldArray, fieldName, "value_keyword_lowercase",
@@ -412,6 +413,13 @@ public class ObjectEntryModelDocumentContributor
 
 			_appendToContent(
 				locale, fieldName, textEmbeddingContentHelper, valueString);
+
+			if (Validator.isNotNull(text)) {
+				_addField(fieldArray, fieldName, valueFieldName, text);
+
+				_appendToContent(
+					locale, fieldName, textEmbeddingContentHelper, text);
+			}
 		}
 		else if (fieldValue instanceof byte[]) {
 			_addField(
@@ -670,6 +678,33 @@ public class ObjectEntryModelDocumentContributor
 		return _format.format(value);
 	}
 
+	private String _getExtractedText(long fileEntryId) {
+		if (fileEntryId == 0) {
+			return null;
+		}
+
+		DLFileEntry dlFileEntry = DLFileEntryLocalServiceUtil.fetchDLFileEntry(
+			fileEntryId);
+
+		if (dlFileEntry == null) {
+			return null;
+		}
+
+		try {
+			return DLFileEntryTextExtractorUtil.extractText(
+				dlFileEntry, dlFileEntry.getFileVersion());
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to get file version for file entry " + fileEntryId,
+					portalException);
+			}
+
+			return null;
+		}
+	}
+
 	private String _getFileName(
 		long dlFileEntryId, ObjectDefinition objectDefinition) {
 
@@ -746,6 +781,20 @@ public class ObjectEntryModelDocumentContributor
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private String _getLocalizedValueFieldName(
+		String locale, ObjectEntry objectEntry, ObjectField objectField) {
+
+		if (Validator.isBlank(objectField.getIndexedLanguageId())) {
+			return "value_text";
+		}
+
+		if (objectField.isLocalized()) {
+			return "value_" + locale;
+		}
+
+		return "value_" + objectEntry.getDefaultLanguageId();
 	}
 
 	private long[] _getOrganizationIds(Long accountEntryId) {
