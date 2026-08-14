@@ -9,12 +9,15 @@ import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectConstants;
 import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.base.ObjectFolderServiceBaseImpl;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -78,6 +81,25 @@ public class ObjectFolderServiceImpl extends ObjectFolderServiceBaseImpl {
 			getPermissionChecker(), objectFolder, ActionKeys.VIEW);
 
 		return objectFolder;
+	}
+
+	@Override
+	public List<ObjectFolder> getObjectFolders(long companyId)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		return TransformUtil.transform(
+			objectFolderPersistence.findByCompanyId(companyId),
+			objectFolder -> {
+				if (_objectFolderModelResourcePermission.contains(
+						permissionChecker, objectFolder, ActionKeys.VIEW)) {
+
+					return objectFolder;
+				}
+
+				return null;
+			});
 	}
 
 	@Override
