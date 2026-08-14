@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -60,6 +61,10 @@ public interface ObjectFolderService extends BaseService {
 			String externalReferenceCode, long companyId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectFolder> getObjectFolders(long companyId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -73,4 +78,4 @@ public interface ObjectFolderService extends BaseService {
 		throws PortalException;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:770533026
+// LIFERAY-SERVICE-BUILDER-HASH:-1321313828

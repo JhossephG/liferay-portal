@@ -61,6 +61,14 @@ public class ObjectFolderServiceWrapper
 			externalReferenceCode, companyId);
 	}
 
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectFolder>
+			getObjectFolders(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectFolderService.getObjectFolders(companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -94,4 +102,4 @@ public class ObjectFolderServiceWrapper
 	private ObjectFolderService _objectFolderService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1814110062
+// LIFERAY-SERVICE-BUILDER-HASH:-256535764

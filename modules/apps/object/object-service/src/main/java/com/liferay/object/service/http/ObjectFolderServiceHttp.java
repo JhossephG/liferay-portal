@@ -205,6 +205,47 @@ public class ObjectFolderServiceHttp {
 		}
 	}
 
+	public static java.util.List<com.liferay.object.model.ObjectFolder>
+			getObjectFolders(HttpPrincipal httpPrincipal, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				ObjectFolderServiceUtil.class, "getObjectFolders",
+				_getObjectFoldersParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (java.util.List<com.liferay.object.model.ObjectFolder>)
+				returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static com.liferay.object.model.ObjectFolder updateObjectFolder(
 			HttpPrincipal httpPrincipal, String externalReferenceCode,
 			long objectFolderId,
@@ -214,7 +255,7 @@ public class ObjectFolderServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				ObjectFolderServiceUtil.class, "updateObjectFolder",
-				_updateObjectFolderParameterTypes4);
+				_updateObjectFolderParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, objectFolderId, labelMap);
@@ -260,8 +301,10 @@ public class ObjectFolderServiceHttp {
 		_getObjectFolderByExternalReferenceCodeParameterTypes3 = new Class[] {
 			String.class, long.class
 		};
-	private static final Class<?>[] _updateObjectFolderParameterTypes4 =
+	private static final Class<?>[] _getObjectFoldersParameterTypes4 =
+		new Class[] {long.class};
+	private static final Class<?>[] _updateObjectFolderParameterTypes5 =
 		new Class[] {String.class, long.class, java.util.Map.class};
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-974151628
+// LIFERAY-SERVICE-BUILDER-HASH:724577292

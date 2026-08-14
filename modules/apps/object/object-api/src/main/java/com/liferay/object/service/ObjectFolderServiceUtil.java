@@ -9,6 +9,7 @@ import com.liferay.object.model.ObjectFolder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +60,12 @@ public class ObjectFolderServiceUtil {
 			externalReferenceCode, companyId);
 	}
 
+	public static List<ObjectFolder> getObjectFolders(long companyId)
+		throws PortalException {
+
+		return getService().getObjectFolders(companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -86,4 +93,4 @@ public class ObjectFolderServiceUtil {
 			ObjectFolderServiceUtil.class, ObjectFolderService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1600401000
+// LIFERAY-SERVICE-BUILDER-HASH:1802739286
