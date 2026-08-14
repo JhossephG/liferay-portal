@@ -45,6 +45,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -54,6 +55,7 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -95,8 +97,8 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 			String search, Pagination pagination)
 		throws Exception {
 
-		return SearchUtil.search(
-			HashMapBuilder.put(
+		Map<String, Map<String, String>> actions =
+			HashMapBuilder.<String, Map<String, String>>put(
 				"create",
 				addAction(
 					ObjectActionKeys.ADD_OBJECT_FOLDER, "postObjectFolder",
@@ -123,7 +125,25 @@ public class ObjectFolderResourceImpl extends BaseObjectFolderResourceImpl {
 				addAction(
 					ActionKeys.UPDATE, "putObjectFolderBatch",
 					com.liferay.object.model.ObjectFolder.class.getName(), null)
-			).build(),
+			).build();
+
+		if (Validator.isNull(search)) {
+			List<com.liferay.object.model.ObjectFolder> objectFolders =
+				_objectFolderService.getObjectFolders(
+					contextCompany.getCompanyId());
+
+			return Page.of(
+				actions,
+				transform(
+					ListUtil.subList(
+						objectFolders, pagination.getStartPosition(),
+						pagination.getEndPosition()),
+					this::_toObjectFolder),
+				pagination, objectFolders.size());
+		}
+
+		return SearchUtil.search(
+			actions,
 			booleanQuery -> {
 			},
 			null, com.liferay.object.model.ObjectFolder.class.getName(), search,
