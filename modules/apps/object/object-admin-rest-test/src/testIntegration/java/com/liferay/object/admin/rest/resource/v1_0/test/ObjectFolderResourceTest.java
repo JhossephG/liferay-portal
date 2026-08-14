@@ -8,13 +8,20 @@ package com.liferay.object.admin.rest.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectFolder;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectFolderItem;
+import com.liferay.object.admin.rest.client.pagination.Page;
+import com.liferay.object.admin.rest.client.pagination.Pagination;
 import com.liferay.object.admin.rest.resource.v1_0.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -26,6 +33,14 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class ObjectFolderResourceTest extends BaseObjectFolderResourceTestCase {
+
+	@Override
+	@Test
+	public void testGetObjectFoldersPage() throws Exception {
+		super.testGetObjectFoldersPage();
+
+		_testGetObjectFoldersPageWithEmptySearchIndex();
+	}
 
 	@Ignore
 	@Override
@@ -251,5 +266,36 @@ public class ObjectFolderResourceTest extends BaseObjectFolderResourceTestCase {
 
 		return testPostObjectFolder_addObjectFolder(randomObjectFolder());
 	}
+
+	private void _testGetObjectFoldersPageWithEmptySearchIndex()
+		throws Exception {
+
+		Page<ObjectFolder> page = objectFolderResource.getObjectFoldersPage(
+			null, null);
+
+		long totalCount = page.getTotalCount();
+
+		ObjectFolder objectFolder = testGetObjectFoldersPage_addObjectFolder(
+			randomObjectFolder());
+
+		_indexWriterHelper.deleteDocument(
+			TestPropsValues.getCompanyId(),
+			Field.getUID(
+				com.liferay.object.model.ObjectFolder.class.getName(),
+				String.valueOf(objectFolder.getId())),
+			true);
+
+		page = objectFolderResource.getObjectFoldersPage(
+			null, Pagination.of(1, (int)totalCount + 1));
+
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+		assertContains(objectFolder, (List<ObjectFolder>)page.getItems());
+
+		objectFolderResource.deleteObjectFolder(objectFolder.getId());
+	}
+
+	@Inject
+	private IndexWriterHelper _indexWriterHelper;
 
 }
