@@ -501,7 +501,8 @@ public class ObjectDefinitionLocalServiceImpl
 		ObjectDefinition objectDefinition =
 			objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
 
-		return deleteObjectDefinition(objectDefinition);
+		return objectDefinitionLocalService.deleteObjectDefinition(
+			objectDefinition);
 	}
 
 	@Indexable(type = IndexableType.DELETE)
