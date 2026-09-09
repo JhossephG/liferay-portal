@@ -748,6 +748,16 @@ public class ObjectDefinitionLocalServiceImpl
 			}
 		}
 
+		if (MassDeleteCacheThreadLocal.isMassDeleteMode()) {
+			_systemEventLocalService.addSystemEvent(
+				objectDefinition.getCompanyId(),
+				objectDefinition.getExternalReferenceCode(),
+				ObjectDefinition.class.getName(),
+				objectDefinition.getObjectDefinitionId(),
+				objectDefinition.getUuid(), StringPool.BLANK,
+				SystemEventConstants.TYPE_DELETE, StringPool.BLANK);
+		}
+
 		return objectDefinition;
 	}
 
