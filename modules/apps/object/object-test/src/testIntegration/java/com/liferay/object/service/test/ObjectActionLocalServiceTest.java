@@ -88,6 +88,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.LifecycleAction;
@@ -133,6 +134,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -220,6 +222,15 @@ public class ObjectActionLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
+		_companyConfigurationTemporarySwapper =
+			new CompanyConfigurationTemporarySwapper(
+				TestPropsValues.getCompanyId(),
+				"com.liferay.object.internal.configuration." +
+					"WebhookObjectActionExecutorImplConfiguration",
+				HashMapDictionaryBuilder.<String, Object>put(
+					"webhookURLLocalNetworkAccessEnabled", true
+				).build());
+
 		_group = GroupTestUtil.addGroup();
 
 		_accountEntry = CommerceTestUtil.addAccount(
@@ -267,7 +278,9 @@ public class ObjectActionLocalServiceTest {
 	}
 
 	@After
-	public void tearDown() throws PortalException {
+	public void tearDown() throws Exception {
+		_companyConfigurationTemporarySwapper.close();
+
 		ReflectionTestUtil.setFieldValue(
 			_objectActionExecutorRegistry.getObjectActionExecutor(
 				0, ObjectActionExecutorConstants.KEY_WEBHOOK),
@@ -2761,6 +2774,113 @@ public class ObjectActionLocalServiceTest {
 	}
 
 	@Test
+	public void testExecuteObjectActionWithWebhookURL() throws Exception {
+		_publishCustomObjectDefinition();
+
+		// Allowed host
+
+		ObjectAction objectAction = _addWebhookObjectAction(
+			"http://203.0.113.1/webhook");
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.object.internal.configuration." +
+							"WebhookObjectActionExecutorImplConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"webhookURLHostsAllowed",
+							new String[] {"203.0.113.1"}
+						).put(
+							"webhookURLLocalNetworkAccessEnabled", false
+						).build())) {
+
+			_assertWebhookObjectActionExecuted(
+				objectAction.getObjectActionId(), "http://203.0.113.1/webhook");
+		}
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		// Disallowed host
+
+		objectAction = _addWebhookObjectAction("https://onafteradd.com");
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.object.internal.configuration." +
+							"WebhookObjectActionExecutorImplConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"webhookURLHostsAllowed",
+							new String[] {RandomTestUtil.randomString()}
+						).build())) {
+
+			_assertWebhookObjectActionNotExecuted(
+				objectAction.getObjectActionId());
+		}
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		// Local network address
+
+		objectAction = _addWebhookObjectAction("http://127.0.0.1/webhook");
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.object.internal.configuration." +
+							"WebhookObjectActionExecutorImplConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"webhookURLLocalNetworkAccessEnabled", false
+						).build())) {
+
+			_assertWebhookObjectActionNotExecuted(
+				objectAction.getObjectActionId());
+		}
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		// Local network address allowed
+
+		objectAction = _addWebhookObjectAction("http://127.0.0.1/webhook");
+
+		_assertWebhookObjectActionExecuted(
+			objectAction.getObjectActionId(), "http://127.0.0.1/webhook");
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		// Public address
+
+		objectAction = _addWebhookObjectAction("http://203.0.113.1/webhook");
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					new CompanyConfigurationTemporarySwapper(
+						TestPropsValues.getCompanyId(),
+						"com.liferay.object.internal.configuration." +
+							"WebhookObjectActionExecutorImplConfiguration",
+						HashMapDictionaryBuilder.<String, Object>put(
+							"webhookURLLocalNetworkAccessEnabled", false
+						).build())) {
+
+			_assertWebhookObjectActionExecuted(
+				objectAction.getObjectActionId(), "http://203.0.113.1/webhook");
+		}
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+
+		// Unsupported scheme
+
+		objectAction = _addWebhookObjectAction("file:///etc/passwd");
+
+		_assertWebhookObjectActionNotExecuted(objectAction.getObjectActionId());
+
+		_objectActionLocalService.deleteObjectAction(objectAction);
+	}
+
+	@Test
 	public void testOnAfterAddObjectActionWithHierarchy() throws Exception {
 		ObjectDefinition objectDefinitionA =
 			_publishObjectDefinitionWithObjectAction();
@@ -3504,6 +3624,18 @@ public class ObjectActionLocalServiceTest {
 		return objectEntry;
 	}
 
+	private ObjectAction _addWebhookObjectAction(String url) throws Exception {
+		return _addObjectAction(
+			_objectDefinition.getObjectDefinitionId(),
+			ObjectActionExecutorConstants.KEY_WEBHOOK,
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD,
+			UnicodePropertiesBuilder.put(
+				"secret", RandomTestUtil.randomString()
+			).put(
+				"url", url
+			).build());
+	}
+
 	private void _assertEmailNotificationSent(String body, int inboxSize) {
 		List<NotificationQueueEntry> notificationQueueEntries =
 			_notificationQueueEntryLocalService.getNotificationEntries(
@@ -3672,6 +3804,7 @@ public class ObjectActionLocalServiceTest {
 			"https://" + StringUtil.toLowerCase(objectActionTriggerKey) +
 				".com",
 			options.getLocation());
+		Assert.assertFalse(options.isFollowRedirects());
 
 		Http.Body body = options.getBody();
 
@@ -3735,6 +3868,56 @@ public class ObjectActionLocalServiceTest {
 				JSONUtil.getValue(
 					payloadJSONObject, "JSONObject/originalObjectEntry"));
 		}
+	}
+
+	private void _assertWebhookObjectActionExecuted(
+			long objectActionId, String url)
+		throws Exception {
+
+		_addObjectEntry(
+			_objectDefinition,
+			HashMapBuilder.<String, Serializable>put(
+				"firstName", RandomTestUtil.randomString()
+			).build());
+
+		Assert.assertEquals(1, _argumentsList.size());
+
+		Object[] arguments = _argumentsList.poll();
+
+		Http.Options options = (Http.Options)arguments[0];
+
+		Assert.assertEquals(url, options.getLocation());
+		Assert.assertFalse(options.isFollowRedirects());
+
+		ObjectAction objectAction = _objectActionLocalService.getObjectAction(
+			objectActionId);
+
+		Assert.assertEquals(
+			ObjectActionConstants.STATUS_SUCCESS, objectAction.getStatus());
+	}
+
+	private void _assertWebhookObjectActionNotExecuted(long objectActionId)
+		throws Exception {
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.object.internal.action.engine." +
+					"ObjectActionEngineImpl",
+				LoggerTestUtil.OFF)) {
+
+			_addObjectEntry(
+				_objectDefinition,
+				HashMapBuilder.<String, Serializable>put(
+					"firstName", RandomTestUtil.randomString()
+				).build());
+		}
+
+		Assert.assertEquals(0, _argumentsList.size());
+
+		ObjectAction objectAction = _objectActionLocalService.getObjectAction(
+			objectActionId);
+
+		Assert.assertEquals(
+			ObjectActionConstants.STATUS_FAILED, objectAction.getStatus());
 	}
 
 	private FutureTask<Void> _getAddObjectEntryFutureTask(String firstName) {
@@ -4249,6 +4432,9 @@ public class ObjectActionLocalServiceTest {
 	@Inject
 	private CommerceSubscriptionEntryLocalService
 		_commerceSubscriptionEntryLocalService;
+
+	private CompanyConfigurationTemporarySwapper
+		_companyConfigurationTemporarySwapper;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
