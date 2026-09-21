@@ -3068,6 +3068,32 @@
 		},
 		{
 			"properties": {
+				"pid": {
+					"const": "com.liferay.object.internal.configuration.WebhookObjectActionExecutorImplConfiguration",
+					"title": "Webhook Object Action Executor"
+				},
+				"webhookURLHostsAllowed": {
+					"description": "List the host names that object action webhooks may request. Leave the list blank for any host. A host that resolves to a local network address also requires local network access.",
+					"items": {
+						"type": "string"
+					},
+					"title": "Webhook URL Hosts Allowed",
+					"type": "array"
+				},
+				"webhookURLLocalNetworkAccessEnabled": {
+					"default": false,
+					"description": "Send object action webhooks to a URL that resolves to a local network address. Leave this disabled unless the webhooks require it, because it lets an attacker use the portal to reach services on the internal network.",
+					"title": "Webhook URL Local Network Access Enabled",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Webhook Object Action Executor"
+		},
+		{
+			"properties": {
 				"githubURL": {
 					"default": "",
 					"type": "string"
@@ -5311,6 +5337,7 @@
 				"com.liferay.object.configuration.ObjectConfiguration",
 				"com.liferay.object.configuration.ObjectEntryScheduleConfiguration",
 				"com.liferay.object.configuration.ObjectEntryVersionConfiguration",
+				"com.liferay.object.internal.configuration.WebhookObjectActionExecutorImplConfiguration",
 				"com.liferay.osb.patcher.configuration.PatcherConfiguration",
 				"com.liferay.osb.patcher.configuration.PatcherEmailConfiguration",
 				"com.liferay.portal.crypto.hash.provider.bcrypt.internal.configuration.BCryptCryptoHashProviderConfiguration",
