@@ -38,6 +38,7 @@ describe('The ActionBuilder component should', () => {
 
 		render(
 			<ActionBuilder
+				companyAdmin={false}
 				disableGroovyAction={true}
 				errors={{}}
 				hasUserNotificationHandler={false}
