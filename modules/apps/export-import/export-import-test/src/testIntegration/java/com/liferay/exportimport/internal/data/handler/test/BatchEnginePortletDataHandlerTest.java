@@ -1883,9 +1883,11 @@ public class BatchEnginePortletDataHandlerTest {
 		User user1 = UserTestUtil.addUser();
 		User user2 = UserTestUtil.addUser();
 		User user3 = UserTestUtil.addUser();
+		User user4 = UserTestUtil.addUser();
 
 		_users.add(user1);
 		_users.add(user2);
+		_users.add(user4);
 
 		NotificationTemplate notificationTemplate1 = _addNotificationTemplate(
 			NotificationRecipientConstants.TYPE_USER,
@@ -1898,7 +1900,10 @@ public class BatchEnginePortletDataHandlerTest {
 				user2.getScreenName()),
 			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
 				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user3.getScreenName()));
+				user3.getScreenName()),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user4.getScreenName()));
 		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
 			NotificationRecipientConstants.TYPE_USER,
 			NotificationConstants.TYPE_USER_NOTIFICATION,
@@ -1909,8 +1914,10 @@ public class BatchEnginePortletDataHandlerTest {
 		File larFile = _exportNotificationTemplates();
 
 		String user3ScreenName = user3.getScreenName();
+		String user4ScreenName = user4.getScreenName();
 
 		_userLocalService.deleteUser(user3);
+		_userLocalService.deleteUser(user4);
 
 		ExportImportConfiguration exportImportConfiguration =
 			_importNotificationTemplates(larFile, null);
@@ -1934,13 +1941,17 @@ public class BatchEnginePortletDataHandlerTest {
 			ExportImportReportEntryConstants.TYPE_WARNING,
 			exportImportReportEntry1);
 
-		String errorMessage1 = exportImportReportEntry1.getErrorMessage();
-
-		Assert.assertTrue(
-			errorMessage1,
-			errorMessage1.contains(notificationTemplate1.getName()));
-		Assert.assertTrue(
-			errorMessage1, errorMessage1.contains(user3ScreenName));
+		Assert.assertEquals(
+			LanguageUtil.format(
+				LocaleUtil.getDefault(),
+				"the-users-x-do-not-exist-and-were-removed-from-the-" +
+					"recipients-of-notification-template-x",
+				new Object[] {
+					user3ScreenName + StringPool.COMMA_AND_SPACE +
+						user4ScreenName,
+					notificationTemplate1.getName()
+				}),
+			exportImportReportEntry1.getErrorMessage());
 
 		ExportImportReportEntry exportImportReportEntry2 =
 			_getExportImportReportEntry(
@@ -1956,13 +1967,15 @@ public class BatchEnginePortletDataHandlerTest {
 			ExportImportReportEntryConstants.TYPE_WARNING,
 			exportImportReportEntry2);
 
-		String errorMessage2 = exportImportReportEntry2.getErrorMessage();
-
-		Assert.assertTrue(
-			errorMessage2,
-			errorMessage2.contains(notificationTemplate2.getName()));
-		Assert.assertTrue(
-			errorMessage2, errorMessage2.contains(user3ScreenName));
+		Assert.assertEquals(
+			LanguageUtil.format(
+				LocaleUtil.getDefault(),
+				"the-user-x-does-not-exist-and-was-removed-from-the-" +
+					"recipients-of-notification-template-x",
+				new Object[] {
+					user3ScreenName, notificationTemplate2.getName()
+				}),
+			exportImportReportEntry2.getErrorMessage());
 	}
 
 	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
