@@ -479,22 +479,8 @@ public class NotificationTemplateResourceTest
 
 		JSONObject notificationTemplateJSONObject =
 			HTTPTestUtil.invokeToJSONObject(
-				JSONUtil.put(
-					"editorType",
-					NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT
-				).put(
-					"name", RandomTestUtil.randomString()
-				).put(
-					"recipients", recipientsJSONArray
-				).put(
-					"recipientType", recipientType
-				).put(
-					"subject",
-					JSONUtil.put(
-						LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
-						RandomTestUtil.randomString())
-				).put(
-					"type", type
+				_toNotificationTemplateJSONObject(
+					recipientsJSONArray, recipientType, type
 				).toString(),
 				"notification/v1.0/notification-templates", Http.Method.POST);
 
@@ -533,22 +519,8 @@ public class NotificationTemplateResourceTest
 		throws Exception {
 
 		return HTTPTestUtil.invokeToJSONObject(
-			JSONUtil.put(
-				"editorType",
-				NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT
-			).put(
-				"name", RandomTestUtil.randomString()
-			).put(
-				"recipients", recipientsJSONArray
-			).put(
-				"recipientType", recipientType
-			).put(
-				"subject",
-				JSONUtil.put(
-					LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
-					RandomTestUtil.randomString())
-			).put(
-				"type", type
+			_toNotificationTemplateJSONObject(
+				recipientsJSONArray, recipientType, type
 			).toString(),
 			"notification/v1.0/notification-templates/" +
 				notificationTemplateId,
@@ -1587,6 +1559,27 @@ public class NotificationTemplateResourceTest
 						RandomTestUtil.randomString()
 					)),
 				NotificationRecipientConstants.TYPE_USER_GROUP));
+	}
+
+	private JSONObject _toNotificationTemplateJSONObject(
+		JSONArray recipientsJSONArray, String recipientType, String type) {
+
+		return JSONUtil.put(
+			"editorType", NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT
+		).put(
+			"name", RandomTestUtil.randomString()
+		).put(
+			"recipients", recipientsJSONArray
+		).put(
+			"recipientType", recipientType
+		).put(
+			"subject",
+			JSONUtil.put(
+				LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
+				RandomTestUtil.randomString())
+		).put(
+			"type", type
+		);
 	}
 
 	private JSONObject _toRoleJSONObject(String roleName) throws Exception {
