@@ -112,8 +112,7 @@ public class NotificationRecipientSettingLocalServiceImpl
 			Map<String, Object> recipientMap = (Map<String, Object>)recipient;
 
 			for (Map.Entry<String, Object> entry : recipientMap.entrySet()) {
-				if (NotificationRecipientSettingConstants.
-						isRecipientMetadataName(entry.getKey()) ||
+				if (_isRecipientMetadataName(entry.getKey()) ||
 					Objects.equals(
 						recipientMap.get(
 							NotificationRecipientSettingConstants.
@@ -333,6 +332,24 @@ public class NotificationRecipientSettingLocalServiceImpl
 		}
 
 		notificationRecipientSettings.add(notificationRecipientSetting);
+	}
+
+	private boolean _isRecipientMetadataName(String name) {
+		if (name.equals(
+				NotificationRecipientSettingConstants.
+					NAME_ROLE_EXTERNAL_REFERENCE_CODE) ||
+			name.equals(NotificationRecipientSettingConstants.NAME_ROLE_TYPE) ||
+			name.equals(
+				NotificationRecipientSettingConstants.
+					NAME_USER_EXTERNAL_REFERENCE_CODE) ||
+			name.equals(
+				NotificationRecipientSettingConstants.
+					NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private void _reportUnresolvedUserRecipients(
