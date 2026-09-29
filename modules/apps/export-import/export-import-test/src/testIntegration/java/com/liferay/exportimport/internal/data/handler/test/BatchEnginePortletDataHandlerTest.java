@@ -2027,14 +2027,33 @@ public class BatchEnginePortletDataHandlerTest {
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_EMPTY, _userGroup.getStatus());
 
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, from, fromName, roleName,
-			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
-			NotificationRecipientConstants.TYPE_USER_GROUP);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2, roleName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate3, userGroupName);
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate1,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_BCC, userGroupName),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_BCC_TYPE,
+				NotificationRecipientConstants.TYPE_USER_GROUP),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_FROM, from),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_FROM_NAME,
+				LocalizedMapUtil.getLocalizedMap(fromName)),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_TO, roleName),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_TO_TYPE,
+				NotificationRecipientConstants.TYPE_ROLE));
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate2,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+				roleName));
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate3,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
+				userGroupName));
 
 		_assertExportImportReportEntry(
 			_portal.getClassNameId(Role.class), 0,
@@ -2197,11 +2216,15 @@ public class BatchEnginePortletDataHandlerTest {
 		_notificationTemplates.add(importedNotificationTemplate1);
 		_notificationTemplates.add(importedNotificationTemplate2);
 
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, user1.getScreenName(),
-			user2.getScreenName());
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2);
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate1,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user1.getScreenName()),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user2.getScreenName()));
+		_assertNotificationRecipientSettings(importedNotificationTemplate2);
 
 		ExportImportReportEntry exportImportReportEntry1 =
 			_getExportImportReportEntry(
@@ -2457,16 +2480,38 @@ public class BatchEnginePortletDataHandlerTest {
 		_notificationTemplates.add(importedNotificationTemplate3);
 		_notificationTemplates.add(importedNotificationTemplate4);
 
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, from, fromName, roleName,
-			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
-			NotificationRecipientConstants.TYPE_USER_GROUP);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2, roleName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate3, userGroupName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate4, user3.getScreenName());
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate1,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_BCC, userGroupName),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_BCC_TYPE,
+				NotificationRecipientConstants.TYPE_USER_GROUP),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_FROM, from),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_FROM_NAME,
+				LocalizedMapUtil.getLocalizedMap(fromName)),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_TO, roleName),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_TO_TYPE,
+				NotificationRecipientConstants.TYPE_ROLE));
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate2,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+				roleName));
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate3,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
+				userGroupName));
+		_assertNotificationRecipientSettings(
+			importedNotificationTemplate4,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user3.getScreenName()));
 
 		ObjectEntry objectEntry = _addNotificationObjectEntry();
 
@@ -4774,37 +4819,6 @@ public class BatchEnginePortletDataHandlerTest {
 				NotificationRecipientSettingConstants.NAME_TO));
 	}
 
-	private void _assertNotificationRecipientSettingValues(
-			NotificationTemplate notificationTemplate, String... values)
-		throws Exception {
-
-		notificationTemplate =
-			_notificationTemplateLocalService.
-				getNotificationTemplateByExternalReferenceCode(
-					notificationTemplate.getExternalReferenceCode(),
-					TestPropsValues.getCompanyId());
-
-		NotificationRecipient notificationRecipient =
-			notificationTemplate.getNotificationRecipient();
-
-		List<String> notificationRecipientSettingValues =
-			TransformUtil.transform(
-				notificationRecipient.getNotificationRecipientSettings(),
-				notificationRecipientSetting ->
-					notificationRecipientSetting.getValue(
-						LocaleUtil.getDefault()));
-
-		Assert.assertEquals(
-			notificationRecipientSettingValues.toString(), values.length,
-			notificationRecipientSettingValues.size());
-
-		for (String value : values) {
-			Assert.assertTrue(
-				notificationRecipientSettingValues.toString(),
-				notificationRecipientSettingValues.contains(value));
-		}
-	}
-
 	private void _assertNotificationRecipientSettings(
 			Map<String, Object> expectedNotificationRecipientSettingsMap,
 			NotificationTemplate notificationTemplate)
@@ -4813,6 +4827,25 @@ public class BatchEnginePortletDataHandlerTest {
 		Assert.assertEquals(
 			expectedNotificationRecipientSettingsMap,
 			_getNotificationRecipientSettingsMap(notificationTemplate));
+	}
+
+	private void _assertNotificationRecipientSettings(
+			NotificationTemplate notificationTemplate,
+			NotificationRecipientSetting...
+				expectedNotificationRecipientSettings)
+		throws Exception {
+
+		NotificationRecipient notificationRecipient =
+			notificationTemplate.getNotificationRecipient();
+
+		Assert.assertEquals(
+			ListUtil.sort(
+				TransformUtil.transformToList(
+					expectedNotificationRecipientSettings, this::_toString)),
+			ListUtil.sort(
+				TransformUtil.transform(
+					notificationRecipient.getNotificationRecipientSettings(),
+					this::_toString)));
 	}
 
 	private void _assertNotificationTemplate(
@@ -6359,6 +6392,13 @@ public class BatchEnginePortletDataHandlerTest {
 		).put(
 			"scopeKey", _getObjectEntryScopeKey(group, scope)
 		);
+	}
+
+	private String _toString(
+		NotificationRecipientSetting notificationRecipientSetting) {
+
+		return notificationRecipientSetting.getName() + StringPool.EQUAL +
+			notificationRecipientSetting.getValue(LocaleUtil.getDefault());
 	}
 
 	private static final String _FILE_NAME_PREFIX_NOTIFICATION_TEMPLATES =
