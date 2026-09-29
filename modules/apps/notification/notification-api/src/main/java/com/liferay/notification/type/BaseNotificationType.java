@@ -353,12 +353,11 @@ public abstract class BaseNotificationType implements NotificationType {
 	private Map<String, String> _toRecipientMap(
 		NotificationRecipientSetting notificationRecipientSetting) {
 
-		Map<String, String> map = HashMapBuilder.put(
-			notificationRecipientSetting.getName(),
-			notificationRecipientSetting.getValue()
-		).build();
-
 		String name = notificationRecipientSetting.getName();
+
+		Map<String, String> map = HashMapBuilder.put(
+			name, notificationRecipientSetting.getValue()
+		).build();
 
 		if (Objects.equals(
 				name, NotificationRecipientSettingConstants.NAME_ROLE_NAME)) {
