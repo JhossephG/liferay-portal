@@ -406,12 +406,7 @@ public class NotificationTemplateResourceTest
 		JSONAssert.assertEquals(
 			expectedRecipientsJSONArray.toString(),
 			JSONUtil.getValueAsString(
-				HTTPTestUtil.invokeToJSONObject(
-					null,
-					"notification/v1.0/notification-templates/" +
-						notificationTemplateJSONObject.getLong("id"),
-					Http.Method.GET),
-				"JSONArray/recipients"),
+				notificationTemplateJSONObject, "JSONArray/recipients"),
 			JSONCompareMode.NON_EXTENSIBLE);
 	}
 
@@ -576,6 +571,20 @@ public class NotificationTemplateResourceTest
 					RandomTestUtil.randomString()));
 	}
 
+	private void _testGetNotificationTemplate(
+			JSONArray expectedRecipientsJSONArray,
+			JSONObject notificationTemplateJSONObject)
+		throws Exception {
+
+		_assertNotificationTemplateRecipients(
+			expectedRecipientsJSONArray,
+			HTTPTestUtil.invokeToJSONObject(
+				null,
+				"notification/v1.0/notification-templates/" +
+					notificationTemplateJSONObject.getLong("id"),
+				Http.Method.GET));
+	}
+
 	private void _testGetNotificationTemplateEmail() throws Exception {
 		String from = RandomTestUtil.randomString() + "@liferay.com";
 
@@ -614,20 +623,11 @@ public class NotificationTemplateResourceTest
 				NotificationRecipientConstants.TYPE_EMAIL,
 				NotificationConstants.TYPE_EMAIL);
 
-		_assertNotificationTemplateRecipients(
+		_testGetNotificationTemplate(
 			JSONUtil.putAll(
 				JSONUtil.put(
 					NotificationRecipientSettingConstants.NAME_BCC,
-					JSONUtil.putAll(
-						JSONUtil.put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-							_userGroup.getExternalReferenceCode()
-						).put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_NAME,
-							_userGroup.getName()
-						))
+					JSONUtil.putAll(_toUserGroupJSONObject(_userGroup))
 				).put(
 					NotificationRecipientSettingConstants.NAME_BCC_TYPE,
 					NotificationRecipientConstants.TYPE_USER_GROUP
@@ -649,47 +649,35 @@ public class NotificationTemplateResourceTest
 	private void _testGetNotificationTemplateUserNotification()
 		throws Exception {
 
-		_testGetNotificationTemplateUserNotification(
-			_toRoleJSONObject(_role.getName()),
-			NotificationRecipientSettingConstants.NAME_ROLE_NAME,
-			NotificationRecipientConstants.TYPE_ROLE, _role.getName());
-
-		_testGetNotificationTemplateUserNotification(
-			JSONUtil.put(
-				NotificationRecipientSettingConstants.
-					NAME_USER_EXTERNAL_REFERENCE_CODE,
-				_user.getExternalReferenceCode()
-			).put(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				_user.getScreenName()
-			),
-			NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-			NotificationRecipientConstants.TYPE_USER, _user.getScreenName());
-
-		_testGetNotificationTemplateUserNotification(
-			JSONUtil.put(
-				NotificationRecipientSettingConstants.
-					NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-				_userGroup.getExternalReferenceCode()
-			).put(
-				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-				_userGroup.getName()
-			),
-			NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-			NotificationRecipientConstants.TYPE_USER_GROUP,
-			_userGroup.getName());
-	}
-
-	private void _testGetNotificationTemplateUserNotification(
-			JSONObject expectedRecipientJSONObject, String recipientName,
-			String recipientType, String recipientValue)
-		throws Exception {
-
-		_assertNotificationTemplateRecipients(
-			JSONUtil.putAll(expectedRecipientJSONObject),
+		_testGetNotificationTemplate(
+			JSONUtil.putAll(_toRoleJSONObject(_role.getName())),
 			_postNotificationTemplateJSONObject(
-				JSONUtil.putAll(JSONUtil.put(recipientName, recipientValue)),
-				recipientType, NotificationConstants.TYPE_USER_NOTIFICATION));
+				JSONUtil.putAll(
+					JSONUtil.put(
+						NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+						_role.getName())),
+				NotificationRecipientConstants.TYPE_ROLE,
+				NotificationConstants.TYPE_USER_NOTIFICATION));
+		_testGetNotificationTemplate(
+			JSONUtil.putAll(_toUserJSONObject(_user)),
+			_postNotificationTemplateJSONObject(
+				JSONUtil.putAll(
+					JSONUtil.put(
+						NotificationRecipientSettingConstants.
+							NAME_USER_SCREEN_NAME,
+						_user.getScreenName())),
+				NotificationRecipientConstants.TYPE_USER,
+				NotificationConstants.TYPE_USER_NOTIFICATION));
+		_testGetNotificationTemplate(
+			JSONUtil.putAll(_toUserGroupJSONObject(_userGroup)),
+			_postNotificationTemplateJSONObject(
+				JSONUtil.putAll(
+					JSONUtil.put(
+						NotificationRecipientSettingConstants.
+							NAME_USER_GROUP_NAME,
+						_userGroup.getName())),
+				NotificationRecipientConstants.TYPE_USER_GROUP,
+				NotificationConstants.TYPE_USER_NOTIFICATION));
 	}
 
 	private void _testGetNotificationTemplatesPageWithObjectDefinitionIdFilter()
@@ -827,16 +815,7 @@ public class NotificationTemplateResourceTest
 			JSONUtil.putAll(
 				JSONUtil.put(
 					NotificationRecipientSettingConstants.NAME_BCC,
-					JSONUtil.putAll(
-						JSONUtil.put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-							_userGroup.getExternalReferenceCode()
-						).put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_NAME,
-							_userGroup.getName()
-						))
+					JSONUtil.putAll(_toUserGroupJSONObject(_userGroup))
 				).put(
 					NotificationRecipientSettingConstants.NAME_BCC_TYPE,
 					NotificationRecipientConstants.TYPE_USER_GROUP
@@ -945,15 +924,7 @@ public class NotificationTemplateResourceTest
 		// User
 
 		_assertNotificationTemplateRecipients(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_EXTERNAL_REFERENCE_CODE,
-					_user.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-					_user.getScreenName()
-				)),
+			JSONUtil.putAll(_toUserJSONObject(_user)),
 			_patchNotificationTemplateJSONObject(
 				notificationTemplateId,
 				JSONUtil.putAll(
@@ -987,15 +958,7 @@ public class NotificationTemplateResourceTest
 				NotificationRecipientConstants.TYPE_USER_GROUP));
 
 		_assertNotificationTemplateRecipients(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-					_userGroup.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-					_userGroup.getName()
-				)),
+			JSONUtil.putAll(_toUserGroupJSONObject(_userGroup)),
 			_patchNotificationTemplateJSONObject(
 				notificationTemplateId,
 				JSONUtil.putAll(
@@ -1192,19 +1155,7 @@ public class NotificationTemplateResourceTest
 			JSONUtil.put(
 				"toType", NotificationRecipientConstants.TYPE_SUBSCRIBERS));
 
-		// Notification template recipient type user group
-
-		_testPostNotificationTemplateWithRecipient(
-			JSONUtil.putAll(_toRoleJSONObject(_role.getName())),
-			JSONUtil.put(
-				NotificationRecipientSettingConstants.
-					NAME_ROLE_EXTERNAL_REFERENCE_CODE,
-				_role.getExternalReferenceCode()
-			).put(
-				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
-				RandomTestUtil.randomString()
-			),
-			NotificationRecipientConstants.TYPE_ROLE);
+		// Notification template recipient type role
 
 		_testPostNotificationTemplateWithRecipient(
 			JSONUtil.putAll(_toRoleJSONObject(_role.getName())),
@@ -1239,14 +1190,7 @@ public class NotificationTemplateResourceTest
 
 		// Notification template recipient type user
 
-		JSONObject userJSONObject = JSONUtil.put(
-			NotificationRecipientSettingConstants.
-				NAME_USER_EXTERNAL_REFERENCE_CODE,
-			_user.getExternalReferenceCode()
-		).put(
-			NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-			_user.getScreenName()
-		);
+		JSONObject userJSONObject = _toUserJSONObject(_user);
 
 		_testPostNotificationTemplateWithRecipient(
 			JSONUtil.putAll(userJSONObject),
@@ -1303,15 +1247,7 @@ public class NotificationTemplateResourceTest
 				NotificationConstants.TYPE_USER_NOTIFICATION));
 
 		_testPostNotificationTemplateWithRecipient(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-					_userGroup.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-					_userGroup.getName()
-				)),
+			JSONUtil.putAll(_toUserGroupJSONObject(_userGroup)),
 			JSONUtil.put(
 				NotificationRecipientSettingConstants.
 					NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
@@ -1383,14 +1319,7 @@ public class NotificationTemplateResourceTest
 
 		// Notification template recipient type user
 
-		JSONObject userJSONObject = JSONUtil.put(
-			NotificationRecipientSettingConstants.
-				NAME_USER_EXTERNAL_REFERENCE_CODE,
-			_user.getExternalReferenceCode()
-		).put(
-			NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-			_user.getScreenName()
-		);
+		JSONObject userJSONObject = _toUserJSONObject(_user);
 
 		_testPostNotificationTemplateWithRecipient(
 			JSONUtil.putAll(userJSONObject),
@@ -1447,15 +1376,7 @@ public class NotificationTemplateResourceTest
 				NotificationConstants.TYPE_USER_NOTIFICATION));
 
 		_testPostNotificationTemplateWithRecipient(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-					_userGroup.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-					_userGroup.getName()
-				)),
+			JSONUtil.putAll(_toUserGroupJSONObject(_userGroup)),
 			JSONUtil.put(
 				NotificationRecipientSettingConstants.
 					NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
@@ -1649,16 +1570,7 @@ public class NotificationTemplateResourceTest
 			JSONUtil.putAll(
 				JSONUtil.put(
 					NotificationRecipientSettingConstants.NAME_BCC,
-					JSONUtil.putAll(
-						JSONUtil.put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-							_userGroup.getExternalReferenceCode()
-						).put(
-							NotificationRecipientSettingConstants.
-								NAME_USER_GROUP_NAME,
-							_userGroup.getName()
-						))
+					JSONUtil.putAll(_toUserGroupJSONObject(_userGroup))
 				).put(
 					NotificationRecipientSettingConstants.NAME_BCC_TYPE,
 					NotificationRecipientConstants.TYPE_USER_GROUP
@@ -1770,15 +1682,7 @@ public class NotificationTemplateResourceTest
 		// Notification template recipient type user
 
 		_assertNotificationTemplateRecipients(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_EXTERNAL_REFERENCE_CODE,
-					_user.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-					_user.getScreenName()
-				)),
+			JSONUtil.putAll(_toUserJSONObject(_user)),
 			_putNotificationTemplateJSONObject(
 				notificationTemplateId,
 				JSONUtil.putAll(
@@ -1814,15 +1718,7 @@ public class NotificationTemplateResourceTest
 				NotificationConstants.TYPE_USER_NOTIFICATION));
 
 		_assertNotificationTemplateRecipients(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.
-						NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
-					_userGroup.getExternalReferenceCode()
-				).put(
-					NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-					_userGroup.getName()
-				)),
+			JSONUtil.putAll(_toUserGroupJSONObject(_userGroup)),
 			_putNotificationTemplateJSONObject(
 				notificationTemplateId,
 				JSONUtil.putAll(
@@ -1922,6 +1818,28 @@ public class NotificationTemplateResourceTest
 		).put(
 			NotificationRecipientSettingConstants.NAME_ROLE_TYPE,
 			RoleConstants.getTypeLabel(role.getType())
+		);
+	}
+
+	private JSONObject _toUserGroupJSONObject(UserGroup userGroup) {
+		return JSONUtil.put(
+			NotificationRecipientSettingConstants.
+				NAME_USER_GROUP_EXTERNAL_REFERENCE_CODE,
+			userGroup.getExternalReferenceCode()
+		).put(
+			NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
+			userGroup.getName()
+		);
+	}
+
+	private JSONObject _toUserJSONObject(User user) {
+		return JSONUtil.put(
+			NotificationRecipientSettingConstants.
+				NAME_USER_EXTERNAL_REFERENCE_CODE,
+			user.getExternalReferenceCode()
+		).put(
+			NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+			user.getScreenName()
 		);
 	}
 
