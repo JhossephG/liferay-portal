@@ -569,7 +569,26 @@ public class NotificationTemplateResourceTest
 		JSONObject fromNameJSONObject = JSONUtil.put(
 			"en_US", RandomTestUtil.randomString());
 
-		JSONObject notificationTemplateJSONObject =
+		_testGetNotificationTemplate(
+			JSONUtil.putAll(
+				JSONUtil.put(
+					NotificationRecipientSettingConstants.NAME_BCC,
+					JSONUtil.putAll(_toUserGroupJSONObject(_userGroup))
+				).put(
+					NotificationRecipientSettingConstants.NAME_BCC_TYPE,
+					NotificationRecipientConstants.TYPE_USER_GROUP
+				).put(
+					NotificationRecipientSettingConstants.NAME_FROM, from
+				).put(
+					NotificationRecipientSettingConstants.NAME_FROM_NAME,
+					fromNameJSONObject
+				).put(
+					NotificationRecipientSettingConstants.NAME_TO,
+					JSONUtil.putAll(_toRoleJSONObject(_role.getName()))
+				).put(
+					NotificationRecipientSettingConstants.NAME_TO_TYPE,
+					NotificationRecipientConstants.TYPE_ROLE
+				)),
 			_postNotificationTemplateJSONObject(
 				JSONUtil.putAll(
 					JSONUtil.put(
@@ -599,29 +618,7 @@ public class NotificationTemplateResourceTest
 						NotificationRecipientConstants.TYPE_ROLE
 					)),
 				NotificationRecipientConstants.TYPE_EMAIL,
-				NotificationConstants.TYPE_EMAIL);
-
-		_testGetNotificationTemplate(
-			JSONUtil.putAll(
-				JSONUtil.put(
-					NotificationRecipientSettingConstants.NAME_BCC,
-					JSONUtil.putAll(_toUserGroupJSONObject(_userGroup))
-				).put(
-					NotificationRecipientSettingConstants.NAME_BCC_TYPE,
-					NotificationRecipientConstants.TYPE_USER_GROUP
-				).put(
-					NotificationRecipientSettingConstants.NAME_FROM, from
-				).put(
-					NotificationRecipientSettingConstants.NAME_FROM_NAME,
-					fromNameJSONObject
-				).put(
-					NotificationRecipientSettingConstants.NAME_TO,
-					JSONUtil.putAll(_toRoleJSONObject(_role.getName()))
-				).put(
-					NotificationRecipientSettingConstants.NAME_TO_TYPE,
-					NotificationRecipientConstants.TYPE_ROLE
-				)),
-			notificationTemplateJSONObject);
+				NotificationConstants.TYPE_EMAIL));
 	}
 
 	private void _testGetNotificationTemplateWithUserNotificationType()
