@@ -62,7 +62,6 @@ import com.liferay.notification.constants.NotificationConstants;
 import com.liferay.notification.constants.NotificationPortletKeys;
 import com.liferay.notification.constants.NotificationRecipientConstants;
 import com.liferay.notification.constants.NotificationRecipientSettingConstants;
-import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.context.NotificationContextBuilder;
 import com.liferay.notification.model.NotificationQueueEntry;
@@ -70,7 +69,6 @@ import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationQueueEntryLocalService;
-import com.liferay.notification.service.NotificationRecipientLocalService;
 import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.notification.test.util.NotificationTemplateUtil;
 import com.liferay.notification.type.NotificationType;
@@ -2247,7 +2245,7 @@ public class BatchEnginePortletDataHandlerTest {
 				new Object[] {
 					user3ScreenName + StringPool.COMMA_AND_SPACE +
 						user4ScreenName,
-					notificationTemplate1.getName()
+					notificationTemplate1.getName(LocaleUtil.getDefault())
 				}),
 			exportImportReportEntry1.getErrorMessage());
 
@@ -2270,7 +2268,8 @@ public class BatchEnginePortletDataHandlerTest {
 				"the-user-x-does-not-exist-and-was-removed-from-the-" +
 					"recipients-of-notification-template-x",
 				new Object[] {
-					user3ScreenName, notificationTemplate2.getName()
+					user3ScreenName,
+					notificationTemplate2.getName(LocaleUtil.getDefault())
 				}),
 			exportImportReportEntry2.getErrorMessage());
 
@@ -4295,27 +4294,17 @@ public class BatchEnginePortletDataHandlerTest {
 			NotificationRecipientSetting... notificationRecipientSettings)
 		throws Exception {
 
-		NotificationContext notificationContext = new NotificationContext();
+		NotificationContext notificationContext =
+			NotificationTemplateUtil.createNotificationContext(
+				Arrays.asList(notificationRecipientSettings), type);
 
 		NotificationTemplate notificationTemplate =
-			_notificationTemplateLocalService.createNotificationTemplate(
-				RandomTestUtil.randomLong());
+			notificationContext.getNotificationTemplate();
 
-		notificationTemplate.setEditorType(
-			NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT);
-		notificationTemplate.setName(RandomTestUtil.randomString());
+		notificationTemplate.setBodyMap(_getRandomLocalizedMap());
+		notificationTemplate.setNameMap(_getRandomLocalizedMap());
 		notificationTemplate.setRecipientType(recipientType);
-		notificationTemplate.setSubject(RandomTestUtil.randomString());
-		notificationTemplate.setType(type);
-
-		notificationContext.setNotificationTemplate(notificationTemplate);
-
-		notificationContext.setNotificationRecipient(
-			_notificationRecipientLocalService.createNotificationRecipient(
-				RandomTestUtil.randomLong()));
-		notificationContext.setNotificationRecipientSettings(
-			Arrays.asList(notificationRecipientSettings));
-		notificationContext.setType(type);
+		notificationTemplate.setSubjectMap(_getRandomLocalizedMap());
 
 		notificationTemplate =
 			_notificationTemplateLocalService.addNotificationTemplate(
@@ -6512,10 +6501,6 @@ public class BatchEnginePortletDataHandlerTest {
 	@Inject
 	private NotificationQueueEntryLocalService
 		_notificationQueueEntryLocalService;
-
-	@Inject
-	private NotificationRecipientLocalService
-		_notificationRecipientLocalService;
 
 	@Inject
 	private NotificationTemplateLocalService _notificationTemplateLocalService;
