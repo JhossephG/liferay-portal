@@ -366,8 +366,7 @@ public class NotificationRecipientSettingLocalServiceImpl
 		_exportImportReportEntryLocalService.getOrAddExportImportReportEntry(
 			0, user.getCompanyId(),
 			notificationTemplate.getExternalReferenceCode(),
-			_portal.getClassNameId(NotificationTemplate.class.getName()),
-			notificationTemplate.getNotificationTemplateId(),
+			_portal.getClassNameId(NotificationTemplate.class.getName()), 0,
 			GetterUtil.getLong(
 				ExportImportThreadLocal.getExportImportConfigurationId()),
 			ExportImportReportEntryConstants.TYPE_WARNING,
