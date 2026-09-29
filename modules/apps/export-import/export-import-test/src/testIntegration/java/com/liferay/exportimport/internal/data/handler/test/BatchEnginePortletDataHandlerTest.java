@@ -1711,440 +1711,6 @@ public class BatchEnginePortletDataHandlerTest {
 
 	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
 	@Test
-	public void testExportImportNotificationTemplateRecipients()
-		throws Exception {
-
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-		_userGroup = UserGroupTestUtil.addUserGroup();
-
-		User user1 = UserTestUtil.addUser();
-		User user2 = UserTestUtil.addUser();
-		User user3 = UserTestUtil.addUser();
-
-		_users.add(user1);
-		_users.add(user2);
-		_users.add(user3);
-
-		_userLocalService.addRoleUser(_role.getRoleId(), user1);
-		_userGroupLocalService.addUserUserGroup(
-			user2.getUserId(), _userGroup.getUserGroupId());
-
-		String from = RandomTestUtil.randomString() + "@liferay.com";
-		String fromName = RandomTestUtil.randomString();
-
-		NotificationTemplate notificationTemplate1 =
-			_addEmailNotificationTemplate(
-				from, fromName, _role.getName(), _userGroup.getName());
-
-		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_ROLE,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
-				_role.getName()));
-		NotificationTemplate notificationTemplate3 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_USER_GROUP,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-				_userGroup.getName()));
-		NotificationTemplate notificationTemplate4 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_USER,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user3.getScreenName()));
-
-		File larFile = _exportNotificationTemplates();
-
-		String roleName = RandomTestUtil.randomString();
-
-		_role = _roleLocalService.updateRole(
-			_role.getExternalReferenceCode(), _role.getRoleId(), roleName,
-			_role.getTitleMap(), _role.getDescriptionMap(), _role.getSubtype(),
-			ServiceContextTestUtil.getServiceContext());
-
-		String userGroupName = RandomTestUtil.randomString();
-
-		_userGroup = _userGroupLocalService.updateUserGroup(
-			_userGroup.getExternalReferenceCode(),
-			TestPropsValues.getCompanyId(), _userGroup.getUserGroupId(),
-			userGroupName, _userGroup.getDescription(),
-			ServiceContextTestUtil.getServiceContext());
-
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate1);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate2);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate3);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate4);
-
-		_importNotificationTemplates(larFile, null);
-
-		NotificationTemplate importedNotificationTemplate1 =
-			_getNotificationTemplate(
-				notificationTemplate1.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate2 =
-			_getNotificationTemplate(
-				notificationTemplate2.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate3 =
-			_getNotificationTemplate(
-				notificationTemplate3.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate4 =
-			_getNotificationTemplate(
-				notificationTemplate4.getExternalReferenceCode());
-
-		_notificationTemplates.add(importedNotificationTemplate1);
-		_notificationTemplates.add(importedNotificationTemplate2);
-		_notificationTemplates.add(importedNotificationTemplate3);
-		_notificationTemplates.add(importedNotificationTemplate4);
-
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, from, fromName, roleName,
-			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
-			NotificationRecipientConstants.TYPE_USER_GROUP);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2, roleName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate3, userGroupName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate4, user3.getScreenName());
-
-		ObjectEntry objectEntry = _addNotificationObjectEntry();
-
-		_sendNotification(0, importedNotificationTemplate1, objectEntry);
-		_sendNotification(0, importedNotificationTemplate2, objectEntry);
-		_sendNotification(0, importedNotificationTemplate3, objectEntry);
-		_sendNotification(0, importedNotificationTemplate4, objectEntry);
-
-		List<NotificationQueueEntry> notificationQueueEntries =
-			_getNotificationQueueEntries(importedNotificationTemplate1);
-
-		_notificationQueueEntries.addAll(notificationQueueEntries);
-
-		Assert.assertEquals(
-			notificationQueueEntries.toString(), 1,
-			notificationQueueEntries.size());
-
-		_assertNotificationQueueEntry(
-			user2.getEmailAddress(), user1.getEmailAddress(),
-			notificationQueueEntries.get(0));
-
-		_assertUserNotificationEvents(user1, user2, user3);
-	}
-
-	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
-	@Test
-	public void testExportImportNotificationTemplateWithMissingRoleAndUserGroup()
-		throws Exception {
-
-		_organization = OrganizationTestUtil.addOrganization();
-
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_ORGANIZATION);
-		_userGroup = UserGroupTestUtil.addUserGroup();
-
-		String roleName = _role.getName();
-		String userGroupName = _userGroup.getName();
-
-		String from = RandomTestUtil.randomString() + "@liferay.com";
-		String fromName = RandomTestUtil.randomString();
-
-		NotificationTemplate notificationTemplate1 =
-			_addEmailNotificationTemplate(
-				from, fromName, roleName, userGroupName);
-
-		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_ROLE,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
-				roleName));
-		NotificationTemplate notificationTemplate3 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_USER_GROUP,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
-				userGroupName));
-
-		File larFile = _exportNotificationTemplates();
-
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate1);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate2);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate3);
-
-		_roleLocalService.deleteRole(_role);
-		_userGroupLocalService.deleteUserGroup(_userGroup);
-
-		ExportImportConfiguration exportImportConfiguration =
-			_importNotificationTemplates(larFile, null);
-
-		NotificationTemplate importedNotificationTemplate1 =
-			_getNotificationTemplate(
-				notificationTemplate1.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate2 =
-			_getNotificationTemplate(
-				notificationTemplate2.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate3 =
-			_getNotificationTemplate(
-				notificationTemplate3.getExternalReferenceCode());
-
-		_notificationTemplates.add(importedNotificationTemplate1);
-		_notificationTemplates.add(importedNotificationTemplate2);
-		_notificationTemplates.add(importedNotificationTemplate3);
-
-		_role = _roleLocalService.fetchRoleByExternalReferenceCode(
-			_role.getExternalReferenceCode(), TestPropsValues.getCompanyId());
-
-		Assert.assertEquals(WorkflowConstants.STATUS_EMPTY, _role.getStatus());
-		Assert.assertEquals(RoleConstants.TYPE_ORGANIZATION, _role.getType());
-
-		_userGroup =
-			_userGroupLocalService.fetchUserGroupByExternalReferenceCode(
-				_userGroup.getExternalReferenceCode(),
-				TestPropsValues.getCompanyId());
-
-		Assert.assertEquals(
-			WorkflowConstants.STATUS_EMPTY, _userGroup.getStatus());
-
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, from, fromName, roleName,
-			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
-			NotificationRecipientConstants.TYPE_USER_GROUP);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2, roleName);
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate3, userGroupName);
-
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(Role.class), 0,
-			_role.getExternalReferenceCode(), 0, "role",
-			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
-			_getExportImportReportEntry(
-				_role.getExternalReferenceCode(), exportImportConfiguration));
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(UserGroup.class), 0,
-			_userGroup.getExternalReferenceCode(), 0, "user-group",
-			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
-			_getExportImportReportEntry(
-				_userGroup.getExternalReferenceCode(),
-				exportImportConfiguration));
-
-		Long originalExportImportConfigurationId =
-			ExportImportThreadLocal.getExportImportConfigurationId();
-
-		ExportImportThreadLocal.setExportImportConfigurationId(0);
-
-		_role = _roleLocalService.updateRole(
-			_role.getExternalReferenceCode(), _role.getRoleId(), roleName,
-			_role.getTitleMap(), _role.getDescriptionMap(), _role.getSubtype(),
-			ServiceContextTestUtil.getServiceContext());
-
-		Assert.assertEquals(
-			WorkflowConstants.STATUS_APPROVED, _role.getStatus());
-
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(Role.class), 0,
-			_role.getExternalReferenceCode(), 0, "role",
-			ExportImportReportEntryConstants.STATUS_RESOLVED,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
-			_getExportImportReportEntry(
-				_role.getExternalReferenceCode(), exportImportConfiguration));
-
-		_userGroup = _userGroupLocalService.addOrUpdateUserGroup(
-			_userGroup.getExternalReferenceCode(), TestPropsValues.getUserId(),
-			TestPropsValues.getCompanyId(), userGroupName,
-			_userGroup.getDescription(),
-			ServiceContextTestUtil.getServiceContext());
-
-		Assert.assertEquals(
-			WorkflowConstants.STATUS_APPROVED, _userGroup.getStatus());
-
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(UserGroup.class), 0,
-			_userGroup.getExternalReferenceCode(), 0, "user-group",
-			ExportImportReportEntryConstants.STATUS_RESOLVED,
-			ExportImportReportEntryConstants.TYPE_EMPTY,
-			_getExportImportReportEntry(
-				_userGroup.getExternalReferenceCode(),
-				exportImportConfiguration));
-
-		ExportImportThreadLocal.setExportImportConfigurationId(
-			originalExportImportConfigurationId);
-
-		User user1 = UserTestUtil.addUser();
-		User user2 = UserTestUtil.addUser();
-
-		_users.add(user1);
-		_users.add(user2);
-
-		_userGroupLocalService.addUserUserGroup(
-			user2.getUserId(), _userGroup.getUserGroupId());
-		_userGroupRoleLocalService.addUserGroupRole(
-			user1.getUserId(), _organization.getGroupId(), _role.getRoleId());
-
-		ObjectEntry objectEntry = _addNotificationObjectEntry();
-
-		_sendNotification(
-			_organization.getGroupId(), importedNotificationTemplate2,
-			objectEntry);
-		_sendNotification(0, importedNotificationTemplate3, objectEntry);
-
-		_assertUserNotificationEvents(user1, user2);
-	}
-
-	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
-	@Test
-	public void testExportImportNotificationTemplateWithMissingUsers()
-		throws Exception {
-
-		User user1 = UserTestUtil.addUser();
-		User user2 = UserTestUtil.addUser();
-		User user3 = UserTestUtil.addUser();
-		User user4 = UserTestUtil.addUser();
-
-		_users.add(user1);
-		_users.add(user2);
-		_users.add(user4);
-
-		NotificationTemplate notificationTemplate1 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_USER,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user1.getScreenName()),
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user2.getScreenName()),
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user3.getScreenName()),
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user4.getScreenName()));
-		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
-			NotificationRecipientConstants.TYPE_USER,
-			NotificationConstants.TYPE_USER_NOTIFICATION,
-			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
-				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
-				user3.getScreenName()));
-
-		File larFile = _exportNotificationTemplates();
-
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate1);
-		_notificationTemplateLocalService.deleteNotificationTemplate(
-			notificationTemplate2);
-
-		String user3ScreenName = user3.getScreenName();
-		String user4ScreenName = user4.getScreenName();
-
-		_userLocalService.deleteUser(user3);
-		_userLocalService.deleteUser(user4);
-
-		long backgroundTaskId = new ExportImportExecutor(
-		).withGroupId(
-			_getCompanyGroupId()
-		).withIncludeNotificationTemplates(
-		).withLARFile(
-			larFile
-		).executeImportInBackground();
-
-		ExportImportTestUtil.retryAssert(
-			1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS,
-			() -> {
-				BackgroundTask backgroundTask =
-					BackgroundTaskManagerUtil.getBackgroundTask(
-						backgroundTaskId);
-
-				Assert.assertEquals(
-					BackgroundTaskConstants.STATUS_COMPLETED_WITH_ERRORS,
-					backgroundTask.getStatus());
-			});
-
-		ExportImportConfiguration exportImportConfiguration =
-			_getExportImportConfiguration(backgroundTaskId);
-
-		NotificationTemplate importedNotificationTemplate1 =
-			_getNotificationTemplate(
-				notificationTemplate1.getExternalReferenceCode());
-		NotificationTemplate importedNotificationTemplate2 =
-			_getNotificationTemplate(
-				notificationTemplate2.getExternalReferenceCode());
-
-		_notificationTemplates.add(importedNotificationTemplate1);
-		_notificationTemplates.add(importedNotificationTemplate2);
-
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate1, user1.getScreenName(),
-			user2.getScreenName());
-		_assertNotificationRecipientSettingValues(
-			importedNotificationTemplate2);
-
-		ExportImportReportEntry exportImportReportEntry1 =
-			_getExportImportReportEntry(
-				notificationTemplate1.getExternalReferenceCode(),
-				exportImportConfiguration);
-
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(NotificationTemplate.class), 0,
-			notificationTemplate1.getExternalReferenceCode(), 0,
-			"notification-template",
-			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
-			ExportImportReportEntryConstants.TYPE_WARNING,
-			exportImportReportEntry1);
-
-		Assert.assertEquals(
-			LanguageUtil.format(
-				LocaleUtil.getDefault(),
-				"the-users-x-do-not-exist-and-were-removed-from-the-" +
-					"recipients-of-notification-template-x",
-				new Object[] {
-					user3ScreenName + StringPool.COMMA_AND_SPACE +
-						user4ScreenName,
-					notificationTemplate1.getName()
-				}),
-			exportImportReportEntry1.getErrorMessage());
-
-		ExportImportReportEntry exportImportReportEntry2 =
-			_getExportImportReportEntry(
-				notificationTemplate2.getExternalReferenceCode(),
-				exportImportConfiguration);
-
-		_assertExportImportReportEntry(
-			_portal.getClassNameId(NotificationTemplate.class), 0,
-			notificationTemplate2.getExternalReferenceCode(), 0,
-			"notification-template",
-			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
-			ExportImportReportEntryConstants.TYPE_WARNING,
-			exportImportReportEntry2);
-
-		Assert.assertEquals(
-			LanguageUtil.format(
-				LocaleUtil.getDefault(),
-				"the-user-x-does-not-exist-and-was-removed-from-the-" +
-					"recipients-of-notification-template-x",
-				new Object[] {
-					user3ScreenName, notificationTemplate2.getName()
-				}),
-			exportImportReportEntry2.getErrorMessage());
-
-		ObjectEntry objectEntry = _addNotificationObjectEntry();
-
-		_sendNotification(0, importedNotificationTemplate1, objectEntry);
-		_sendNotification(0, importedNotificationTemplate2, objectEntry);
-
-		_assertUserNotificationEvents(user1, user2);
-	}
-
-	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
-	@Test
 	public void testExportImportNotificationTemplates() throws Exception {
 		NotificationTemplate notificationTemplate = _addNotificationTemplate(
 			TestPropsValues.getUserId());
@@ -2387,6 +1953,314 @@ public class BatchEnginePortletDataHandlerTest {
 
 	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
 	@Test
+	public void testExportImportNotificationTemplatesWithMissingRoleAndUserGroup()
+		throws Exception {
+
+		_organization = OrganizationTestUtil.addOrganization();
+
+		_role = RoleTestUtil.addRole(RoleConstants.TYPE_ORGANIZATION);
+		_userGroup = UserGroupTestUtil.addUserGroup();
+
+		String roleName = _role.getName();
+		String userGroupName = _userGroup.getName();
+
+		String from = RandomTestUtil.randomString() + "@liferay.com";
+		String fromName = RandomTestUtil.randomString();
+
+		NotificationTemplate notificationTemplate1 =
+			_addEmailNotificationTemplate(
+				from, fromName, roleName, userGroupName);
+
+		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_ROLE,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+				roleName));
+		NotificationTemplate notificationTemplate3 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_USER_GROUP,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
+				userGroupName));
+
+		File larFile = _exportNotificationTemplates();
+
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate1);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate2);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate3);
+
+		_roleLocalService.deleteRole(_role);
+		_userGroupLocalService.deleteUserGroup(_userGroup);
+
+		ExportImportConfiguration exportImportConfiguration =
+			_importNotificationTemplates(larFile, null);
+
+		NotificationTemplate importedNotificationTemplate1 =
+			_getNotificationTemplate(
+				notificationTemplate1.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate2 =
+			_getNotificationTemplate(
+				notificationTemplate2.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate3 =
+			_getNotificationTemplate(
+				notificationTemplate3.getExternalReferenceCode());
+
+		_notificationTemplates.add(importedNotificationTemplate1);
+		_notificationTemplates.add(importedNotificationTemplate2);
+		_notificationTemplates.add(importedNotificationTemplate3);
+
+		_role = _roleLocalService.fetchRoleByExternalReferenceCode(
+			_role.getExternalReferenceCode(), TestPropsValues.getCompanyId());
+
+		Assert.assertEquals(WorkflowConstants.STATUS_EMPTY, _role.getStatus());
+		Assert.assertEquals(RoleConstants.TYPE_ORGANIZATION, _role.getType());
+
+		_userGroup =
+			_userGroupLocalService.fetchUserGroupByExternalReferenceCode(
+				_userGroup.getExternalReferenceCode(),
+				TestPropsValues.getCompanyId());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EMPTY, _userGroup.getStatus());
+
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate1, from, fromName, roleName,
+			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
+			NotificationRecipientConstants.TYPE_USER_GROUP);
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate2, roleName);
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate3, userGroupName);
+
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(Role.class), 0,
+			_role.getExternalReferenceCode(), 0, "role",
+			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
+			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getExportImportReportEntry(
+				_role.getExternalReferenceCode(), exportImportConfiguration));
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(UserGroup.class), 0,
+			_userGroup.getExternalReferenceCode(), 0, "user-group",
+			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
+			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getExportImportReportEntry(
+				_userGroup.getExternalReferenceCode(),
+				exportImportConfiguration));
+
+		Long originalExportImportConfigurationId =
+			ExportImportThreadLocal.getExportImportConfigurationId();
+
+		ExportImportThreadLocal.setExportImportConfigurationId(0);
+
+		_role = _roleLocalService.updateRole(
+			_role.getExternalReferenceCode(), _role.getRoleId(), roleName,
+			_role.getTitleMap(), _role.getDescriptionMap(), _role.getSubtype(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, _role.getStatus());
+
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(Role.class), 0,
+			_role.getExternalReferenceCode(), 0, "role",
+			ExportImportReportEntryConstants.STATUS_RESOLVED,
+			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getExportImportReportEntry(
+				_role.getExternalReferenceCode(), exportImportConfiguration));
+
+		_userGroup = _userGroupLocalService.addOrUpdateUserGroup(
+			_userGroup.getExternalReferenceCode(), TestPropsValues.getUserId(),
+			TestPropsValues.getCompanyId(), userGroupName,
+			_userGroup.getDescription(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_APPROVED, _userGroup.getStatus());
+
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(UserGroup.class), 0,
+			_userGroup.getExternalReferenceCode(), 0, "user-group",
+			ExportImportReportEntryConstants.STATUS_RESOLVED,
+			ExportImportReportEntryConstants.TYPE_EMPTY,
+			_getExportImportReportEntry(
+				_userGroup.getExternalReferenceCode(),
+				exportImportConfiguration));
+
+		ExportImportThreadLocal.setExportImportConfigurationId(
+			originalExportImportConfigurationId);
+
+		User user1 = UserTestUtil.addUser();
+		User user2 = UserTestUtil.addUser();
+
+		_users.add(user1);
+		_users.add(user2);
+
+		_userGroupLocalService.addUserUserGroup(
+			user2.getUserId(), _userGroup.getUserGroupId());
+		_userGroupRoleLocalService.addUserGroupRole(
+			user1.getUserId(), _organization.getGroupId(), _role.getRoleId());
+
+		ObjectEntry objectEntry = _addNotificationObjectEntry();
+
+		_sendNotification(
+			_organization.getGroupId(), importedNotificationTemplate2,
+			objectEntry);
+		_sendNotification(0, importedNotificationTemplate3, objectEntry);
+
+		_assertUserNotificationEvents(user1, user2);
+	}
+
+	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
+	@Test
+	public void testExportImportNotificationTemplatesWithMissingUsers()
+		throws Exception {
+
+		User user1 = UserTestUtil.addUser();
+		User user2 = UserTestUtil.addUser();
+		User user3 = UserTestUtil.addUser();
+		User user4 = UserTestUtil.addUser();
+
+		_users.add(user1);
+		_users.add(user2);
+		_users.add(user4);
+
+		NotificationTemplate notificationTemplate1 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_USER,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user1.getScreenName()),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user2.getScreenName()),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user3.getScreenName()),
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user4.getScreenName()));
+		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_USER,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user3.getScreenName()));
+
+		File larFile = _exportNotificationTemplates();
+
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate1);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate2);
+
+		String user3ScreenName = user3.getScreenName();
+		String user4ScreenName = user4.getScreenName();
+
+		_userLocalService.deleteUser(user3);
+		_userLocalService.deleteUser(user4);
+
+		long backgroundTaskId = new ExportImportExecutor(
+		).withGroupId(
+			_getCompanyGroupId()
+		).withIncludeNotificationTemplates(
+		).withLARFile(
+			larFile
+		).executeImportInBackground();
+
+		ExportImportTestUtil.retryAssert(
+			1, TimeUnit.SECONDS, 30, TimeUnit.SECONDS,
+			() -> {
+				BackgroundTask backgroundTask =
+					BackgroundTaskManagerUtil.getBackgroundTask(
+						backgroundTaskId);
+
+				Assert.assertEquals(
+					BackgroundTaskConstants.STATUS_COMPLETED_WITH_ERRORS,
+					backgroundTask.getStatus());
+			});
+
+		ExportImportConfiguration exportImportConfiguration =
+			_getExportImportConfiguration(backgroundTaskId);
+
+		NotificationTemplate importedNotificationTemplate1 =
+			_getNotificationTemplate(
+				notificationTemplate1.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate2 =
+			_getNotificationTemplate(
+				notificationTemplate2.getExternalReferenceCode());
+
+		_notificationTemplates.add(importedNotificationTemplate1);
+		_notificationTemplates.add(importedNotificationTemplate2);
+
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate1, user1.getScreenName(),
+			user2.getScreenName());
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate2);
+
+		ExportImportReportEntry exportImportReportEntry1 =
+			_getExportImportReportEntry(
+				notificationTemplate1.getExternalReferenceCode(),
+				exportImportConfiguration);
+
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(NotificationTemplate.class), 0,
+			notificationTemplate1.getExternalReferenceCode(), 0,
+			"notification-template",
+			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
+			ExportImportReportEntryConstants.TYPE_WARNING,
+			exportImportReportEntry1);
+
+		Assert.assertEquals(
+			LanguageUtil.format(
+				LocaleUtil.getDefault(),
+				"the-users-x-do-not-exist-and-were-removed-from-the-" +
+					"recipients-of-notification-template-x",
+				new Object[] {
+					user3ScreenName + StringPool.COMMA_AND_SPACE +
+						user4ScreenName,
+					notificationTemplate1.getName()
+				}),
+			exportImportReportEntry1.getErrorMessage());
+
+		ExportImportReportEntry exportImportReportEntry2 =
+			_getExportImportReportEntry(
+				notificationTemplate2.getExternalReferenceCode(),
+				exportImportConfiguration);
+
+		_assertExportImportReportEntry(
+			_portal.getClassNameId(NotificationTemplate.class), 0,
+			notificationTemplate2.getExternalReferenceCode(), 0,
+			"notification-template",
+			ExportImportReportEntryConstants.STATUS_UNRESOLVED,
+			ExportImportReportEntryConstants.TYPE_WARNING,
+			exportImportReportEntry2);
+
+		Assert.assertEquals(
+			LanguageUtil.format(
+				LocaleUtil.getDefault(),
+				"the-user-x-does-not-exist-and-was-removed-from-the-" +
+					"recipients-of-notification-template-x",
+				new Object[] {
+					user3ScreenName, notificationTemplate2.getName()
+				}),
+			exportImportReportEntry2.getErrorMessage());
+
+		ObjectEntry objectEntry = _addNotificationObjectEntry();
+
+		_sendNotification(0, importedNotificationTemplate1, objectEntry);
+		_sendNotification(0, importedNotificationTemplate2, objectEntry);
+
+		_assertUserNotificationEvents(user1, user2);
+	}
+
+	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
+	@Test
 	public void testExportImportNotificationTemplatesWithPermissions()
 		throws Exception {
 
@@ -2489,6 +2363,132 @@ public class BatchEnginePortletDataHandlerTest {
 		_assertNotificationTemplateRoleNames(
 			notificationTemplate.getExternalReferenceCode(),
 			RoleConstants.OWNER, RoleConstants.SITE_MEMBER);
+	}
+
+	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
+	@Test
+	public void testExportImportNotificationTemplatesWithRecipients()
+		throws Exception {
+
+		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		_userGroup = UserGroupTestUtil.addUserGroup();
+
+		User user1 = UserTestUtil.addUser();
+		User user2 = UserTestUtil.addUser();
+		User user3 = UserTestUtil.addUser();
+
+		_users.add(user1);
+		_users.add(user2);
+		_users.add(user3);
+
+		_userLocalService.addRoleUser(_role.getRoleId(), user1);
+		_userGroupLocalService.addUserUserGroup(
+			user2.getUserId(), _userGroup.getUserGroupId());
+
+		String from = RandomTestUtil.randomString() + "@liferay.com";
+		String fromName = RandomTestUtil.randomString();
+
+		NotificationTemplate notificationTemplate1 =
+			_addEmailNotificationTemplate(
+				from, fromName, _role.getName(), _userGroup.getName());
+
+		NotificationTemplate notificationTemplate2 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_ROLE,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_ROLE_NAME,
+				_role.getName()));
+		NotificationTemplate notificationTemplate3 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_USER_GROUP,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
+				_userGroup.getName()));
+		NotificationTemplate notificationTemplate4 = _addNotificationTemplate(
+			NotificationRecipientConstants.TYPE_USER,
+			NotificationConstants.TYPE_USER_NOTIFICATION,
+			NotificationRecipientSettingUtil.createNotificationRecipientSetting(
+				NotificationRecipientSettingConstants.NAME_USER_SCREEN_NAME,
+				user3.getScreenName()));
+
+		File larFile = _exportNotificationTemplates();
+
+		String roleName = RandomTestUtil.randomString();
+
+		_role = _roleLocalService.updateRole(
+			_role.getExternalReferenceCode(), _role.getRoleId(), roleName,
+			_role.getTitleMap(), _role.getDescriptionMap(), _role.getSubtype(),
+			ServiceContextTestUtil.getServiceContext());
+
+		String userGroupName = RandomTestUtil.randomString();
+
+		_userGroup = _userGroupLocalService.updateUserGroup(
+			_userGroup.getExternalReferenceCode(),
+			TestPropsValues.getCompanyId(), _userGroup.getUserGroupId(),
+			userGroupName, _userGroup.getDescription(),
+			ServiceContextTestUtil.getServiceContext());
+
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate1);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate2);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate3);
+		_notificationTemplateLocalService.deleteNotificationTemplate(
+			notificationTemplate4);
+
+		_importNotificationTemplates(larFile, null);
+
+		NotificationTemplate importedNotificationTemplate1 =
+			_getNotificationTemplate(
+				notificationTemplate1.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate2 =
+			_getNotificationTemplate(
+				notificationTemplate2.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate3 =
+			_getNotificationTemplate(
+				notificationTemplate3.getExternalReferenceCode());
+		NotificationTemplate importedNotificationTemplate4 =
+			_getNotificationTemplate(
+				notificationTemplate4.getExternalReferenceCode());
+
+		_notificationTemplates.add(importedNotificationTemplate1);
+		_notificationTemplates.add(importedNotificationTemplate2);
+		_notificationTemplates.add(importedNotificationTemplate3);
+		_notificationTemplates.add(importedNotificationTemplate4);
+
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate1, from, fromName, roleName,
+			NotificationRecipientConstants.TYPE_ROLE, userGroupName,
+			NotificationRecipientConstants.TYPE_USER_GROUP);
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate2, roleName);
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate3, userGroupName);
+		_assertNotificationRecipientSettingValues(
+			importedNotificationTemplate4, user3.getScreenName());
+
+		ObjectEntry objectEntry = _addNotificationObjectEntry();
+
+		_sendNotification(0, importedNotificationTemplate1, objectEntry);
+		_sendNotification(0, importedNotificationTemplate2, objectEntry);
+		_sendNotification(0, importedNotificationTemplate3, objectEntry);
+		_sendNotification(0, importedNotificationTemplate4, objectEntry);
+
+		List<NotificationQueueEntry> notificationQueueEntries =
+			_getNotificationQueueEntries(importedNotificationTemplate1);
+
+		_notificationQueueEntries.addAll(notificationQueueEntries);
+
+		Assert.assertEquals(
+			notificationQueueEntries.toString(), 1,
+			notificationQueueEntries.size());
+
+		_assertNotificationQueueEntry(
+			user2.getEmailAddress(), user1.getEmailAddress(),
+			notificationQueueEntries.get(0));
+
+		_assertUserNotificationEvents(user1, user2, user3);
 	}
 
 	@FeatureFlags(featureFlags = @FeatureFlag(value = "LPD-49854"))
