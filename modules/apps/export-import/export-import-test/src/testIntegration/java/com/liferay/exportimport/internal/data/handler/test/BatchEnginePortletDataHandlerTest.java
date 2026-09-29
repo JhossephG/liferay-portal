@@ -2010,16 +2010,15 @@ public class BatchEnginePortletDataHandlerTest {
 		_notificationTemplates.add(importedNotificationTemplate2);
 		_notificationTemplates.add(importedNotificationTemplate3);
 
-		_role = _roleLocalService.fetchRoleByExternalReferenceCode(
+		_role = _roleLocalService.getRoleByExternalReferenceCode(
 			_role.getExternalReferenceCode(), TestPropsValues.getCompanyId());
 
 		Assert.assertEquals(WorkflowConstants.STATUS_EMPTY, _role.getStatus());
 		Assert.assertEquals(RoleConstants.TYPE_ORGANIZATION, _role.getType());
 
-		_userGroup =
-			_userGroupLocalService.fetchUserGroupByExternalReferenceCode(
-				_userGroup.getExternalReferenceCode(),
-				TestPropsValues.getCompanyId());
+		_userGroup = _userGroupLocalService.getUserGroupByExternalReferenceCode(
+			_userGroup.getExternalReferenceCode(),
+			TestPropsValues.getCompanyId());
 
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_EMPTY, _userGroup.getStatus());
