@@ -24,6 +24,7 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Role;
@@ -790,7 +791,9 @@ public class NotificationTemplateResourceTest
 	private void _testPostNotificationTemplate(JSONObject recipientJSONObject)
 		throws Exception {
 
-		_testPostNotificationTemplate(recipientJSONObject, recipientJSONObject);
+		_testPostNotificationTemplate(
+			JSONFactoryUtil.createJSONObject(recipientJSONObject.toString()),
+			recipientJSONObject);
 	}
 
 	private void _testPostNotificationTemplate(
