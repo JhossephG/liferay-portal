@@ -593,7 +593,6 @@ public class NotificationTemplateResourceTest
 
 	private void _testGetNotificationTemplateEmail() throws Exception {
 		String from = RandomTestUtil.randomString() + "@liferay.com";
-
 		JSONObject fromNameJSONObject = JSONUtil.put(
 			"en_US", RandomTestUtil.randomString());
 
@@ -799,8 +798,7 @@ public class NotificationTemplateResourceTest
 			JSONObject recipientJSONObject)
 		throws Exception {
 
-		String from = RandomTestUtil.randomString();
-
+		String from = RandomTestUtil.randomString() + "@liferay.com";
 		JSONObject fromNameJSONObject = JSONUtil.put(
 			"en_US", RandomTestUtil.randomString());
 
