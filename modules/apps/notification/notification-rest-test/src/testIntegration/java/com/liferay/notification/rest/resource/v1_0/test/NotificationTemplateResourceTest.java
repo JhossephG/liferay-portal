@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,6 +75,16 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 public class NotificationTemplateResourceTest
 	extends BaseNotificationTemplateResourceTestCase {
 
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+
+		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+		_user = UserTestUtil.addUser();
+		_userGroup = UserGroupTestUtil.addUserGroup();
+	}
+
 	@Override
 	@Test
 	public void testDeleteNotificationTemplateByExternalReferenceCode()
@@ -88,10 +99,6 @@ public class NotificationTemplateResourceTest
 	@Test
 	public void testGetNotificationTemplate() throws Exception {
 		super.testGetNotificationTemplate();
-
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-		_user = UserTestUtil.addUser();
-		_userGroup = UserGroupTestUtil.addUserGroup();
 
 		_testGetNotificationTemplateEmail();
 		_testGetNotificationTemplateUserNotification();
@@ -178,10 +185,6 @@ public class NotificationTemplateResourceTest
 	public void testPatchNotificationTemplate() throws Exception {
 		super.testPatchNotificationTemplate();
 
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-		_user = UserTestUtil.addUser();
-		_userGroup = UserGroupTestUtil.addUserGroup();
-
 		_testPatchNotificationTemplateWithName();
 		_testUpdateNotificationTemplateWithEmailType(
 			this::_patchNotificationTemplateJSONObject);
@@ -193,10 +196,6 @@ public class NotificationTemplateResourceTest
 	@Test
 	public void testPostNotificationTemplate() throws Exception {
 		super.testPostNotificationTemplate();
-
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-		_user = UserTestUtil.addUser();
-		_userGroup = UserGroupTestUtil.addUserGroup();
 
 		_testPostNotificationTemplateEmail();
 		_testPostNotificationTemplateUserNotification();
@@ -235,10 +234,6 @@ public class NotificationTemplateResourceTest
 	@Test
 	public void testPutNotificationTemplate() throws Exception {
 		super.testPutNotificationTemplate();
-
-		_role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-		_user = UserTestUtil.addUser();
-		_userGroup = UserGroupTestUtil.addUserGroup();
 
 		_testPutNotificationTemplateWithNameTranslations();
 		_testPutNotificationTemplateWithPermissions();
