@@ -101,8 +101,8 @@ public class NotificationTemplateResourceTest
 	public void testGetNotificationTemplate() throws Exception {
 		super.testGetNotificationTemplate();
 
-		_testGetNotificationTemplateEmail();
-		_testGetNotificationTemplateUserNotification();
+		_testGetNotificationTemplateWithEmailType();
+		_testGetNotificationTemplateWithUserNotificationType();
 	}
 
 	@Override
@@ -198,12 +198,12 @@ public class NotificationTemplateResourceTest
 	public void testPostNotificationTemplate() throws Exception {
 		super.testPostNotificationTemplate();
 
-		_testPostNotificationTemplateEmail();
-		_testPostNotificationTemplateUserNotification();
 		_testPostNotificationTemplateWithCreator();
+		_testPostNotificationTemplateWithEmailType();
 		_testPostNotificationTemplateWithNameWithoutDefaultLanguage();
 		_testPostNotificationTemplateWithPermissions();
 		_testPostNotificationTemplateWithPermissionsAndFeatureFlagDisabled();
+		_testPostNotificationTemplateWithUserNotificationType();
 	}
 
 	@Override
@@ -564,7 +564,7 @@ public class NotificationTemplateResourceTest
 				Http.Method.GET));
 	}
 
-	private void _testGetNotificationTemplateEmail() throws Exception {
+	private void _testGetNotificationTemplateWithEmailType() throws Exception {
 		String from = RandomTestUtil.randomString() + "@liferay.com";
 		JSONObject fromNameJSONObject = JSONUtil.put(
 			"en_US", RandomTestUtil.randomString());
@@ -624,7 +624,7 @@ public class NotificationTemplateResourceTest
 			notificationTemplateJSONObject);
 	}
 
-	private void _testGetNotificationTemplateUserNotification()
+	private void _testGetNotificationTemplateWithUserNotificationType()
 		throws Exception {
 
 		_testGetNotificationTemplate(
@@ -829,7 +829,38 @@ public class NotificationTemplateResourceTest
 					toDTO(notificationTemplateJSONObject.toString())));
 	}
 
-	private void _testPostNotificationTemplateEmail() throws Exception {
+	private void _testPostNotificationTemplateWithCreator() throws Exception {
+		NotificationTemplate notificationTemplate = _addNotificationTemplate(
+			randomNotificationTemplate());
+
+		Creator creator = notificationTemplate.getCreator();
+
+		User user = TestPropsValues.getUser();
+
+		Assert.assertEquals(
+			user.getExternalReferenceCode(),
+			creator.getExternalReferenceCode());
+
+		com.liferay.notification.model.NotificationTemplate
+			serviceBuilderNotificationTemplate =
+				_notificationTemplateLocalService.addNotificationTemplate(
+					RandomTestUtil.randomString(), _user.getUserId(),
+					NotificationConstants.TYPE_EMAIL);
+
+		_notificationTemplates.add(serviceBuilderNotificationTemplate);
+
+		notificationTemplate =
+			notificationTemplateResource.getNotificationTemplate(
+				serviceBuilderNotificationTemplate.getNotificationTemplateId());
+
+		creator = notificationTemplate.getCreator();
+
+		Assert.assertEquals(
+			_user.getExternalReferenceCode(),
+			creator.getExternalReferenceCode());
+	}
+
+	private void _testPostNotificationTemplateWithEmailType() throws Exception {
 
 		// Notification template recipient type email
 
@@ -962,7 +993,74 @@ public class NotificationTemplateResourceTest
 			));
 	}
 
-	private void _testPostNotificationTemplateUserNotification()
+	private void _testPostNotificationTemplateWithNameWithoutDefaultLanguage()
+		throws Exception {
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.vulcan.internal.jaxrs.exception.mapper." +
+					"WebApplicationExceptionMapper",
+				LoggerTestUtil.ERROR)) {
+
+			Assert.assertEquals(
+				400,
+				HTTPTestUtil.invokeToHttpCode(
+					JSONUtil.put(
+						"name_i18n",
+						JSONUtil.put(
+							LocaleUtil.toLanguageId(LocaleUtil.BRAZIL),
+							RandomTestUtil.randomString())
+					).put(
+						"recipients", JSONUtil.putAll()
+					).toString(),
+					"notification/v1.0/notification-templates",
+					Http.Method.POST));
+		}
+	}
+
+	private void _testPostNotificationTemplateWithPermissions()
+		throws Exception {
+
+		_assertPermissions(
+			_postNotificationTemplateWithPermissions(
+				RoleConstants.ADMINISTRATOR),
+			RoleConstants.ADMINISTRATOR);
+	}
+
+	private void _testPostNotificationTemplateWithPermissionsAndFeatureFlagDisabled()
+		throws Exception {
+
+		try (PropsTemporarySwapper propsTemporarySwapper =
+				new PropsTemporarySwapper(
+					FeatureFlagConstants.getKey("LPD-49854"),
+					Boolean.FALSE.toString())) {
+
+			Assert.assertEquals(
+				400,
+				HTTPTestUtil.invokeToHttpCode(
+					JSONUtil.put(
+						"permissions",
+						JSONUtil.putAll(
+							_getPermissionJSONObject(
+								RoleConstants.ADMINISTRATOR))
+					).toString(),
+					"notification/v1.0/notification-templates",
+					Http.Method.POST));
+		}
+	}
+
+	private void _testPostNotificationTemplateWithRecipient(
+			JSONArray expectedRecipientsJSONArray,
+			JSONObject recipientJSONObject, String recipientType)
+		throws Exception {
+
+		_assertNotificationTemplateRecipients(
+			expectedRecipientsJSONArray,
+			_postNotificationTemplateJSONObject(
+				JSONUtil.putAll(recipientJSONObject), recipientType,
+				NotificationConstants.TYPE_USER_NOTIFICATION));
+	}
+
+	private void _testPostNotificationTemplateWithUserNotificationType()
 		throws Exception {
 
 		// Notification template recipient type role
@@ -1089,104 +1187,6 @@ public class NotificationTemplateResourceTest
 				NotificationRecipientSettingConstants.NAME_USER_GROUP_NAME,
 				RandomTestUtil.randomString()),
 			NotificationRecipientConstants.TYPE_USER_GROUP);
-	}
-
-	private void _testPostNotificationTemplateWithCreator() throws Exception {
-		NotificationTemplate notificationTemplate = _addNotificationTemplate(
-			randomNotificationTemplate());
-
-		Creator creator = notificationTemplate.getCreator();
-
-		User user = TestPropsValues.getUser();
-
-		Assert.assertEquals(
-			user.getExternalReferenceCode(),
-			creator.getExternalReferenceCode());
-
-		com.liferay.notification.model.NotificationTemplate
-			serviceBuilderNotificationTemplate =
-				_notificationTemplateLocalService.addNotificationTemplate(
-					RandomTestUtil.randomString(), _user.getUserId(),
-					NotificationConstants.TYPE_EMAIL);
-
-		_notificationTemplates.add(serviceBuilderNotificationTemplate);
-
-		notificationTemplate =
-			notificationTemplateResource.getNotificationTemplate(
-				serviceBuilderNotificationTemplate.getNotificationTemplateId());
-
-		creator = notificationTemplate.getCreator();
-
-		Assert.assertEquals(
-			_user.getExternalReferenceCode(),
-			creator.getExternalReferenceCode());
-	}
-
-	private void _testPostNotificationTemplateWithNameWithoutDefaultLanguage()
-		throws Exception {
-
-		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				"com.liferay.portal.vulcan.internal.jaxrs.exception.mapper." +
-					"WebApplicationExceptionMapper",
-				LoggerTestUtil.ERROR)) {
-
-			Assert.assertEquals(
-				400,
-				HTTPTestUtil.invokeToHttpCode(
-					JSONUtil.put(
-						"name_i18n",
-						JSONUtil.put(
-							LocaleUtil.toLanguageId(LocaleUtil.BRAZIL),
-							RandomTestUtil.randomString())
-					).put(
-						"recipients", JSONUtil.putAll()
-					).toString(),
-					"notification/v1.0/notification-templates",
-					Http.Method.POST));
-		}
-	}
-
-	private void _testPostNotificationTemplateWithPermissions()
-		throws Exception {
-
-		_assertPermissions(
-			_postNotificationTemplateWithPermissions(
-				RoleConstants.ADMINISTRATOR),
-			RoleConstants.ADMINISTRATOR);
-	}
-
-	private void _testPostNotificationTemplateWithPermissionsAndFeatureFlagDisabled()
-		throws Exception {
-
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					FeatureFlagConstants.getKey("LPD-49854"),
-					Boolean.FALSE.toString())) {
-
-			Assert.assertEquals(
-				400,
-				HTTPTestUtil.invokeToHttpCode(
-					JSONUtil.put(
-						"permissions",
-						JSONUtil.putAll(
-							_getPermissionJSONObject(
-								RoleConstants.ADMINISTRATOR))
-					).toString(),
-					"notification/v1.0/notification-templates",
-					Http.Method.POST));
-		}
-	}
-
-	private void _testPostNotificationTemplateWithRecipient(
-			JSONArray expectedRecipientsJSONArray,
-			JSONObject recipientJSONObject, String recipientType)
-		throws Exception {
-
-		_assertNotificationTemplateRecipients(
-			expectedRecipientsJSONArray,
-			_postNotificationTemplateJSONObject(
-				JSONUtil.putAll(recipientJSONObject), recipientType,
-				NotificationConstants.TYPE_USER_NOTIFICATION));
 	}
 
 	private void _testPutNotificationTemplateWithNameTranslations()
