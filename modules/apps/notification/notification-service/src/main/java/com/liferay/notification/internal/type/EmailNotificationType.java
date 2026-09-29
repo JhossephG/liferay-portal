@@ -605,7 +605,7 @@ public class EmailNotificationType extends BaseNotificationType {
 					recipientType, NotificationRecipientConstants.TYPE_ROLE)) {
 
 				for (Map<String, String> roleMap : recipientMaps) {
-					Role role = roleLocalService.fetchRole(
+					Role role = _roleLocalService.fetchRole(
 						companyId,
 						roleMap.get(
 							NotificationRecipientSettingConstants.
