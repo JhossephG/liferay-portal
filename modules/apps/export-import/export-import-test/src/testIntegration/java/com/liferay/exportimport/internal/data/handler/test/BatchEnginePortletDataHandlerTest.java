@@ -2144,6 +2144,7 @@ public class BatchEnginePortletDataHandlerTest {
 
 		_users.add(user1);
 		_users.add(user2);
+		_users.add(user3);
 		_users.add(user4);
 
 		NotificationTemplate notificationTemplate1 = _addNotificationTemplate(
