@@ -1959,11 +1959,10 @@ public class BatchEnginePortletDataHandlerTest {
 		_role = RoleTestUtil.addRole(RoleConstants.TYPE_ORGANIZATION);
 		_userGroup = UserGroupTestUtil.addUserGroup();
 
-		String roleName = _role.getName();
-		String userGroupName = _userGroup.getName();
-
 		String from = RandomTestUtil.randomString() + "@liferay.com";
 		String fromName = RandomTestUtil.randomString();
+		String roleName = _role.getName();
+		String userGroupName = _userGroup.getName();
 
 		NotificationTemplate notificationTemplate1 =
 			_addEmailNotificationTemplate(
