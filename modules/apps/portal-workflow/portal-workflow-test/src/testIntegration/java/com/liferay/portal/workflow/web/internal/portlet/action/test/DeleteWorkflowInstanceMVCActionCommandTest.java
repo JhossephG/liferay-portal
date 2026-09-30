@@ -8,6 +8,7 @@ package com.liferay.portal.workflow.web.internal.portlet.action.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.WorkflowInstanceLink;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -57,6 +59,8 @@ public class DeleteWorkflowInstanceMVCActionCommandTest {
 
 	@Before
 	public void setUp() throws Exception {
+		UserTestUtil.setUser(TestPropsValues.getUser());
+
 		_group = GroupTestUtil.addGroup();
 
 		_user1 = UserTestUtil.addUser(_group.getGroupId());
@@ -81,6 +85,18 @@ public class DeleteWorkflowInstanceMVCActionCommandTest {
 
 		_assertWorkflowInstanceDeleted(blogsEntry.getEntryId());
 
+		// Administrator user from a different company
+
+		blogsEntry = _addBlogsEntry();
+
+		_company = CompanyTestUtil.addCompany();
+
+		_assertWorkflowInstanceNotDeleted(
+			blogsEntry.getEntryId(),
+			_processAction(
+				blogsEntry, WorkflowPortletKeys.CONTROL_PANEL_WORKFLOW_INSTANCE,
+				UserTestUtil.addCompanyAdminUser(_company)));
+
 		// Nonowner user
 
 		for (String portletId :
@@ -92,24 +108,9 @@ public class DeleteWorkflowInstanceMVCActionCommandTest {
 
 			blogsEntry = _addBlogsEntry();
 
-			MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
-				_processAction(blogsEntry, portletId, _user2);
-
-			Assert.assertTrue(
-				SessionErrors.contains(
-					mockLiferayPortletActionRequest,
-					PrincipalException.MustHavePermission.class));
-
-			blogsEntry = _blogsEntryLocalService.getEntry(
-				blogsEntry.getEntryId());
-
-			Assert.assertEquals(
-				WorkflowConstants.STATUS_PENDING, blogsEntry.getStatus());
-
-			Assert.assertNotNull(
-				_workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
-					blogsEntry.getCompanyId(), blogsEntry.getGroupId(),
-					BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+			_assertWorkflowInstanceNotDeleted(
+				blogsEntry.getEntryId(),
+				_processAction(blogsEntry, portletId, _user2));
 		}
 
 		// Owner user
@@ -136,6 +137,27 @@ public class DeleteWorkflowInstanceMVCActionCommandTest {
 			WorkflowConstants.STATUS_DRAFT, blogsEntry.getStatus());
 
 		Assert.assertNull(
+			_workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
+				blogsEntry.getCompanyId(), blogsEntry.getGroupId(),
+				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+	}
+
+	private void _assertWorkflowInstanceNotDeleted(
+			long entryId,
+			MockLiferayPortletActionRequest mockLiferayPortletActionRequest)
+		throws Exception {
+
+		Assert.assertTrue(
+			SessionErrors.contains(
+				mockLiferayPortletActionRequest,
+				PrincipalException.MustHavePermission.class));
+
+		BlogsEntry blogsEntry = _blogsEntryLocalService.getEntry(entryId);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, blogsEntry.getStatus());
+
+		Assert.assertNotNull(
 			_workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
 				blogsEntry.getCompanyId(), blogsEntry.getGroupId(),
 				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
@@ -181,6 +203,9 @@ public class DeleteWorkflowInstanceMVCActionCommandTest {
 
 	@Inject
 	private BlogsEntryLocalService _blogsEntryLocalService;
+
+	@DeleteAfterTestRun
+	private Company _company;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
