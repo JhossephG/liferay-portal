@@ -122,27 +122,37 @@ public class DeleteWorkflowInstanceMVCActionCommand
 		long workflowInstanceId = ParamUtil.getLong(
 			actionRequest, "workflowInstanceId");
 
+		WorkflowInstance workflowInstance = null;
+
 		if (Objects.equals(
 				_portal.getPortletId(actionRequest),
 				WorkflowPortletKeys.CONTROL_PANEL_WORKFLOW_INSTANCE)) {
 
-			return WorkflowInstanceManagerUtil.getWorkflowInstance(
+			workflowInstance = WorkflowInstanceManagerUtil.getWorkflowInstance(
 				themeDisplay.getCompanyId(), workflowInstanceId);
 		}
-
-		WorkflowInstance workflowInstance =
-			WorkflowInstanceManagerUtil.getWorkflowInstance(
+		else {
+			workflowInstance = WorkflowInstanceManagerUtil.getWorkflowInstance(
 				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
 				workflowInstanceId);
-
-		if (workflowInstance == null) {
-			throw new PrincipalException.MustHavePermission(
-				themeDisplay.getPermissionChecker(),
-				WorkflowInstance.class.getName(), workflowInstanceId,
-				ActionKeys.DELETE);
 		}
 
-		return workflowInstance;
+		if (workflowInstance != null) {
+			Map<String, Serializable> workflowContext =
+				workflowInstance.getWorkflowContext();
+
+			long companyId = GetterUtil.getLong(
+				workflowContext.get(WorkflowConstants.CONTEXT_COMPANY_ID));
+
+			if (companyId == themeDisplay.getCompanyId()) {
+				return workflowInstance;
+			}
+		}
+
+		throw new PrincipalException.MustHavePermission(
+			themeDisplay.getPermissionChecker(),
+			WorkflowInstance.class.getName(), workflowInstanceId,
+			ActionKeys.DELETE);
 	}
 
 	private void _updateEntryStatus(Map<String, Serializable> workflowContext)
