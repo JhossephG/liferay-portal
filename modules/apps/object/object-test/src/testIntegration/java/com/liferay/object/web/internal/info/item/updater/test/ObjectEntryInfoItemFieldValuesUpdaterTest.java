@@ -442,6 +442,23 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 			MapUtil.getString(
 				objectEntry8.getValues(), objectField1.getName()));
 
+		// Standalone object entry
+
+		ObjectEntry objectEntry9 = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
+			Collections.emptyMap());
+
+		_updateFromInfoItemFieldValues(
+			InfoItemFieldValues.builder(
+			).infoFieldValue(
+				_getDeletedItemIdentifiersInfoFieldValue(objectEntry9)
+			).build(),
+			objectEntry6.getObjectDefinition(), objectEntry6);
+
+		Assert.assertNull(
+			objectEntryLocalService.fetchObjectEntry(
+				objectEntry9.getObjectEntryId()));
+
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService,
 			new String[] {"C_A", "C_AA", "C_AB", "C_AAA", "C_AAB"},
