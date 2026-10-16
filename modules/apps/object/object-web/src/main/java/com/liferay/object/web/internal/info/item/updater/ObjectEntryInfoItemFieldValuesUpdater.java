@@ -325,9 +325,9 @@ public class ObjectEntryInfoItemFieldValuesUpdater
 					externalReferenceCode, objectEntry.getGroupId(),
 					objectDefinition.getObjectDefinitionId());
 
-			Node node = tree.getNode(relatedObjectEntry.getObjectEntryId());
+			Node node = tree.fetchNode(relatedObjectEntry.getObjectEntryId());
 
-			if (node.getPrimaryKey() != relatedObjectEntry.getObjectEntryId()) {
+			if (node == null) {
 				throw new NoSuchObjectEntryException(
 					StringBundler.concat(
 						"No ObjectEntry exists with the key ",
