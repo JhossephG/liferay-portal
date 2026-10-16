@@ -301,8 +301,17 @@ public class ObjectEntryInfoItemFieldValuesUpdater
 					objectDefinition.getStorageType());
 
 			String externalReferenceCode = split[1];
+			ObjectEntry relatedObjectEntry = null;
 
-			if (!objectDefinition.isRootDescendantNode()) {
+			if (objectDefinition.isRootDescendantNode()) {
+				relatedObjectEntry = ObjectEntryServiceUtil.getObjectEntry(
+					externalReferenceCode, objectEntry.getGroupId(),
+					objectDefinition.getObjectDefinitionId());
+			}
+
+			if ((relatedObjectEntry == null) ||
+				!relatedObjectEntry.isRootDescendantNode()) {
+
 				objectEntryManager.deleteObjectEntry(
 					companyId, dtoConverterContext, externalReferenceCode,
 					objectDefinition, scopeKey);
@@ -319,11 +328,6 @@ public class ObjectEntryInfoItemFieldValuesUpdater
 				tree = objectEntryTreeFactory.create(
 					objectEntry.getObjectEntryId());
 			}
-
-			ObjectEntry relatedObjectEntry =
-				ObjectEntryServiceUtil.getObjectEntry(
-					externalReferenceCode, objectEntry.getGroupId(),
-					objectDefinition.getObjectDefinitionId());
 
 			Node node = tree.fetchNode(relatedObjectEntry.getObjectEntryId());
 
