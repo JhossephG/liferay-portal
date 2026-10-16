@@ -56,6 +56,7 @@ import com.liferay.object.tree.Node;
 import com.liferay.object.tree.ObjectEntryTreeFactory;
 import com.liferay.object.tree.Tree;
 import com.liferay.object.web.internal.info.item.BaseObjectEntryInfoItemTestCase;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -241,7 +242,7 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 	public void testUpdateFromInfoItemFieldValuesWithDeletedItemIdentifiers()
 		throws Exception {
 
-		// Object entry from another tree
+		// Object entries from the same tree
 
 		Tree objectDefinitionTree = TreeTestUtil.createObjectDefinitionTree(
 			_objectDefinitionLocalService, _objectRelationshipLocalService,
@@ -260,12 +261,100 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 
 		Node objectDefinitionRootNode = objectDefinitionTree.getRootNode();
 
-		Tree tree1 = TreeTestUtil.createObjectEntryTree(
+		TreeTestUtil.createObjectEntryTree(
 			"1", _objectDefinitionLocalService, objectEntryLocalService,
 			_objectFieldLocalService, _objectRelationshipLocalService,
 			objectDefinitionRootNode.getPrimaryKey());
-		Tree tree2 = TreeTestUtil.createObjectEntryTree(
+
+		ObjectEntry objectEntry3 = _getObjectEntry("A1", "C_A");
+
+		_updateFromInfoItemFieldValues(
+			InfoItemFieldValues.builder(
+			).infoFieldValue(
+				_getDeletedItemIdentifiersInfoFieldValue(
+					_getObjectEntry("AAA1", "C_AAA"),
+					_getObjectEntry("AB1", "C_AB"))
+			).build(),
+			objectEntry3.getObjectDefinition(), objectEntry3);
+
+		ObjectEntryTreeFactory objectEntryTreeFactory =
+			new ObjectEntryTreeFactory(
+				objectEntryLocalService, _objectRelationshipLocalService);
+
+		TreeTestUtil.assertObjectEntryTree(
+			LinkedHashMapBuilder.put(
+				"A1", new String[] {"AA1"}
+			).put(
+				"AA1", new String[] {"AAB1"}
+			).put(
+				"AAB1", new String[0]
+			).build(),
+			objectEntryTreeFactory.create(objectEntry3.getObjectEntryId()),
+			objectEntryLocalService);
+
+		// Object entry from another tree
+
+		TreeTestUtil.createObjectEntryTree(
 			"2", _objectDefinitionLocalService, objectEntryLocalService,
+			_objectFieldLocalService, _objectRelationshipLocalService,
+			objectDefinitionRootNode.getPrimaryKey());
+		TreeTestUtil.createObjectEntryTree(
+			"3", _objectDefinitionLocalService, objectEntryLocalService,
+			_objectFieldLocalService, _objectRelationshipLocalService,
+			objectDefinitionRootNode.getPrimaryKey());
+
+		ObjectEntry objectEntry4 = _getObjectEntry("A2", "C_A");
+
+		AssertUtils.assertFailure(
+			InfoFormException.class, null,
+			() -> _updateFromInfoItemFieldValues(
+				InfoItemFieldValues.builder(
+				).infoFieldValue(
+					_getDeletedItemIdentifiersInfoFieldValue(
+						_getObjectEntry("AA3", "C_AA"))
+				).build(),
+				objectEntry4.getObjectDefinition(), objectEntry4));
+
+		ObjectEntry objectEntry5 = _getObjectEntry("A3", "C_A");
+
+		TreeTestUtil.assertObjectEntryTree(
+			LinkedHashMapBuilder.put(
+				"A3", new String[] {"AA3", "AB3"}
+			).put(
+				"AA3", new String[] {"AAA3", "AAB3"}
+			).put(
+				"AB3", new String[0]
+			).put(
+				"AAA3", new String[0]
+			).put(
+				"AAB3", new String[0]
+			).build(),
+			objectEntryTreeFactory.create(objectEntry5.getObjectEntryId()),
+			objectEntryLocalService);
+
+		// Object entry from the same tree
+
+		_updateFromInfoItemFieldValues(
+			InfoItemFieldValues.builder(
+			).infoFieldValue(
+				_getDeletedItemIdentifiersInfoFieldValue(
+					_getObjectEntry("AA2", "C_AA"))
+			).build(),
+			objectEntry4.getObjectDefinition(), objectEntry4);
+
+		TreeTestUtil.assertObjectEntryTree(
+			LinkedHashMapBuilder.put(
+				"A2", new String[] {"AB2"}
+			).put(
+				"AB2", new String[0]
+			).build(),
+			objectEntryTreeFactory.create(objectEntry4.getObjectEntryId()),
+			objectEntryLocalService);
+
+		// Object entry from the same tree with related info field values
+
+		TreeTestUtil.createObjectEntryTree(
+			"4", _objectDefinitionLocalService, objectEntryLocalService,
 			_objectFieldLocalService, _objectRelationshipLocalService,
 			objectDefinitionRootNode.getPrimaryKey());
 
@@ -273,54 +362,85 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 			_objectDefinitionLocalService.getObjectDefinition(
 				TestPropsValues.getCompanyId(), "C_AA");
 
-		Node rootNode = tree1.getRootNode();
+		ObjectField objectField1 = ObjectFieldUtil.addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).labelMap(
+				RandomTestUtil.randomLocaleStringMap()
+			).name(
+				"a" + RandomTestUtil.randomString()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).userId(
+				TestPropsValues.getUserId()
+			).build());
 
-		ObjectEntry objectEntry = objectEntryLocalService.getObjectEntry(
-			rootNode.getPrimaryKey());
+		ObjectRelationship objectRelationship =
+			TreeTestUtil.getEdgeObjectRelationship(
+				objectDefinition, _objectRelationshipLocalService,
+				objectDefinitionTree);
 
-		AssertUtils.assertFailure(
-			InfoFormException.class, null,
-			() -> _updateFromInfoItemFieldValues(
-				_getDeletedItemIdentifiersInfoItemFieldValues(
-					"AA2", objectDefinition),
-				objectEntry.getObjectDefinition(), objectEntry));
+		ObjectEntry objectEntry6 = _getObjectEntry("A4", "C_A");
+		ObjectField objectField2 = _objectFieldLocalService.getObjectField(
+			objectRelationship.getObjectFieldId2());
 
-		ObjectEntryTreeFactory objectEntryTreeFactory =
-			new ObjectEntryTreeFactory(
-				objectEntryLocalService, _objectRelationshipLocalService);
+		ObjectEntry objectEntry7 = ObjectEntryTestUtil.addObjectEntry(
+			0, objectDefinition.getObjectDefinitionId(),
+			HashMapBuilder.<String, Serializable>put(
+				objectField2.getName(), objectEntry6.getObjectEntryId()
+			).build());
 
-		rootNode = tree2.getRootNode();
-
-		TreeTestUtil.assertObjectEntryTree(
-			LinkedHashMapBuilder.put(
-				"A2", new String[] {"AA2", "AB2"}
-			).put(
-				"AA2", new String[] {"AAA2", "AAB2"}
-			).put(
-				"AB2", new String[0]
-			).put(
-				"AAA2", new String[0]
-			).put(
-				"AAB2", new String[0]
-			).build(),
-			objectEntryTreeFactory.create(rootNode.getPrimaryKey()),
-			objectEntryLocalService);
-
-		// Object entry from the same tree
+		InfoField<TextInfoFieldType> infoField = InfoField.builder(
+		).infoFieldType(
+			TextInfoFieldType.INSTANCE
+		).namespace(
+			ObjectEntryInfoItemUtil.getInfoFieldNamespace(
+				objectDefinition, objectRelationship)
+		).name(
+			objectField1.getName()
+		).build();
+		String value = RandomTestUtil.randomString();
 
 		_updateFromInfoItemFieldValues(
-			_getDeletedItemIdentifiersInfoItemFieldValues(
-				"AA1", objectDefinition),
-			objectEntry.getObjectDefinition(), objectEntry);
+			InfoItemFieldValues.builder(
+			).infoFieldValue(
+				_getDeletedItemIdentifiersInfoFieldValue(objectEntry7)
+			).infoFieldValue(
+				new InfoFieldValue<>(
+					infoField,
+					new RelatedInfoFieldValue<>(
+						HashMapBuilder.
+							<RelatedInfoFieldValue.
+								RelatedInfoFieldValueIdentifier,
+							 InfoFieldValue<Object>>put(
+								new RelatedInfoFieldValue.
+									RelatedInfoFieldValueIdentifier(
+										"AA4", "A4"),
+								new InfoFieldValue<>(infoField, value)
+							).build()))
+			).build(),
+			objectEntry6.getObjectDefinition(), objectEntry6);
 
 		TreeTestUtil.assertObjectEntryTree(
 			LinkedHashMapBuilder.put(
-				"A1", new String[] {"AB1"}
+				"A4", new String[] {"AA4", "AB4"}
 			).put(
-				"AB1", new String[0]
+				"AA4", new String[] {"AAA4", "AAB4"}
+			).put(
+				"AB4", new String[0]
+			).put(
+				"AAA4", new String[0]
+			).put(
+				"AAB4", new String[0]
 			).build(),
-			objectEntryTreeFactory.create(objectEntry.getObjectEntryId()),
+			objectEntryTreeFactory.create(objectEntry6.getObjectEntryId()),
 			objectEntryLocalService);
+
+		ObjectEntry objectEntry8 = _getObjectEntry("AA4", "C_AA");
+
+		Assert.assertEquals(
+			value,
+			MapUtil.getString(
+				objectEntry8.getValues(), objectField1.getName()));
 
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService,
@@ -659,26 +779,29 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 				title, MapUtil.getString(curObjectEntry.getValues(), "title")));
 	}
 
-	private InfoItemFieldValues _getDeletedItemIdentifiersInfoItemFieldValues(
-		String externalReferenceCode, ObjectDefinition objectDefinition) {
+	private InfoFieldValue<Object> _getDeletedItemIdentifiersInfoFieldValue(
+		ObjectEntry... objectEntries) {
 
-		return InfoItemFieldValues.builder(
-		).infoFieldValue(
-			new InfoFieldValue<>(
-				InfoField.builder(
-				).infoFieldType(
-					MultiselectInfoFieldType.INSTANCE
-				).namespace(
-					InfoItemFieldValuesUpdater.class.getSimpleName()
-				).name(
-					"deletedItemIdentifiers"
-				).build(),
-				new String[] {
-					StringBundler.concat(
+		return new InfoFieldValue<>(
+			InfoField.builder(
+			).infoFieldType(
+				MultiselectInfoFieldType.INSTANCE
+			).namespace(
+				InfoItemFieldValuesUpdater.class.getSimpleName()
+			).name(
+				"deletedItemIdentifiers"
+			).build(),
+			TransformUtil.transformToArray(
+				Arrays.asList(objectEntries),
+				objectEntry -> {
+					ObjectDefinition objectDefinition =
+						objectEntry.getObjectDefinition();
+
+					return StringBundler.concat(
 						objectDefinition.getClassName(), StringPool.UNDERLINE,
-						externalReferenceCode)
-				})
-		).build();
+						objectEntry.getExternalReferenceCode());
+				},
+				String.class));
 	}
 
 	private ObjectEntryFolder _getExpectedObjectEntryFolder(
@@ -707,6 +830,18 @@ public class ObjectEntryInfoItemFieldValuesUpdaterTest
 		}
 
 		return objectEntryFolder;
+	}
+
+	private ObjectEntry _getObjectEntry(
+			String externalReferenceCode, String objectDefinitionName)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), objectDefinitionName);
+
+		return objectEntryLocalService.getObjectEntry(
+			externalReferenceCode, 0, objectDefinition.getObjectDefinitionId());
 	}
 
 	private int _getObjectEntryFoldersCount(
