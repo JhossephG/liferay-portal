@@ -16,13 +16,44 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
  * @author Dante Wang
  */
 public class URLUtilTest {
+
+	@BeforeClass
+	public static void setUpClass() {
+		_propsUtilMockedStatic.when(
+			() -> PropsUtil.get(PropsKeys.DNS_SECURITY_ADDRESS_TIMEOUT_SECONDS)
+		).thenReturn(
+			String.valueOf(2)
+		);
+
+		_propsUtilMockedStatic.when(
+			() -> PropsUtil.get(PropsKeys.DNS_SECURITY_THREAD_LIMIT)
+		).thenReturn(
+			String.valueOf(10)
+		);
+
+		_propsUtilMockedStatic.when(
+			() -> PropsUtil.get(PropsKeys.DNS_SECURITY_THREAD_QUEUE_LIMIT)
+		).thenReturn(
+			String.valueOf(5)
+		);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_propsUtilMockedStatic.close();
+	}
 
 	@Test
 	public void testDownloadAndInstallJar() throws Exception {
@@ -47,6 +78,47 @@ public class URLUtilTest {
 		finally {
 			Files.deleteIfExists(tempFilePath);
 		}
+	}
+
+	@Test
+	public void testIsValidURL() {
+
+		// Unsupported scheme
+
+		Assert.assertFalse(
+			URLUtil.isValidURL("ftp://liferay.com", new String[0], false));
+
+		// Missing host
+
+		Assert.assertFalse(
+			URLUtil.isValidURL("http:///path", new String[0], false));
+
+		// Host not in allowlist
+
+		Assert.assertFalse(
+			URLUtil.isValidURL(
+				"https://8.8.8.8", new String[] {"liferay.com"}, true));
+
+		// Host in allowlist
+
+		Assert.assertTrue(
+			URLUtil.isValidURL(
+				"https://liferay.com", new String[] {"liferay.com"}, true));
+
+		// Local address allowed when local network access is enabled
+
+		Assert.assertTrue(
+			URLUtil.isValidURL("http://127.0.0.1", new String[0], true));
+
+		// Local address rejected when local network access is disabled
+
+		Assert.assertFalse(
+			URLUtil.isValidURL("http://127.0.0.1", new String[0], false));
+
+		// Public address allowed when local network access is disabled
+
+		Assert.assertTrue(
+			URLUtil.isValidURL("http://8.8.8.8", new String[0], false));
 	}
 
 	private void _testDownload(String sha1) throws Exception {
@@ -86,5 +158,8 @@ public class URLUtilTest {
 
 	private static final String _SHA1_REAL =
 		"98e93e8db707aa2d31118c9c88a2d6b642d896fd";
+
+	private static final MockedStatic<PropsUtil> _propsUtilMockedStatic =
+		Mockito.mockStatic(PropsUtil.class, Mockito.CALLS_REAL_METHODS);
 
 }
