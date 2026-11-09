@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.security.fips.FIPSModeValidator;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -83,6 +84,44 @@ public class URLUtil {
 				catch (IOException ioException) {
 				}
 			}
+		}
+	}
+
+	public static boolean isValidURL(
+		String url, String[] urlHostsAllowed,
+		boolean urlLocalNetworkAccessEnabled) {
+
+		try {
+			URI uri = new URI(url);
+
+			String scheme = StringUtil.toLowerCase(uri.getScheme());
+
+			if (!Http.HTTP.equals(scheme) && !Http.HTTPS.equals(scheme)) {
+				return false;
+			}
+
+			String host = uri.getHost();
+
+			if (Validator.isNull(host) ||
+				(ArrayUtil.isNotEmpty(urlHostsAllowed) &&
+				 !ArrayUtil.contains(urlHostsAllowed, host, true))) {
+
+				return false;
+			}
+
+			if (urlLocalNetworkAccessEnabled) {
+				return true;
+			}
+
+			return !InetAddressUtil.isLocalInetAddress(
+				InetAddressUtil.getInetAddressByName(host));
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
 		}
 	}
 
